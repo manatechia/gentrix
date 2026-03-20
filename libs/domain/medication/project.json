@@ -1,0 +1,19 @@
+{
+  "name": "domain-medication",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/medication/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/domain/medication",
+        "main": "libs/domain/medication/src/index.ts",
+        "tsConfig": "libs/domain/medication/tsconfig.lib.json",
+        "assets": []
+      }
+    }
+  },
+  "tags": ["scope:domain", "type:model"]
+}

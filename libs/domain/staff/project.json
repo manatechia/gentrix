@@ -1,0 +1,19 @@
+{
+  "name": "domain-staff",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/staff/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/domain/staff",
+        "main": "libs/domain/staff/src/index.ts",
+        "tsConfig": "libs/domain/staff/tsconfig.lib.json",
+        "assets": []
+      }
+    }
+  },
+  "tags": ["scope:domain", "type:model"]
+}

@@ -1,0 +1,10 @@
+node_modules
+dist
+.nx
+tmp
+coverage
+.env
+.env.*
+.DS_Store
+
+vite.config.*.timestamp*
