@@ -63,7 +63,7 @@ export function ResidentsPanel({
                 </span>
               </div>
               <p className="mt-2 leading-[1.65] text-brand-text-secondary">
-                Habitacion {resident.room} / {resident.age} anos
+                Habitacion {resident.room} / {resident.age} años
               </p>
               <div className="mt-4 grid gap-2">
                 <span className="h-[5px] w-[74%] rounded-full bg-brand-primary" />

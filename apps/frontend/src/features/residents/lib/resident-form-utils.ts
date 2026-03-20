@@ -103,6 +103,39 @@ export function formatResidentDateInput(value: string): string {
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
+export function formatResidentDigitsInput(
+  value: string,
+  maxLength: number,
+): string {
+  return value.replace(/\D/g, '').slice(0, maxLength);
+}
+
+export function getResidentDocumentDigits(value: string): string {
+  return value.replace(/\D/g, '');
+}
+
+export function buildResidentCuit(
+  documentNumber: string,
+  prefix: string,
+  suffix: string,
+): string | undefined {
+  const documentDigits = getResidentDocumentDigits(documentNumber);
+  const normalizedPrefix = formatResidentDigitsInput(prefix, 2);
+  const normalizedSuffix = formatResidentDigitsInput(suffix, 1);
+
+  if (
+    !documentDigits ||
+    !normalizedPrefix ||
+    !normalizedSuffix ||
+    normalizedPrefix.length !== 2 ||
+    normalizedSuffix.length !== 1
+  ) {
+    return undefined;
+  }
+
+  return `${normalizedPrefix}-${documentDigits}-${normalizedSuffix}`;
+}
+
 export function toResidentDateIso(value: string): string | null {
   if (!value) {
     return null;

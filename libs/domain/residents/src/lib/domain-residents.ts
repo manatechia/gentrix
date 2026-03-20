@@ -238,7 +238,10 @@ export function createResidentSeed(
     documentType: 'dni',
     documentNumber: '30123456',
     documentIssuingCountry: 'Argentina',
-    internalNumber: 'INT-001',
+    internalNumber: createEntityId(
+      'resident-internal',
+      'Marta Diaz 30123456 A-101',
+    ),
     procedureNumber: 'TRM-30123456',
     cuil: '27-30123456-3',
     birthDate: toIsoDateString('1942-05-19T00:00:00.000Z'),
@@ -326,7 +329,7 @@ export function createResidentFromIntake(
     documentType: input.documentType,
     documentNumber: input.documentNumber.trim(),
     documentIssuingCountry: input.documentIssuingCountry.trim(),
-    internalNumber: input.internalNumber?.trim() || undefined,
+    internalNumber: createRandomEntityId(),
     procedureNumber: input.procedureNumber?.trim() || undefined,
     cuil: input.cuil?.trim() || undefined,
     birthDate: toIsoDateString(input.birthDate),
@@ -404,6 +407,13 @@ export function createResidentFromIntake(
         ? toIsoDateString(input.discharge.date)
         : undefined,
       reason: input.discharge.reason?.trim() || undefined,
+    },
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      room: input.room.trim(),
     },
     emergencyContact: {
       fullName: primaryFamilyContact?.fullName ?? 'Contacto pendiente',

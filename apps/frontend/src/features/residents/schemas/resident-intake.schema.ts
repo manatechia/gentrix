@@ -141,9 +141,13 @@ export const residentIntakeSchema = Yup.object({
   documentIssuingCountry: Yup.string()
     .trim()
     .required('El pais emisor del documento es obligatorio.'),
-  internalNumber: Yup.string().trim(),
   procedureNumber: Yup.string().trim(),
-  cuil: Yup.string().trim(),
+  cuitPrefix: Yup.string()
+    .trim()
+    .matches(/^\d{0,2}$/, 'El prefijo del CUIT debe tener 2 digitos.'),
+  cuitSuffix: Yup.string()
+    .trim()
+    .matches(/^\d{0,1}$/, 'El digito final del CUIT debe tener 1 digito.'),
   firstName: Yup.string().trim().required('El nombre es obligatorio.'),
   middleNames: Yup.string().trim(),
   lastName: Yup.string().trim().required('El apellido es obligatorio.'),
@@ -197,6 +201,33 @@ export const residentIntakeSchema = Yup.object({
     .of(attachmentSchema)
     .max(6, 'Puedes cargar hasta 6 adjuntos.'),
 }).test(
+  'cuit-complete',
+  'Completa el CUIT con 2 digitos iniciales y 1 digito final.',
+  (values, context) => {
+    const prefix = values?.cuitPrefix?.trim() ?? '';
+    const suffix = values?.cuitSuffix?.trim() ?? '';
+
+    if (!prefix && !suffix) {
+      return true;
+    }
+
+    if (prefix.length !== 2) {
+      return context.createError({
+        path: 'cuitPrefix',
+        message: 'Ingresa los 2 primeros digitos del CUIT.',
+      });
+    }
+
+    if (suffix.length !== 1) {
+      return context.createError({
+        path: 'cuitSuffix',
+        message: 'Ingresa el ultimo digito del CUIT.',
+      });
+    }
+
+    return true;
+  },
+).test(
   'discharge-after-admission',
   'La fecha de salida no puede ser anterior a la fecha de ingreso.',
   (values) => {

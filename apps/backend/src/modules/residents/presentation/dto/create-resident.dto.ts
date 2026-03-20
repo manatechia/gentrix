@@ -256,10 +256,6 @@ export class CreateResidentDto implements ResidentCreateInput {
 
   @IsString()
   @IsOptional()
-  internalNumber?: string;
-
-  @IsString()
-  @IsOptional()
   procedureNumber?: string;
 
   @IsString()

@@ -172,7 +172,7 @@ export function ResidentDetailWorkspace({
                 </span>
               </div>
               <p className="max-w-[64ch] leading-[1.7] text-brand-text-secondary">
-                Habitacion {resident.room}, {resident.age} anos, nivel de
+                Habitacion {resident.room}, {resident.age} años, nivel de
                 cuidado {formatResidentCareLevel(resident.careLevel).toLowerCase()}.
               </p>
               <div className="grid gap-3 min-[680px]:grid-cols-4">
@@ -205,7 +205,7 @@ export function ResidentDetailWorkspace({
                     Edad
                   </span>
                   <strong className="mt-2 block text-brand-text">
-                    {resident.age} anos
+                    {resident.age} años
                   </strong>
                 </article>
               </div>
@@ -252,7 +252,10 @@ export function ResidentDetailWorkspace({
                   label="Numero de tramite"
                   value={showValue(resident.procedureNumber)}
                 />
-                <DetailField label="CUIL" value={showValue(resident.cuil)} />
+                <DetailField
+                  label="CUIT"
+                  value={showValue(resident.cuil)}
+                />
               </div>
             </article>
 
@@ -537,15 +540,27 @@ export function ResidentDetailWorkspace({
               <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
                 Domicilio registrado
               </span>
-              <div className="mt-4 grid gap-2 text-brand-text-secondary">
-                <span>{resident.address.street}</span>
-                <span>
-                  {resident.address.city}, {resident.address.state}
-                </span>
-                <span>CP {resident.address.postalCode}</span>
-                <span>
-                  Habitacion interna {resident.address.room ?? resident.room}
-                </span>
+              <div className="mt-4 grid gap-3 text-brand-text-secondary">
+                <DetailField
+                  label="Domicilio"
+                  value={showValue(resident.address.street)}
+                />
+                <DetailField
+                  label="Ciudad"
+                  value={showValue(resident.address.city)}
+                />
+                <DetailField
+                  label="Provincia"
+                  value={showValue(resident.address.state)}
+                />
+                <DetailField
+                  label="Codigo postal"
+                  value={showValue(resident.address.postalCode)}
+                />
+                <DetailField
+                  label="Habitacion interna"
+                  value={showValue(resident.address.room ?? resident.room)}
+                />
               </div>
             </article>
           </section>
