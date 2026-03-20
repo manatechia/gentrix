@@ -80,6 +80,60 @@ export interface ResidentAttachment extends ResidentAttachmentInput {
   uploadedAt: IsoDateString;
 }
 
+export interface ResidentInsuranceInfo {
+  provider?: string;
+  memberNumber?: string;
+}
+
+export interface ResidentTransferInfo {
+  provider?: string;
+  address?: string;
+  phone?: string;
+}
+
+export interface ResidentPsychiatricCareInfo {
+  provider?: string;
+  careLocation?: string;
+  address?: string;
+  phone?: string;
+}
+
+export interface ResidentClinicalProfile {
+  allergies?: string;
+  emergencyCareLocation?: string;
+  clinicalRecordNumber?: string;
+  primaryDoctorName?: string;
+  primaryDoctorOfficeAddress?: string;
+  primaryDoctorOfficePhone?: string;
+  pathologies?: string;
+  surgeries?: string;
+  smokes?: boolean;
+  drinksAlcohol?: boolean;
+  currentWeightKg?: number;
+}
+
+export interface ResidentBelongings {
+  glasses: boolean;
+  dentures: boolean;
+  walker: boolean;
+  orthopedicBed: boolean;
+  notes?: string;
+}
+
+export interface ResidentFamilyContactInput extends ContactPerson {
+  address?: string;
+  notes?: string;
+}
+
+export interface ResidentFamilyContact extends ResidentFamilyContactInput {
+  id: EntityId;
+}
+
+export interface ResidentDischargeInfo {
+  date?: IsoDateString;
+  reason?: string;
+}
+
 export interface AuthUser {
   id: EntityId;
   fullName: string;
@@ -124,16 +178,28 @@ export interface ResidentDetail {
   documentType: ResidentDocumentType;
   documentNumber: string;
   documentIssuingCountry: string;
+  internalNumber?: string;
+  procedureNumber?: string;
+  cuil?: string;
   age: number;
   birthDate: IsoDateString;
   admissionDate: IsoDateString;
   sex: ResidentSex;
+  maritalStatus?: string;
+  nationality?: string;
   email?: string;
   room: string;
   careLevel: ResidentCareLevel;
   status: EntityStatus;
   medicalHistory: ResidentMedicalHistoryEntry[];
   attachments: ResidentAttachment[];
+  insurance: ResidentInsuranceInfo;
+  transfer: ResidentTransferInfo;
+  psychiatry: ResidentPsychiatricCareInfo;
+  clinicalProfile: ResidentClinicalProfile;
+  belongings: ResidentBelongings;
+  familyContacts: ResidentFamilyContact[];
+  discharge: ResidentDischargeInfo;
   address: Address;
   emergencyContact: ContactPerson;
   audit: AuditTrail;
@@ -147,13 +213,26 @@ export interface ResidentCreateInput {
   documentType: ResidentDocumentType;
   documentNumber: string;
   documentIssuingCountry: string;
+  internalNumber?: string;
+  procedureNumber?: string;
+  cuil?: string;
   birthDate: IsoDateString;
+  admissionDate: IsoDateString;
   sex: ResidentSex;
+  maritalStatus?: string;
+  nationality?: string;
   email?: string;
   room: string;
   careLevel: ResidentCareLevel;
   medicalHistory: ResidentMedicalHistoryEntryInput[];
   attachments: ResidentAttachmentInput[];
+  insurance: ResidentInsuranceInfo;
+  transfer: ResidentTransferInfo;
+  psychiatry: ResidentPsychiatricCareInfo;
+  clinicalProfile: ResidentClinicalProfile;
+  belongings: ResidentBelongings;
+  familyContacts: ResidentFamilyContactInput[];
+  discharge: ResidentDischargeInfo;
 }
 
 export interface StaffOverview {

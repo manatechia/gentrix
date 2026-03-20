@@ -13,9 +13,12 @@ import {
   unwrapEnvelope,
 } from '../../../shared/lib/api-envelope';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
-import { toResidentBirthDateIso } from '../lib/resident-form-utils';
+import { toResidentDateIso } from '../lib/resident-form-utils';
 import * as residentsService from '../services/residents-service';
-import type { ResidentFormValues } from '../types/resident-form-values';
+import type {
+  ResidentBooleanAnswer,
+  ResidentFormValues,
+} from '../types/resident-form-values';
 
 function dedupeById<T extends { id: string }>(items: T[]): T[] {
   const seen = new Set<string>();
@@ -28,6 +31,36 @@ function dedupeById<T extends { id: string }>(items: T[]): T[] {
     seen.add(item.id);
     return true;
   });
+}
+
+function toOptionalString(value: string): string | undefined {
+  const trimmedValue = value.trim();
+  return trimmedValue ? trimmedValue : undefined;
+}
+
+function toOptionalBoolean(
+  value: ResidentBooleanAnswer,
+): boolean | undefined {
+  if (value === 'si') {
+    return true;
+  }
+
+  if (value === 'no') {
+    return false;
+  }
+
+  return undefined;
+}
+
+function toOptionalNumber(value: string): number | undefined {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return undefined;
+  }
+
+  const parsedValue = Number.parseFloat(trimmedValue.replace(',', '.'));
+  return Number.isFinite(parsedValue) ? parsedValue : undefined;
 }
 
 export function useResidentsRoute() {
@@ -107,18 +140,87 @@ export function useResidentsRoute() {
         documentType: values.documentType as ResidentDocumentType,
         documentNumber: values.documentNumber.trim(),
         documentIssuingCountry: values.documentIssuingCountry.trim(),
+        internalNumber: toOptionalString(values.internalNumber),
+        procedureNumber: toOptionalString(values.procedureNumber),
+        cuil: toOptionalString(values.cuil),
         firstName: values.firstName.trim(),
         middleNames: values.middleNames.trim() || undefined,
         lastName: values.lastName.trim(),
         otherLastNames: values.otherLastNames.trim() || undefined,
-        birthDate: toResidentBirthDateIso(values.birthDate) ?? values.birthDate,
+        birthDate: toResidentDateIso(values.birthDate) ?? values.birthDate,
+        admissionDate:
+          toResidentDateIso(values.admissionDate) ?? values.admissionDate,
         sex: values.sex as ResidentSex,
+        maritalStatus: toOptionalString(values.maritalStatus),
+        nationality: toOptionalString(values.nationality),
         email: values.email.trim() || undefined,
         room: values.room.trim(),
         careLevel: values.careLevel,
+        insurance: {
+          provider: toOptionalString(values.insurance.provider),
+          memberNumber: toOptionalString(values.insurance.memberNumber),
+        },
+        transfer: {
+          provider: toOptionalString(values.transfer.provider),
+          address: toOptionalString(values.transfer.address),
+          phone: toOptionalString(values.transfer.phone),
+        },
+        psychiatry: {
+          provider: toOptionalString(values.psychiatry.provider),
+          careLocation: toOptionalString(values.psychiatry.careLocation),
+          address: toOptionalString(values.psychiatry.address),
+          phone: toOptionalString(values.psychiatry.phone),
+        },
+        clinicalProfile: {
+          allergies: toOptionalString(values.clinicalProfile.allergies),
+          emergencyCareLocation: toOptionalString(
+            values.clinicalProfile.emergencyCareLocation,
+          ),
+          clinicalRecordNumber: toOptionalString(
+            values.clinicalProfile.clinicalRecordNumber,
+          ),
+          primaryDoctorName: toOptionalString(
+            values.clinicalProfile.primaryDoctorName,
+          ),
+          primaryDoctorOfficeAddress: toOptionalString(
+            values.clinicalProfile.primaryDoctorOfficeAddress,
+          ),
+          primaryDoctorOfficePhone: toOptionalString(
+            values.clinicalProfile.primaryDoctorOfficePhone,
+          ),
+          pathologies: toOptionalString(values.clinicalProfile.pathologies),
+          surgeries: toOptionalString(values.clinicalProfile.surgeries),
+          smokes: toOptionalBoolean(values.clinicalProfile.smokes),
+          drinksAlcohol: toOptionalBoolean(
+            values.clinicalProfile.drinksAlcohol,
+          ),
+          currentWeightKg: toOptionalNumber(
+            values.clinicalProfile.currentWeightKg,
+          ),
+        },
+        belongings: {
+          glasses: values.belongings.glasses,
+          dentures: values.belongings.dentures,
+          walker: values.belongings.walker,
+          orthopedicBed: values.belongings.orthopedicBed,
+          notes: toOptionalString(values.belongings.notes),
+        },
+        familyContacts: values.familyContacts.map((contact) => ({
+          fullName: contact.fullName.trim(),
+          relationship: contact.relationship.trim(),
+          phone: contact.phone.trim(),
+          email: toOptionalString(contact.email),
+          address: toOptionalString(contact.address),
+          notes: toOptionalString(contact.notes),
+        })),
+        discharge: {
+          date: values.discharge.date
+            ? (toResidentDateIso(values.discharge.date) ?? values.discharge.date)
+            : undefined,
+          reason: toOptionalString(values.discharge.reason),
+        },
         medicalHistory: values.medicalHistory.map((entry) => ({
-          recordedAt:
-            toResidentBirthDateIso(entry.recordedAt) ?? entry.recordedAt,
+          recordedAt: toResidentDateIso(entry.recordedAt) ?? entry.recordedAt,
           title: entry.title.trim(),
           notes: entry.notes.trim(),
         })),

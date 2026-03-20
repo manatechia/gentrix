@@ -30,6 +30,11 @@ interface ResidentDetailWorkspaceProps {
   onRetry: () => void | Promise<void>;
 }
 
+interface DetailFieldProps {
+  label: string;
+  value: string;
+}
+
 const dateFormatter = new Intl.DateTimeFormat('es-AR', {
   dateStyle: 'long',
 });
@@ -52,6 +57,31 @@ function showValue(value: string | undefined): string {
   }
 
   return value;
+}
+
+function showDateValue(value: string | undefined): string {
+  return value ? formatDate(value) : 'No informado';
+}
+
+function showBooleanValue(value: boolean | undefined): string {
+  if (value === undefined) {
+    return 'No informado';
+  }
+
+  return value ? 'Si' : 'No';
+}
+
+function showWeight(value: number | undefined): string {
+  return typeof value === 'number' ? `${value.toFixed(1)} kg` : 'No informado';
+}
+
+function DetailField({ label, value }: DetailFieldProps) {
+  return (
+    <div>
+      <strong className="block text-brand-text">{label}</strong>
+      <span>{value}</span>
+    </div>
+  );
 }
 
 export function ResidentDetailWorkspace({
@@ -82,8 +112,9 @@ export function ResidentDetailWorkspace({
             {resident?.fullName ?? 'Detalle del residente'}
           </h1>
           <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
-            Consulta la ficha actual del paciente y el estado general de sus
-            datos registrados en el sistema.
+            Consulta la ficha actual del paciente con sus datos de
+            identificacion, cobertura, salud, pertenencias y contactos
+            familiares.
           </p>
         </div>
 
@@ -144,7 +175,15 @@ export function ResidentDetailWorkspace({
                 Habitacion {resident.room}, {resident.age} anos, nivel de
                 cuidado {formatResidentCareLevel(resident.careLevel).toLowerCase()}.
               </p>
-              <div className="grid gap-3 min-[680px]:grid-cols-3">
+              <div className="grid gap-3 min-[680px]:grid-cols-4">
+                <article className="rounded-[22px] bg-brand-neutral px-4 py-4">
+                  <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
+                    Interno
+                  </span>
+                  <strong className="mt-2 block text-brand-text">
+                    {showValue(resident.internalNumber)}
+                  </strong>
+                </article>
                 <article className="rounded-[22px] bg-brand-neutral px-4 py-4">
                   <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
                     Ingreso
@@ -198,97 +237,271 @@ export function ResidentDetailWorkspace({
           <section className="grid gap-[18px] min-[980px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
             <article className={surfaceCardClassName}>
               <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                Identidad legal
+                Identificacion
               </span>
               <div className="mt-4 grid gap-3 text-brand-text-secondary">
-                <div>
-                  <strong className="block text-brand-text">Documento</strong>
-                  <span>
-                    {formatResidentDocumentType(resident.documentType)}{' '}
-                    {resident.documentNumber}
-                  </span>
-                </div>
-                <div>
-                  <strong className="block text-brand-text">Pais emisor</strong>
-                  <span>{resident.documentIssuingCountry}</span>
-                </div>
-                <div>
-                  <strong className="block text-brand-text">Sexo</strong>
-                  <span>{formatResidentSex(resident.sex)}</span>
-                </div>
-                <div>
-                  <strong className="block text-brand-text">
-                    Correo electronico
-                  </strong>
-                  <span>{showValue(resident.email)}</span>
-                </div>
+                <DetailField
+                  label="Documento"
+                  value={`${formatResidentDocumentType(resident.documentType)} ${resident.documentNumber}`}
+                />
+                <DetailField
+                  label="Pais emisor"
+                  value={showValue(resident.documentIssuingCountry)}
+                />
+                <DetailField
+                  label="Numero de tramite"
+                  value={showValue(resident.procedureNumber)}
+                />
+                <DetailField label="CUIL" value={showValue(resident.cuil)} />
               </div>
             </article>
 
             <article className={surfaceCardClassName}>
               <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                Nombre completo
+                Datos personales
               </span>
               <div className="mt-4 grid gap-3 text-brand-text-secondary">
-                <div>
-                  <strong className="block text-brand-text">Nombre</strong>
-                  <span>{resident.firstName}</span>
-                </div>
-                <div>
-                  <strong className="block text-brand-text">Otros nombres</strong>
-                  <span>{showValue(resident.middleNames)}</span>
-                </div>
-                <div>
-                  <strong className="block text-brand-text">Apellido</strong>
-                  <span>{resident.lastName}</span>
-                </div>
-                <div>
-                  <strong className="block text-brand-text">Otros apellidos</strong>
-                  <span>{showValue(resident.otherLastNames)}</span>
-                </div>
+                <DetailField label="Nombre" value={resident.firstName} />
+                <DetailField
+                  label="Otros nombres"
+                  value={showValue(resident.middleNames)}
+                />
+                <DetailField label="Apellido" value={resident.lastName} />
+                <DetailField
+                  label="Otros apellidos"
+                  value={showValue(resident.otherLastNames)}
+                />
+                <DetailField
+                  label="Sexo"
+                  value={formatResidentSex(resident.sex)}
+                />
+                <DetailField
+                  label="Estado civil"
+                  value={showValue(resident.maritalStatus)}
+                />
+                <DetailField
+                  label="Nacionalidad"
+                  value={showValue(resident.nationality)}
+                />
+                <DetailField
+                  label="Correo electronico"
+                  value={showValue(resident.email)}
+                />
               </div>
             </article>
 
             <article className={surfaceCardClassName}>
               <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                Domicilio registrado
+                Ingreso y salida
               </span>
-              <div className="mt-4 grid gap-2 text-brand-text-secondary">
-                <span>{resident.address.street}</span>
-                <span>
-                  {resident.address.city}, {resident.address.state}
-                </span>
-                <span>CP {resident.address.postalCode}</span>
-                <span>
-                  Habitacion interna {resident.address.room ?? resident.room}
-                </span>
+              <div className="mt-4 grid gap-3 text-brand-text-secondary">
+                <DetailField
+                  label="Habitacion"
+                  value={showValue(resident.room)}
+                />
+                <DetailField
+                  label="Nivel de cuidado"
+                  value={formatResidentCareLevel(resident.careLevel)}
+                />
+                <DetailField
+                  label="Fecha de ingreso"
+                  value={formatDate(resident.admissionDate)}
+                />
+                <DetailField
+                  label="Fecha de salida"
+                  value={showDateValue(resident.discharge.date)}
+                />
+                <DetailField
+                  label="Motivo de salida"
+                  value={showValue(resident.discharge.reason)}
+                />
               </div>
             </article>
           </section>
 
-          <section className="grid gap-[18px] min-[980px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <section className="grid gap-[18px] min-[980px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
             <article className={surfaceCardClassName}>
               <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                Datos residenciales
+                Cobertura y traslados
               </span>
               <div className="mt-4 grid gap-3 text-brand-text-secondary">
-                <div>
-                  <strong className="block text-brand-text">Habitacion</strong>
-                  <span>{resident.room}</span>
-                </div>
-                <div>
-                  <strong className="block text-brand-text">
-                    Nivel de cuidado
-                  </strong>
-                  <span>{formatResidentCareLevel(resident.careLevel)}</span>
-                </div>
-                <div>
-                  <strong className="block text-brand-text">Estado</strong>
-                  <span>{formatEntityStatus(resident.status)}</span>
-                </div>
+                <DetailField
+                  label="Obra social"
+                  value={showValue(resident.insurance.provider)}
+                />
+                <DetailField
+                  label="Numero de beneficio"
+                  value={showValue(resident.insurance.memberNumber)}
+                />
+                <DetailField
+                  label="Proveedor de traslados"
+                  value={showValue(resident.transfer.provider)}
+                />
+                <DetailField
+                  label="Domicilio de traslado"
+                  value={showValue(resident.transfer.address)}
+                />
+                <DetailField
+                  label="Telefono de traslado"
+                  value={showValue(resident.transfer.phone)}
+                />
               </div>
             </article>
 
+            <article className={surfaceCardClassName}>
+              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                Medico de cabecera
+              </span>
+              <div className="mt-4 grid gap-3 text-brand-text-secondary">
+                <DetailField
+                  label="Historia clinica"
+                  value={showValue(resident.clinicalProfile.clinicalRecordNumber)}
+                />
+                <DetailField
+                  label="Lugar de atencion de emergencia"
+                  value={showValue(
+                    resident.clinicalProfile.emergencyCareLocation,
+                  )}
+                />
+                <DetailField
+                  label="Medico"
+                  value={showValue(resident.clinicalProfile.primaryDoctorName)}
+                />
+                <DetailField
+                  label="Consultorio"
+                  value={showValue(
+                    resident.clinicalProfile.primaryDoctorOfficeAddress,
+                  )}
+                />
+                <DetailField
+                  label="Telefono consultorio"
+                  value={showValue(
+                    resident.clinicalProfile.primaryDoctorOfficePhone,
+                  )}
+                />
+              </div>
+            </article>
+
+            <article className={surfaceCardClassName}>
+              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                Psiquiatria
+              </span>
+              <div className="mt-4 grid gap-3 text-brand-text-secondary">
+                <DetailField
+                  label="Prestador"
+                  value={showValue(resident.psychiatry.provider)}
+                />
+                <DetailField
+                  label="Lugar de atencion"
+                  value={showValue(resident.psychiatry.careLocation)}
+                />
+                <DetailField
+                  label="Domicilio"
+                  value={showValue(resident.psychiatry.address)}
+                />
+                <DetailField
+                  label="Telefono"
+                  value={showValue(resident.psychiatry.phone)}
+                />
+              </div>
+            </article>
+          </section>
+
+          <section className="grid gap-[18px] min-[980px]:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+            <article className={surfaceCardClassName}>
+              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                Resumen clinico
+              </span>
+              <div className="mt-4 grid gap-3 text-brand-text-secondary min-[700px]:grid-cols-2">
+                <DetailField
+                  label="Alergias"
+                  value={showValue(resident.clinicalProfile.allergies)}
+                />
+                <DetailField
+                  label="Patologias"
+                  value={showValue(resident.clinicalProfile.pathologies)}
+                />
+                <DetailField
+                  label="Operaciones y antecedentes"
+                  value={showValue(resident.clinicalProfile.surgeries)}
+                />
+                <DetailField
+                  label="Fuma"
+                  value={showBooleanValue(resident.clinicalProfile.smokes)}
+                />
+                <DetailField
+                  label="Bebe alcohol"
+                  value={showBooleanValue(
+                    resident.clinicalProfile.drinksAlcohol,
+                  )}
+                />
+                <DetailField
+                  label="Peso del mes"
+                  value={showWeight(resident.clinicalProfile.currentWeightKg)}
+                />
+              </div>
+            </article>
+
+            <article className={surfaceCardClassName}>
+              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                Pertenencias
+              </span>
+              <div className="mt-4 grid gap-3 text-brand-text-secondary">
+                <DetailField
+                  label="Anteojos"
+                  value={showBooleanValue(resident.belongings.glasses)}
+                />
+                <DetailField
+                  label="Dentaduras"
+                  value={showBooleanValue(resident.belongings.dentures)}
+                />
+                <DetailField
+                  label="Andador"
+                  value={showBooleanValue(resident.belongings.walker)}
+                />
+                <DetailField
+                  label="Cama ortopedica"
+                  value={showBooleanValue(resident.belongings.orthopedicBed)}
+                />
+                <DetailField
+                  label="Notas"
+                  value={showValue(resident.belongings.notes)}
+                />
+              </div>
+            </article>
+          </section>
+
+          <section className={surfaceCardClassName}>
+            <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+              Familiares y contactos
+            </span>
+
+            {resident.familyContacts.length === 0 ? (
+              <p className="mt-4 leading-[1.65] text-brand-text-secondary">
+                No hay familiares o contactos cargados para este residente.
+              </p>
+            ) : (
+              <div className="mt-4 grid gap-3 min-[980px]:grid-cols-2">
+                {resident.familyContacts.map((contact) => (
+                  <article
+                    key={contact.id}
+                    className="rounded-[22px] bg-brand-neutral px-4 py-4 text-brand-text-secondary"
+                  >
+                    <strong className="block text-brand-text">
+                      {contact.fullName}
+                    </strong>
+                    <span className="mt-1 block">{contact.relationship}</span>
+                    <span className="mt-1 block">{contact.phone}</span>
+                    <span className="mt-1 block">{showValue(contact.email)}</span>
+                    <span className="mt-1 block">{showValue(contact.address)}</span>
+                    <span className="mt-1 block">{showValue(contact.notes)}</span>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="grid gap-[18px] min-[980px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <article className={surfaceCardClassName}>
               <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
                 Historial medico
@@ -318,6 +531,22 @@ export function ResidentDetailWorkspace({
                   ))}
                 </div>
               )}
+            </article>
+
+            <article className={surfaceCardClassName}>
+              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                Domicilio registrado
+              </span>
+              <div className="mt-4 grid gap-2 text-brand-text-secondary">
+                <span>{resident.address.street}</span>
+                <span>
+                  {resident.address.city}, {resident.address.state}
+                </span>
+                <span>CP {resident.address.postalCode}</span>
+                <span>
+                  Habitacion interna {resident.address.room ?? resident.room}
+                </span>
+              </div>
             </article>
           </section>
 
