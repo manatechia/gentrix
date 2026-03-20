@@ -53,10 +53,10 @@ export function ResidentCreateWorkspace({
             Alta de paciente
           </h1>
           <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
-            El alta ahora vive en una subpagina propia y concentra los datos
-            de identidad principales del residente, sus antecedentes medicos
-            y los adjuntos clinicos necesarios. La edad se muestra como
-            calculo automatico para validar rapidamente la carga.
+            El alta ahora vive en una subpagina propia y separa la carga en
+            bloques desplegables de identificacion, contacto, cobertura,
+            salud, pertenencias, familiares y adjuntos. La edad se muestra
+            como calculo automatico para validar rapidamente la informacion.
           </p>
         </div>
 
@@ -64,7 +64,9 @@ export function ResidentCreateWorkspace({
           <Link className={secondaryButtonClassName} to="/residentes">
             Volver a residentes
           </Link>
-          <span className={primaryButtonClassName}>{residentCount} residentes</span>
+          <span className={primaryButtonClassName}>
+            {residentCount} residentes
+          </span>
         </div>
       </section>
 

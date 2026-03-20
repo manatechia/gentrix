@@ -1,12 +1,14 @@
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsDataURI,
   IsDateString,
   IsEmail,
   IsIn,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   Max,
@@ -18,10 +20,17 @@ import { Type } from 'class-transformer';
 import { residentCareLevels } from '@gentrix/domain-residents';
 import type {
   ResidentAttachmentInput,
+  ResidentBelongings,
+  ResidentClinicalProfile,
   ResidentCreateInput,
   ResidentDocumentType,
+  ResidentDischargeInfo,
+  ResidentFamilyContactInput,
+  ResidentInsuranceInfo,
   ResidentMedicalHistoryEntryInput,
+  ResidentPsychiatricCareInfo,
   ResidentSex,
+  ResidentTransferInfo,
 } from '@gentrix/shared-types';
 
 const residentDocumentTypes: ResidentDocumentType[] = [
@@ -67,6 +76,156 @@ export class CreateResidentAttachmentDto implements ResidentAttachmentInput {
   dataUrl!: string;
 }
 
+export class CreateResidentInsuranceDto implements ResidentInsuranceInfo {
+  @IsString()
+  @IsOptional()
+  provider?: string;
+
+  @IsString()
+  @IsOptional()
+  memberNumber?: string;
+}
+
+export class CreateResidentTransferDto implements ResidentTransferInfo {
+  @IsString()
+  @IsOptional()
+  provider?: string;
+
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @IsString()
+  @IsOptional()
+  phone?: string;
+}
+
+export class CreateResidentPsychiatryDto
+  implements ResidentPsychiatricCareInfo
+{
+  @IsString()
+  @IsOptional()
+  provider?: string;
+
+  @IsString()
+  @IsOptional()
+  careLocation?: string;
+
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @IsString()
+  @IsOptional()
+  phone?: string;
+}
+
+export class CreateResidentClinicalProfileDto
+  implements ResidentClinicalProfile
+{
+  @IsString()
+  @IsOptional()
+  allergies?: string;
+
+  @IsString()
+  @IsOptional()
+  emergencyCareLocation?: string;
+
+  @IsString()
+  @IsOptional()
+  clinicalRecordNumber?: string;
+
+  @IsString()
+  @IsOptional()
+  primaryDoctorName?: string;
+
+  @IsString()
+  @IsOptional()
+  primaryDoctorOfficeAddress?: string;
+
+  @IsString()
+  @IsOptional()
+  primaryDoctorOfficePhone?: string;
+
+  @IsString()
+  @IsOptional()
+  pathologies?: string;
+
+  @IsString()
+  @IsOptional()
+  surgeries?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  smokes?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  drinksAlcohol?: boolean;
+
+  @IsNumber()
+  @Min(0)
+  @Max(500)
+  @IsOptional()
+  currentWeightKg?: number;
+}
+
+export class CreateResidentBelongingsDto implements ResidentBelongings {
+  @IsBoolean()
+  glasses!: boolean;
+
+  @IsBoolean()
+  dentures!: boolean;
+
+  @IsBoolean()
+  walker!: boolean;
+
+  @IsBoolean()
+  orthopedicBed!: boolean;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+}
+
+export class CreateResidentFamilyContactDto
+  implements ResidentFamilyContactInput
+{
+  @IsString()
+  @IsNotEmpty()
+  fullName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  relationship!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  phone!: string;
+
+  @IsEmail()
+  @IsOptional()
+  email?: string;
+
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
+}
+
+export class CreateResidentDischargeDto implements ResidentDischargeInfo {
+  @IsDateString()
+  @IsOptional()
+  date?: string;
+
+  @IsString()
+  @IsOptional()
+  reason?: string;
+}
+
 export class CreateResidentDto implements ResidentCreateInput {
   @IsString()
   @IsNotEmpty()
@@ -95,11 +254,34 @@ export class CreateResidentDto implements ResidentCreateInput {
   @IsNotEmpty()
   documentIssuingCountry!: string;
 
+  @IsString()
+  @IsOptional()
+  internalNumber?: string;
+
+  @IsString()
+  @IsOptional()
+  procedureNumber?: string;
+
+  @IsString()
+  @IsOptional()
+  cuil?: string;
+
   @IsDateString()
   birthDate!: string;
 
+  @IsDateString()
+  admissionDate!: string;
+
   @IsIn(residentSexes)
   sex!: ResidentCreateInput['sex'];
+
+  @IsString()
+  @IsOptional()
+  maritalStatus?: string;
+
+  @IsString()
+  @IsOptional()
+  nationality?: string;
 
   @IsEmail()
   @IsOptional()
@@ -123,4 +305,34 @@ export class CreateResidentDto implements ResidentCreateInput {
   @ValidateNested({ each: true })
   @Type(() => CreateResidentAttachmentDto)
   attachments!: ResidentCreateInput['attachments'];
+
+  @ValidateNested()
+  @Type(() => CreateResidentInsuranceDto)
+  insurance!: ResidentCreateInput['insurance'];
+
+  @ValidateNested()
+  @Type(() => CreateResidentTransferDto)
+  transfer!: ResidentCreateInput['transfer'];
+
+  @ValidateNested()
+  @Type(() => CreateResidentPsychiatryDto)
+  psychiatry!: ResidentCreateInput['psychiatry'];
+
+  @ValidateNested()
+  @Type(() => CreateResidentClinicalProfileDto)
+  clinicalProfile!: ResidentCreateInput['clinicalProfile'];
+
+  @ValidateNested()
+  @Type(() => CreateResidentBelongingsDto)
+  belongings!: ResidentCreateInput['belongings'];
+
+  @IsArray()
+  @ArrayMaxSize(6)
+  @ValidateNested({ each: true })
+  @Type(() => CreateResidentFamilyContactDto)
+  familyContacts!: ResidentCreateInput['familyContacts'];
+
+  @ValidateNested()
+  @Type(() => CreateResidentDischargeDto)
+  discharge!: ResidentCreateInput['discharge'];
 }

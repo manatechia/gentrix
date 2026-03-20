@@ -9,21 +9,68 @@ import {
   formatResidentDocumentType,
   formatResidentSex,
 } from '../../../shared/lib/display-labels';
+import { formatCurrentDateForResidentInput } from '../lib/resident-form-utils';
 import type { ResidentFormValues } from '../types/resident-form-values';
 
 export const residentFormInitialValues: ResidentFormValues = {
   documentType: '',
   documentNumber: '',
   documentIssuingCountry: 'Argentina',
+  internalNumber: '',
+  procedureNumber: '',
+  cuil: '',
   firstName: '',
   middleNames: '',
   lastName: '',
   otherLastNames: '',
   birthDate: '',
+  admissionDate: formatCurrentDateForResidentInput(),
   sex: '',
+  maritalStatus: '',
+  nationality: 'Argentina',
   email: '',
   room: '',
   careLevel: 'assisted',
+  insurance: {
+    provider: '',
+    memberNumber: '',
+  },
+  transfer: {
+    provider: '',
+    address: '',
+    phone: '',
+  },
+  psychiatry: {
+    provider: '',
+    careLocation: '',
+    address: '',
+    phone: '',
+  },
+  clinicalProfile: {
+    allergies: '',
+    emergencyCareLocation: '',
+    clinicalRecordNumber: '',
+    primaryDoctorName: '',
+    primaryDoctorOfficeAddress: '',
+    primaryDoctorOfficePhone: '',
+    pathologies: '',
+    surgeries: '',
+    smokes: '',
+    drinksAlcohol: '',
+    currentWeightKg: '',
+  },
+  belongings: {
+    glasses: false,
+    dentures: false,
+    walker: false,
+    orthopedicBed: false,
+    notes: '',
+  },
+  familyContacts: [],
+  discharge: {
+    date: '',
+    reason: '',
+  },
   medicalHistory: [],
   attachments: [],
 };
@@ -63,6 +110,21 @@ export const residentSexOptions: Array<{
   { value: 'masculino', label: formatResidentSex('masculino') },
   { value: 'x', label: formatResidentSex('x') },
 ];
+
+export const residentMaritalStatusOptions = [
+  'Soltero/a',
+  'Casado/a',
+  'Viudo/a',
+  'Divorciado/a',
+  'Union convivencial',
+  'Separado/a',
+  'No informado',
+] as const;
+
+export const residentBooleanAnswerOptions = [
+  { value: 'si', label: 'Si' },
+  { value: 'no', label: 'No' },
+] as const;
 
 export const documentIssuingCountryOptions = [
   'Argentina',

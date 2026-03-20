@@ -3,6 +3,7 @@ import { calculateAge, createRandomEntityId } from '@gentrix/shared-utils';
 
 import type {
   ResidentAttachmentFormValue,
+  ResidentFamilyContactFormValue,
   ResidentMedicalHistoryFormValue,
 } from '../types/resident-form-values';
 
@@ -39,6 +40,18 @@ export function createEmptyMedicalHistoryEntry(): ResidentMedicalHistoryFormValu
     localId: createRandomEntityId(),
     recordedAt: '',
     title: '',
+    notes: '',
+  };
+}
+
+export function createEmptyFamilyContact(): ResidentFamilyContactFormValue {
+  return {
+    localId: createRandomEntityId(),
+    fullName: '',
+    relationship: '',
+    phone: '',
+    email: '',
+    address: '',
     notes: '',
   };
 }
@@ -90,7 +103,7 @@ export function formatResidentDateInput(value: string): string {
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
 }
 
-export function toResidentBirthDateIso(value: string): string | null {
+export function toResidentDateIso(value: string): string | null {
   if (!value) {
     return null;
   }
@@ -133,8 +146,10 @@ export function toResidentBirthDateIso(value: string): string | null {
   return parsed.toISOString();
 }
 
+export const toResidentBirthDateIso = toResidentDateIso;
+
 export function isResidentDateInFuture(value: string): boolean {
-  const isoDate = toResidentBirthDateIso(value);
+  const isoDate = toResidentDateIso(value);
 
   if (!isoDate) {
     return false;
@@ -147,11 +162,21 @@ export function isResidentDateInFuture(value: string): boolean {
 }
 
 export function getResidentAgeFromBirthDate(value: string): number | null {
-  const isoDate = toResidentBirthDateIso(value);
+  const isoDate = toResidentDateIso(value);
 
   if (!isoDate) {
     return null;
   }
 
   return Math.max(calculateAge(isoDate), 0);
+}
+
+export function formatCurrentDateForResidentInput(
+  referenceDate: Date = new Date(),
+): string {
+  const day = String(referenceDate.getDate()).padStart(2, '0');
+  const month = String(referenceDate.getMonth() + 1).padStart(2, '0');
+  const year = String(referenceDate.getFullYear());
+
+  return `${day}/${month}/${year}`;
 }
