@@ -13,7 +13,10 @@ import {
   unwrapEnvelope,
 } from '../../../shared/lib/api-envelope';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
-import { toResidentDateIso } from '../lib/resident-form-utils';
+import {
+  buildResidentCuit,
+  toResidentDateIso,
+} from '../lib/resident-form-utils';
 import * as residentsService from '../services/residents-service';
 import type {
   ResidentBooleanAnswer,
@@ -140,9 +143,12 @@ export function useResidentsRoute() {
         documentType: values.documentType as ResidentDocumentType,
         documentNumber: values.documentNumber.trim(),
         documentIssuingCountry: values.documentIssuingCountry.trim(),
-        internalNumber: toOptionalString(values.internalNumber),
         procedureNumber: toOptionalString(values.procedureNumber),
-        cuil: toOptionalString(values.cuil),
+        cuil: buildResidentCuit(
+          values.documentNumber,
+          values.cuitPrefix,
+          values.cuitSuffix,
+        ),
         firstName: values.firstName.trim(),
         middleNames: values.middleNames.trim() || undefined,
         lastName: values.lastName.trim(),

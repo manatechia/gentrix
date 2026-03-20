@@ -1,5 +1,5 @@
 import { FieldArray, Formik, getIn } from 'formik';
-import type { ChangeEvent, FormEvent, ReactNode } from 'react';
+import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 
 import {
   documentIssuingCountryOptions,
@@ -13,9 +13,11 @@ import {
 import {
   createEmptyFamilyContact,
   createEmptyMedicalHistoryEntry,
+  formatResidentDigitsInput,
   formatCurrentDateForResidentInput,
   formatResidentAttachmentSize,
   formatResidentDateInput,
+  getResidentDocumentDigits,
   getResidentAgeFromBirthDate,
   maxResidentAttachmentCount,
   toResidentAttachmentFormValue,
@@ -35,6 +37,7 @@ import {
   secondaryButtonClassName,
   surfaceCardClassName,
 } from '../../../shared/ui/class-names';
+import { SelectField } from '../../../shared/ui/select-field';
 
 interface AdmissionsPanelProps {
   isSavingResident: boolean;
@@ -55,9 +58,37 @@ interface CollapsibleSectionProps {
   children: ReactNode;
 }
 
+interface ToggleCardFieldProps {
+  checked: boolean;
+  label: string;
+  name: string;
+  onBlur: (event: ChangeEvent<HTMLInputElement>) => void;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+}
+
 const textareaClassName = `${inputClassName} min-h-[132px] py-3`;
 const innerPanelClassName =
   'rounded-[24px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/60 p-5';
+const cuitFieldClassName =
+  'grid min-h-[54px] grid-cols-[92px_minmax(0,1fr)_72px] items-center rounded-full border border-[rgba(0,102,132,0.14)] bg-brand-neutral px-4 transition focus-within:border-[rgba(0,102,132,0.28)] focus-within:ring-2 focus-within:ring-[rgba(0,102,132,0.12)]';
+const cuitEditableSegmentClassName =
+  'h-full min-w-0 border-0 bg-transparent px-0 text-center text-[1rem] text-brand-text outline-none';
+const cuitReadonlySegmentClassName =
+  'flex h-[30px] items-center justify-center border-x border-[rgba(0,102,132,0.1)] px-4 text-[1rem] text-brand-text-secondary';
+const toggleCardClassName =
+  'flex min-h-[70px] cursor-pointer items-center gap-3 rounded-[22px] border border-[rgba(0,102,132,0.1)] bg-white/70 px-4 py-3 text-brand-text transition hover:border-[rgba(0,102,132,0.18)]';
+const documentIssuingCountrySelectOptions = documentIssuingCountryOptions.map(
+  (country) => ({
+    value: country,
+    label: country,
+  }),
+);
+const residentMaritalStatusSelectOptions = residentMaritalStatusOptions.map(
+  (status) => ({
+    value: status,
+    label: status,
+  }),
+);
 
 function ValidationMessage({ message }: ValidationMessageProps) {
   const hasMessage = typeof message === 'string' && message.trim().length > 0;
@@ -76,6 +107,45 @@ function ValidationMessage({ message }: ValidationMessageProps) {
   );
 }
 
+function ToggleCardField({
+  checked,
+  label,
+  name,
+  onBlur,
+  onChange,
+}: ToggleCardFieldProps) {
+  return (
+    <label className={toggleCardClassName}>
+      <input
+        className="peer sr-only"
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onBlur={onBlur}
+        onChange={onChange}
+      />
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[7px] border border-[rgba(0,102,132,0.22)] bg-white text-transparent transition peer-focus-visible:ring-4 peer-focus-visible:ring-[rgba(0,102,132,0.12)] peer-checked:border-brand-primary peer-checked:bg-brand-primary peer-checked:text-white">
+        <svg
+          viewBox="0 0 20 20"
+          fill="none"
+          className="h-3.5 w-3.5"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
+          <path
+            d="M5.5 10.5L8.5 13.5L14.5 7.5"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+      <span className="font-semibold">{label}</span>
+    </label>
+  );
+}
+
 function CollapsibleSection({
   title,
   description,
@@ -85,19 +155,46 @@ function CollapsibleSection({
   return (
     <details
       open={defaultOpen}
-      className="overflow-hidden rounded-[26px] border border-[rgba(0,102,132,0.1)] bg-white/90"
+      className="group rounded-[26px] border border-[rgba(0,102,132,0.1)] bg-white/90"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 [&::-webkit-details-marker]:hidden">
-        <div className="grid gap-1">
-          <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-            {title}
-          </span>
-          <span className="leading-[1.5] text-brand-text-secondary">
-            {description}
-          </span>
+      <summary
+        tabIndex={-1}
+        className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 outline-none [&::-webkit-details-marker]:hidden"
+      >
+        <div className="flex min-w-0 items-center gap-4">
+          <span
+            aria-hidden="true"
+            className="h-12 w-[4px] shrink-0 rounded-full bg-[rgb(46,161,105)] opacity-0 transition-opacity duration-200 group-open:opacity-100"
+          />
+
+          <div className="grid gap-1">
+            <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+              {title}
+            </span>
+            <span className="leading-[1.5] text-brand-text-secondary">
+              {description}
+            </span>
+          </div>
         </div>
-        <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-          Desplegable
+
+        <span
+          aria-hidden="true"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary transition-transform duration-200 group-open:rotate-180"
+        >
+          <svg
+            viewBox="0 0 20 20"
+            fill="none"
+            className="h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5 8L10 13L15 8"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </span>
       </summary>
 
@@ -172,6 +269,13 @@ function getAttachmentsError(errors: unknown): string | null {
     : null;
 }
 
+function getCuitMessage(errors: unknown, touched: unknown): string | undefined {
+  return (
+    getFieldMessage(errors, touched, 'cuitPrefix') ??
+    getFieldMessage(errors, touched, 'cuitSuffix')
+  );
+}
+
 export function AdmissionsPanel({
   isSavingResident,
   residentCount,
@@ -179,6 +283,8 @@ export function AdmissionsPanel({
   residentNotice,
   onSubmit,
 }: AdmissionsPanelProps) {
+  const [cuitDocumentSegment, setCuitDocumentSegment] = useState('');
+
   return (
     <article id="intake-panel" className={surfaceCardClassName}>
       <div className="mb-[18px] flex items-start justify-between gap-4">
@@ -224,6 +330,7 @@ export function AdmissionsPanel({
         validationSchema={residentIntakeSchema}
         onSubmit={async (values, helpers) => {
           await onSubmit(values);
+          setCuitDocumentSegment('');
           helpers.resetForm({
             values: {
               ...residentFormInitialValues,
@@ -245,6 +352,7 @@ export function AdmissionsPanel({
         }) => {
           const computedAge = getResidentAgeFromBirthDate(values.birthDate);
           const attachmentsError = getAttachmentsError(errors);
+          const cuitMessage = getCuitMessage(errors, touched);
 
           async function handleAttachmentChange(
             event: ChangeEvent<HTMLInputElement>,
@@ -302,25 +410,10 @@ export function AdmissionsPanel({
             >
               <CollapsibleSection
                 title="Identificacion e ingreso"
-                description="Num interno, documento, tramite, CUIL, fecha de ingreso y ubicacion del paciente."
+                description="Documento, tramite, CUIT, fecha de ingreso y ubicacion del paciente."
                 defaultOpen
               >
-                <div className="grid gap-[14px] min-[980px]:grid-cols-4">
-                  <label className="grid gap-2.5">
-                    <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                      Num interno
-                    </span>
-                    <input
-                      className={inputClassName}
-                      type="text"
-                      name="internalNumber"
-                      value={values.internalNumber}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    />
-                    <ValidationMessage />
-                  </label>
-
+                <div className="grid gap-[14px] min-[980px]:grid-cols-3">
                   <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Fecha ingreso
@@ -371,19 +464,17 @@ export function AdmissionsPanel({
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Nivel de cuidado
                     </span>
-                    <select
-                      className={inputClassName}
+                    <SelectField
                       name="careLevel"
                       value={values.careLevel}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    >
-                      {residentCareLevelOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                      options={residentCareLevelOptions}
+                      onBlur={() => {
+                        void setFieldTouched('careLevel', true);
+                      }}
+                      onChange={(nextValue) => {
+                        void setFieldValue('careLevel', nextValue);
+                      }}
+                    />
                     <ValidationMessage
                       message={getFieldMessage(errors, touched, 'careLevel')}
                     />
@@ -395,20 +486,18 @@ export function AdmissionsPanel({
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Tipo de documento
                     </span>
-                    <select
-                      className={inputClassName}
+                    <SelectField
                       name="documentType"
                       value={values.documentType}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    >
-                      <option value="">Seleccionar</option>
-                      {residentDocumentTypeOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                      options={residentDocumentTypeOptions}
+                      allowEmptyOption
+                      onBlur={() => {
+                        void setFieldTouched('documentType', true);
+                      }}
+                      onChange={(nextValue) => {
+                        void setFieldValue('documentType', nextValue);
+                      }}
+                    />
                     <ValidationMessage
                       message={getFieldMessage(errors, touched, 'documentType')}
                     />
@@ -423,7 +512,12 @@ export function AdmissionsPanel({
                       type="text"
                       name="documentNumber"
                       value={values.documentNumber}
-                      onBlur={handleBlur}
+                      onBlur={(event) => {
+                        handleBlur(event);
+                        setCuitDocumentSegment(
+                          getResidentDocumentDigits(event.target.value),
+                        );
+                      }}
                       onChange={handleChange}
                     />
                     <ValidationMessage
@@ -439,19 +533,17 @@ export function AdmissionsPanel({
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Pais emisor
                     </span>
-                    <select
-                      className={inputClassName}
+                    <SelectField
                       name="documentIssuingCountry"
                       value={values.documentIssuingCountry}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    >
-                      {documentIssuingCountryOptions.map((country) => (
-                        <option key={country} value={country}>
-                          {country}
-                        </option>
-                      ))}
-                    </select>
+                      options={documentIssuingCountrySelectOptions}
+                      onBlur={() => {
+                        void setFieldTouched('documentIssuingCountry', true);
+                      }}
+                      onChange={(nextValue) => {
+                        void setFieldValue('documentIssuingCountry', nextValue);
+                      }}
+                    />
                     <ValidationMessage
                       message={getFieldMessage(
                         errors,
@@ -480,17 +572,49 @@ export function AdmissionsPanel({
 
                   <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                      CUIL
+                      CUIT
                     </span>
-                    <input
-                      className={inputClassName}
-                      type="text"
-                      name="cuil"
-                      value={values.cuil}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    />
-                    <ValidationMessage />
+                    <div className={cuitFieldClassName}>
+                      <input
+                        className={cuitEditableSegmentClassName}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={2}
+                        name="cuitPrefix"
+                        value={values.cuitPrefix}
+                        onBlur={handleBlur}
+                        onChange={(event) => {
+                          void setFieldValue(
+                            'cuitPrefix',
+                            formatResidentDigitsInput(event.target.value, 2),
+                          );
+                        }}
+                      />
+
+                      <div
+                        aria-live="polite"
+                        className={cuitReadonlySegmentClassName}
+                      >
+                        {cuitDocumentSegment}
+                      </div>
+
+                      <input
+                        className={cuitEditableSegmentClassName}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        name="cuitSuffix"
+                        value={values.cuitSuffix}
+                        onBlur={handleBlur}
+                        onChange={(event) => {
+                          void setFieldValue(
+                            'cuitSuffix',
+                            formatResidentDigitsInput(event.target.value, 1),
+                          );
+                        }}
+                      />
+                    </div>
+                    <ValidationMessage message={cuitMessage} />
                   </label>
                 </div>
               </CollapsibleSection>
@@ -500,7 +624,7 @@ export function AdmissionsPanel({
                 description="Nombre completo, nacimiento, sexo, estado civil, nacionalidad y correo."
                 defaultOpen
               >
-                <div className="grid gap-[14px] min-[980px]:grid-cols-4">
+                <div className="grid gap-[14px] min-[980px]:grid-cols-2">
                   <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Nombre
@@ -533,6 +657,9 @@ export function AdmissionsPanel({
                     <ValidationMessage />
                   </label>
 
+                </div>
+
+                <div className="grid gap-[14px] min-[980px]:grid-cols-2">
                   <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Apellido
@@ -566,8 +693,8 @@ export function AdmissionsPanel({
                   </label>
                 </div>
 
-                <div className="grid gap-[14px] min-[980px]:grid-cols-3 min-[1320px]:grid-cols-6">
-                  <label className="grid gap-2.5 min-[1320px]:col-span-1">
+                <div className="grid gap-[14px] min-[980px]:grid-cols-3">
+                  <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Fecha nacimiento
                     </span>
@@ -592,69 +719,61 @@ export function AdmissionsPanel({
                     />
                   </label>
 
-                  <label className="grid gap-2.5 min-[1320px]:col-span-1">
+                  <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                      Edad calculada
+                      Edad
                     </span>
                     <input
-                      className={`${inputClassName} cursor-default text-brand-text-secondary`}
+                      className={`${inputClassName} cursor-default bg-white text-brand-text`}
                       type="text"
-                      value={
-                        computedAge === null
-                          ? 'Se calcula automaticamente'
-                          : `${computedAge} anos`
-                      }
+                      value={computedAge === null ? '' : `${computedAge} años`}
                       readOnly
                       tabIndex={-1}
                     />
                     <ValidationMessage />
                   </label>
 
-                  <label className="grid gap-2.5 min-[1320px]:col-span-1">
+                  <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Sexo
                     </span>
-                    <select
-                      className={inputClassName}
+                    <SelectField
                       name="sex"
                       value={values.sex}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    >
-                      <option value="">Seleccionar</option>
-                      {residentSexOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                      options={residentSexOptions}
+                      allowEmptyOption
+                      onBlur={() => {
+                        void setFieldTouched('sex', true);
+                      }}
+                      onChange={(nextValue) => {
+                        void setFieldValue('sex', nextValue);
+                      }}
+                    />
                     <ValidationMessage
                       message={getFieldMessage(errors, touched, 'sex')}
                     />
                   </label>
 
-                  <label className="grid gap-2.5 min-[1320px]:col-span-1">
+                  <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Estado civil
                     </span>
-                    <select
-                      className={inputClassName}
+                    <SelectField
                       name="maritalStatus"
                       value={values.maritalStatus}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    >
-                      <option value="">Seleccionar</option>
-                      {residentMaritalStatusOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                      options={residentMaritalStatusSelectOptions}
+                      allowEmptyOption
+                      onBlur={() => {
+                        void setFieldTouched('maritalStatus', true);
+                      }}
+                      onChange={(nextValue) => {
+                        void setFieldValue('maritalStatus', nextValue);
+                      }}
+                    />
                     <ValidationMessage />
                   </label>
 
-                  <label className="grid gap-2.5 min-[1320px]:col-span-1">
+                  <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Nacionalidad
                     </span>
@@ -669,7 +788,7 @@ export function AdmissionsPanel({
                     <ValidationMessage />
                   </label>
 
-                  <label className="grid gap-2.5 min-[1320px]:col-span-1">
+                  <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                       Correo electronico
                     </span>
@@ -715,7 +834,7 @@ export function AdmissionsPanel({
 
                       <label className="grid gap-2.5">
                         <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                          Num beneficio
+                          Numero de beneficiario
                         </span>
                         <input
                           className={inputClassName}
@@ -987,20 +1106,21 @@ export function AdmissionsPanel({
                           <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                             Fuma
                           </span>
-                          <select
-                            className={inputClassName}
+                          <SelectField
                             name="clinicalProfile.smokes"
                             value={values.clinicalProfile.smokes}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                          >
-                            <option value="">Seleccionar</option>
-                            {residentBooleanAnswerOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
+                            options={residentBooleanAnswerOptions}
+                            allowEmptyOption
+                            onBlur={() => {
+                              void setFieldTouched('clinicalProfile.smokes', true);
+                            }}
+                            onChange={(nextValue) => {
+                              void setFieldValue(
+                                'clinicalProfile.smokes',
+                                nextValue,
+                              );
+                            }}
+                          />
                           <ValidationMessage />
                         </label>
 
@@ -1008,20 +1128,24 @@ export function AdmissionsPanel({
                           <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                             Bebe alcohol
                           </span>
-                          <select
-                            className={inputClassName}
+                          <SelectField
                             name="clinicalProfile.drinksAlcohol"
                             value={values.clinicalProfile.drinksAlcohol}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                          >
-                            <option value="">Seleccionar</option>
-                            {residentBooleanAnswerOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
+                            options={residentBooleanAnswerOptions}
+                            allowEmptyOption
+                            onBlur={() => {
+                              void setFieldTouched(
+                                'clinicalProfile.drinksAlcohol',
+                                true,
+                              );
+                            }}
+                            onChange={(nextValue) => {
+                              void setFieldValue(
+                                'clinicalProfile.drinksAlcohol',
+                                nextValue,
+                              );
+                            }}
+                          />
                           <ValidationMessage />
                         </label>
 
@@ -1184,7 +1308,7 @@ export function AdmissionsPanel({
                 {({ push, remove }) => (
                   <CollapsibleSection
                     title="Familiares y contactos"
-                    description="Permite cargar uno o varios contactos con parentesco, telefono, direccion y notas."
+                    description="Permite cargar uno o varios contactos de referencia con parentesco, telefono, direccion y notas."
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
@@ -1364,58 +1488,46 @@ export function AdmissionsPanel({
               </FieldArray>
 
               <CollapsibleSection
-                title="Pertenencias y egreso"
-                description="Marca lo que trae el paciente al ingreso y deja lista la informacion de salida cuando exista."
+                title="Pertenencias"
+                description="Marca lo que trae el paciente al ingreso y deja registradas observaciones utiles."
               >
                 <article className={innerPanelClassName}>
                   <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
                     Pertenencias
                   </span>
 
-                  <div className="mt-4 grid gap-3 min-[900px]:grid-cols-2 min-[1240px]:grid-cols-4">
-                    <label className="flex min-h-[70px] items-center gap-3 rounded-[22px] border border-[rgba(0,102,132,0.1)] bg-white/70 px-4 py-3 text-brand-text">
-                      <input
-                        type="checkbox"
-                        name="belongings.glasses"
-                        checked={values.belongings.glasses}
-                        onBlur={handleBlur}
-                        onChange={handleChange}
-                      />
-                      <span className="font-semibold">Anteojos</span>
-                    </label>
+                  <div className="mt-4 grid gap-3 min-[900px]:grid-cols-2">
+                    <ToggleCardField
+                      name="belongings.glasses"
+                      label="Anteojos"
+                      checked={values.belongings.glasses}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                    />
 
-                    <label className="flex min-h-[70px] items-center gap-3 rounded-[22px] border border-[rgba(0,102,132,0.1)] bg-white/70 px-4 py-3 text-brand-text">
-                      <input
-                        type="checkbox"
-                        name="belongings.dentures"
-                        checked={values.belongings.dentures}
-                        onBlur={handleBlur}
-                        onChange={handleChange}
-                      />
-                      <span className="font-semibold">Dentaduras</span>
-                    </label>
+                    <ToggleCardField
+                      name="belongings.dentures"
+                      label="Dentaduras"
+                      checked={values.belongings.dentures}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                    />
 
-                    <label className="flex min-h-[70px] items-center gap-3 rounded-[22px] border border-[rgba(0,102,132,0.1)] bg-white/70 px-4 py-3 text-brand-text">
-                      <input
-                        type="checkbox"
-                        name="belongings.walker"
-                        checked={values.belongings.walker}
-                        onBlur={handleBlur}
-                        onChange={handleChange}
-                      />
-                      <span className="font-semibold">Andador</span>
-                    </label>
+                    <ToggleCardField
+                      name="belongings.walker"
+                      label="Andador"
+                      checked={values.belongings.walker}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                    />
 
-                    <label className="flex min-h-[70px] items-center gap-3 rounded-[22px] border border-[rgba(0,102,132,0.1)] bg-white/70 px-4 py-3 text-brand-text">
-                      <input
-                        type="checkbox"
-                        name="belongings.orthopedicBed"
-                        checked={values.belongings.orthopedicBed}
-                        onBlur={handleBlur}
-                        onChange={handleChange}
-                      />
-                      <span className="font-semibold">Cama ortopedica</span>
-                    </label>
+                    <ToggleCardField
+                      name="belongings.orthopedicBed"
+                      label="Cama ortopedica"
+                      checked={values.belongings.orthopedicBed}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                    />
                   </div>
 
                   <label className="mt-[14px] grid gap-2.5">
@@ -1431,53 +1543,6 @@ export function AdmissionsPanel({
                     />
                     <ValidationMessage />
                   </label>
-                </article>
-
-                <article className={innerPanelClassName}>
-                  <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                    Egreso
-                  </span>
-
-                  <div className="mt-4 grid gap-[14px] min-[980px]:grid-cols-[220px_minmax(0,1fr)]">
-                    <label className="grid gap-2.5">
-                      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                        Fecha salida
-                      </span>
-                      <input
-                        className={inputClassName}
-                        type="text"
-                        name="discharge.date"
-                        inputMode="numeric"
-                        maxLength={10}
-                        placeholder="DD/MM/YYYY"
-                        value={values.discharge.date}
-                        onBlur={handleBlur}
-                        onChange={(event) => {
-                          void setFieldValue(
-                            'discharge.date',
-                            formatResidentDateInput(event.target.value),
-                          );
-                        }}
-                      />
-                      <ValidationMessage
-                        message={getFieldMessage(errors, touched, 'discharge.date')}
-                      />
-                    </label>
-
-                    <label className="grid gap-2.5">
-                      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                        Motivo
-                      </span>
-                      <textarea
-                        className={`${textareaClassName} min-h-[110px]`}
-                        name="discharge.reason"
-                        value={values.discharge.reason}
-                        onBlur={handleBlur}
-                        onChange={handleChange}
-                      />
-                      <ValidationMessage />
-                    </label>
-                  </div>
                 </article>
               </CollapsibleSection>
 

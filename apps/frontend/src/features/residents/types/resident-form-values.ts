@@ -80,9 +80,9 @@ export interface ResidentFormValues {
   documentType: string;
   documentNumber: string;
   documentIssuingCountry: string;
-  internalNumber: string;
   procedureNumber: string;
-  cuil: string;
+  cuitPrefix: string;
+  cuitSuffix: string;
   firstName: string;
   middleNames: string;
   lastName: string;

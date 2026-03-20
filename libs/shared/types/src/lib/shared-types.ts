@@ -213,7 +213,6 @@ export interface ResidentCreateInput {
   documentType: ResidentDocumentType;
   documentNumber: string;
   documentIssuingCountry: string;
-  internalNumber?: string;
   procedureNumber?: string;
   cuil?: string;
   birthDate: IsoDateString;
