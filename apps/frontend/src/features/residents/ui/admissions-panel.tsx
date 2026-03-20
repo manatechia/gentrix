@@ -85,7 +85,7 @@ function CollapsibleSection({
   return (
     <details
       open={defaultOpen}
-      className="overflow-hidden rounded-[26px] border border-[rgba(0,102,132,0.1)] bg-white/90"
+      className="group overflow-hidden rounded-[26px] border border-[rgba(0,102,132,0.1)] bg-white/90"
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 [&::-webkit-details-marker]:hidden">
         <div className="grid gap-1">
@@ -96,8 +96,24 @@ function CollapsibleSection({
             {description}
           </span>
         </div>
-        <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-          Desplegable
+        <span
+          aria-hidden="true"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary transition-transform duration-200 group-open:rotate-180"
+        >
+          <svg
+            viewBox="0 0 20 20"
+            fill="none"
+            className="h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5 8L10 13L15 8"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </span>
       </summary>
 
