@@ -26,6 +26,13 @@ FROM workspace AS frontend-build
 
 RUN pnpm nx run frontend:build
 
+FROM workspace AS frontend-dev
+
+ENV NODE_ENV=development
+EXPOSE 4200
+
+CMD ["pnpm", "nx", "serve", "frontend", "--host", "0.0.0.0"]
+
 FROM node:22-bookworm-slim AS backend-runtime
 
 WORKDIR /app

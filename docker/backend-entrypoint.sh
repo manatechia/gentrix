@@ -11,4 +11,3 @@ fi
 
 echo "Starting Gentrix backend..."
 exec node dist/apps/backend/main.js
-

@@ -94,6 +94,38 @@ export function ResidentDetailWorkspace({
   onRetry,
 }: ResidentDetailWorkspaceProps) {
   const navigate = useNavigate();
+  const headerDetails = resident
+    ? [
+        {
+          label: 'Ingreso',
+          value: showDateValue(resident.admissionDate),
+        },
+        {
+          label: 'Nacimiento',
+          value: showDateValue(resident.birthDate),
+        },
+        {
+          label: 'Edad',
+          value: `${resident.age} años`,
+        },
+      ]
+    : [];
+  const overviewDetails = resident
+    ? [
+        {
+          label: 'Interno',
+          value: showValue(resident.internalNumber),
+        },
+        {
+          label: 'Habitacion',
+          value: showValue(resident.room),
+        },
+        {
+          label: 'Cuidado',
+          value: formatResidentCareLevel(resident.careLevel),
+        },
+      ]
+    : [];
 
   return (
     <WorkspaceShell
@@ -111,11 +143,27 @@ export function ResidentDetailWorkspace({
           <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
             {resident?.fullName ?? 'Detalle del residente'}
           </h1>
-          <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
-            Consulta la ficha actual del paciente con sus datos de
-            identificacion, cobertura, salud, pertenencias y contactos
-            familiares.
-          </p>
+          {resident ? (
+            <div className="grid gap-3 pt-1 min-[680px]:grid-cols-3">
+              {headerDetails.map((detail) => (
+                <article
+                  key={detail.label}
+                  className="rounded-[20px] bg-brand-neutral px-4 py-3"
+                >
+                  <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
+                    {detail.label}
+                  </span>
+                  <strong className="mt-1.5 block text-brand-text">
+                    {detail.value}
+                  </strong>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
+              Consulta la ficha actual del residente y sus datos principales.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-3">
@@ -161,53 +209,25 @@ export function ResidentDetailWorkspace({
             className={`${surfaceCardClassName} grid gap-5 min-[980px]:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)]`}
           >
             <div className="grid gap-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-[1.65rem] font-bold tracking-[-0.04em] text-brand-text">
-                  {resident.fullName}
-                </span>
-                <span
-                  className={`${badgeBaseClassName} bg-brand-primary/12 text-brand-primary`}
-                >
-                  {formatEntityStatus(resident.status)}
-                </span>
-              </div>
-              <p className="max-w-[64ch] leading-[1.7] text-brand-text-secondary">
-                Habitacion {resident.room}, {resident.age} años, nivel de
-                cuidado {formatResidentCareLevel(resident.careLevel).toLowerCase()}.
-              </p>
-              <div className="grid gap-3 min-[680px]:grid-cols-4">
-                <article className="rounded-[22px] bg-brand-neutral px-4 py-4">
-                  <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-                    Interno
-                  </span>
-                  <strong className="mt-2 block text-brand-text">
-                    {showValue(resident.internalNumber)}
-                  </strong>
-                </article>
-                <article className="rounded-[22px] bg-brand-neutral px-4 py-4">
-                  <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-                    Ingreso
-                  </span>
-                  <strong className="mt-2 block text-brand-text">
-                    {formatDate(resident.admissionDate)}
-                  </strong>
-                </article>
-                <article className="rounded-[22px] bg-brand-neutral px-4 py-4">
-                  <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-                    Nacimiento
-                  </span>
-                  <strong className="mt-2 block text-brand-text">
-                    {formatDate(resident.birthDate)}
-                  </strong>
-                </article>
-                <article className="rounded-[22px] bg-brand-neutral px-4 py-4">
-                  <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-                    Edad
-                  </span>
-                  <strong className="mt-2 block text-brand-text">
-                    {resident.age} años
-                  </strong>
-                </article>
+              <span
+                className={`${badgeBaseClassName} w-fit bg-brand-primary/12 text-brand-primary`}
+              >
+                {formatEntityStatus(resident.status)}
+              </span>
+              <div className="grid gap-3 min-[680px]:grid-cols-3">
+                {overviewDetails.map((detail) => (
+                  <article
+                    key={detail.label}
+                    className="rounded-[22px] bg-brand-neutral px-4 py-4"
+                  >
+                    <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
+                      {detail.label}
+                    </span>
+                    <strong className="mt-2 block text-brand-text">
+                      {detail.value}
+                    </strong>
+                  </article>
+                ))}
               </div>
             </div>
 
