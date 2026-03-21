@@ -4,7 +4,7 @@ import { ResidentsService } from './application/residents.service';
 import {
   RESIDENT_REPOSITORY,
 } from './domain/repositories/resident.repository';
-import { InMemoryResidentRepository } from './infrastructure/persistence/in-memory/in-memory-resident.repository';
+import { PrismaResidentRepository } from './infrastructure/persistence/prisma/prisma-resident.repository';
 import { ResidentsController } from './presentation/controllers/residents.controller';
 
 @Module({
@@ -13,7 +13,7 @@ import { ResidentsController } from './presentation/controllers/residents.contro
     ResidentsService,
     {
       provide: RESIDENT_REPOSITORY,
-      useClass: InMemoryResidentRepository,
+      useClass: PrismaResidentRepository,
     },
   ],
   exports: [ResidentsService, RESIDENT_REPOSITORY],

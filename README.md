@@ -38,7 +38,7 @@ Package manager oficial del repo: `pnpm`.
 - `POST /api/auth/logout`: cierra la sesion actual.
 - `GET /api/dashboard`: snapshot operativo para el frontend.
 - `GET /api/residents`: residentes resumidos.
-- `POST /api/residents`: alta de residentes persistida en memoria.
+- `POST /api/residents`: alta de residentes persistida en PostgreSQL via Prisma.
 - `GET /api/staff`: personal resumido.
 - `GET /api/medications`: medicacion resumida.
 
@@ -47,13 +47,26 @@ Package manager oficial del repo: `pnpm`.
 - `admin@gentrix.local`
 - `gentrix123`
 
+## Docker
+
+- `docker compose up --build` levanta `frontend`, `backend` y `postgres`.
+- Frontend: `http://localhost:4200`
+- Backend: `http://localhost:3333`
+- PostgreSQL: `localhost:55432`
+- El backend aplica `prisma migrate deploy` al arrancar.
+- Si la base esta vacia y `AUTO_SEED_DEMO=true`, carga los datos demo una sola vez.
+- Se pueden sobreescribir los puertos host con `FRONTEND_PORT`, `BACKEND_PORT` y `POSTGRES_PORT`.
+- Para resetear todo el estado local: `docker compose down -v`
+- Para resembrar manualmente una base ya creada: `docker compose exec backend node apps/backend/prisma/seed.mjs`
+
 ## Base De Datos
 
 - Copiar `.env.example` a `.env` y ajustar `DATABASE_URL` segun el entorno local.
 - La estructura PostgreSQL ya esta versionada en `prisma.config.ts`, `apps/backend/prisma/schema.prisma` y `apps/backend/prisma/migrations`.
 - Los seeds iniciales cargan usuarios, residentes, medicacion, eventos clinicos y horarios.
-- La API todavia corre con repositorios in-memory mientras terminamos la capa Prisma en runtime.
-- Por eso Prisma queda versionado y listo para migraciones/seeds, pero no se inicializa en el arranque actual del backend.
+- Residentes ya leen y escriben contra PostgreSQL via Prisma.
+- Staff, medicacion y autenticacion demo todavia usan repositorios in-memory.
+- Prisma ya se inicializa en el arranque del backend para el modulo de residentes.
 
 ## Nota De Desarrollo
 

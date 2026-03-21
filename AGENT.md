@@ -12,13 +12,13 @@ Al final de cada prompt se debe actualizar este archivo para reflejar el nuevo e
 - Workspace: monorepo Nx integrado.
 - Nombre del workspace: `gentrix`.
 - Stack actual: Nx + TypeScript + React/Vite + NestJS.
-- Direccion tecnica actual: frontend por features con router y backend NestJS + DDD con persistencia runtime in-memory y base PostgreSQL/Prisma versionada.
+- Direccion tecnica actual: frontend por features con router y backend NestJS + DDD con residentes persistidos en PostgreSQL/Prisma y otros modulos todavia en runtime in-memory.
 - Direccion operativa recomendada: frontend con features dentro de `apps/frontend` por ahora y backend por modulos de dominio con capas claras.
 - Persistencia inicial acordada: PostgreSQL + Prisma.
 - Package manager: `pnpm`.
 - Objetivo actual: base funcional de frontend y backend para el sistema del geriatrico.
 - Producto MVP actual: consola unica con login separado y operacion integrada en un solo workspace.
-- Alta de residentes actual: persiste en memoria del backend durante la vida del proceso.
+- Alta de residentes actual: persiste en PostgreSQL via Prisma.
 - Estado de base de datos: schema, migracion inicial y seed de Prisma ya versionados en `apps/backend/prisma`.
 
 ## Contexto De Negocio
@@ -83,7 +83,7 @@ Al final de cada prompt se debe actualizar este archivo para reflejar el nuevo e
 - `POST /api/auth/logout`: invalida la sesion actual.
 - `GET /api/dashboard`: snapshot operativo del geriatrico.
 - `GET /api/residents`: residentes resumidos.
-- `POST /api/residents`: alta de residentes persistida en memoria.
+- `POST /api/residents`: alta de residentes persistida en PostgreSQL via Prisma.
 - `GET /api/staff`: personal resumido.
 - `GET /api/medications`: medicacion resumida.
 
@@ -136,7 +136,7 @@ Al final de cada prompt se debe actualizar este archivo para reflejar el nuevo e
 - El footer del sidebar debe quedar anclado abajo por layout, no solo por orden visual.
 - El nombre y resumen del usuario logueado deben vivir en el footer del sidebar, por encima de `Cerrar sesion`.
 - La escala tipografica global del frontend quedo reducida respecto de la version anterior.
-- El alta de pacientes vive en frontend dentro de la misma shell y persiste en memoria del backend hasta reiniciar el proceso.
+- El alta de pacientes vive en frontend dentro de la misma shell y persiste en PostgreSQL via Prisma.
 - La composicion del frontend debe mantenerse separada en componentes por seccion y hooks/lib para estado y utilidades.
 - Se agrego un acuerdo tecnico versionable en `docs/engineering-working-agreement.md` para centralizar decisiones de infraestructura y buenas practicas.
 
@@ -152,7 +152,7 @@ Al final de cada prompt se debe actualizar este archivo para reflejar el nuevo e
 
 ## Pendientes Probables
 
-- Conectar los repositorios runtime del backend a Prisma/PostgreSQL cuando dejemos de operar in-memory.
+- Migrar staff, medicacion y autenticacion demo a Prisma/PostgreSQL para cerrar el gap con residentes.
 - Evaluar mover la nueva estructura del frontend a libs Nx (`data-access`, `feature`, `ui`) cuando deje de ser suficiente la separacion interna en `apps/frontend`.
 - Agregar tests reales para frontend, backend y librerias.
 - Incorporar autenticacion y configuracion por entorno.
@@ -206,7 +206,7 @@ Al final de cada prompt se debe actualizar este archivo para reflejar el nuevo e
 - `corepack pnpm check`
 - Estado: OK el 2026-03-19 luego de migrar el frontend principal a Tailwind y separar la UI en componentes
 - `corepack pnpm check`
-- Estado: OK el 2026-03-20 luego de persistir el alta de residentes en memoria y agregar `POST /api/residents`
+- Estado: OK el 2026-03-20 luego de conectar el alta de residentes a PostgreSQL via Prisma y mantener `POST /api/residents`
 - `corepack pnpm check`
 - Estado: OK el 2026-03-20 luego de migrar frontend y backend a la nueva infraestructura base
 - Smoke test: login `POST /api/auth/login` + acceso autenticado a `GET /api/dashboard`
@@ -257,7 +257,9 @@ Al final de cada prompt se debe actualizar este archivo para reflejar el nuevo e
 
 ### 2026-03-20
 
-- Se agrego `POST /api/residents` para persistir altas de residentes en memoria del backend.
+- Se conecto `POST /api/residents` a PostgreSQL via Prisma para persistir altas reales de residentes.
+- Se dockerizo el monorepo con `docker compose`, imagenes separadas para frontend/backend, Nginx para el frontend y PostgreSQL para la base local.
+- Se agrego bootstrap de contenedores para correr `prisma migrate deploy` al arrancar el backend y sembrar demo data solo si la base esta vacia.
 - Se conecto el formulario de altas del frontend al backend y se elimino el draft local como fuente principal.
 - Se creo `docs/engineering-working-agreement.md` como cuestionario y acuerdo tecnico versionable.
 - Se actualizo `AGENT.md` para reflejar el nuevo estado del flujo de residentes y la nueva fuente de decisiones tecnicas.
