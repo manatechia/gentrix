@@ -42,12 +42,32 @@ model Session {
 model Resident {
   id               String                @id @default(uuid()) @db.Uuid
   firstName        String
+  middleNames      String?
   lastName         String
+  otherLastNames   String?
+  documentType     String?
+  documentNumber   String?
+  documentIssuingCountry String?
+  internalNumber   String?
+  procedureNumber  String?
+  cuil             String?
   birthDate        DateTime
   admissionDate    DateTime
+  sex              String?
+  maritalStatus    String?
+  nationality      String?
+  email            String?
   room             String
   careLevel        String
   status           String
+  attachments      Json?
+  insurance        Json?
+  transfer         Json?
+  psychiatry       Json?
+  clinicalProfile  Json?
+  belongings       Json?
+  familyContacts   Json?
+  discharge        Json?
   address          Json
   emergencyContact Json
   createdAt        DateTime

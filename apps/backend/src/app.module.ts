@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MedicationModule } from './modules/medication/medication.module';
 import { ResidentsModule } from './modules/residents/residents.module';
@@ -13,6 +14,7 @@ import { SystemModule } from './modules/system/system.module';
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
     }),
+    PrismaModule,
     AuthModule,
     ResidentsModule,
     StaffModule,

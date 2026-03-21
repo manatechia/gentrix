@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { pathToFileURL } from 'node:url';
 
-const prisma = new PrismaClient();
+import { createPrismaClient } from './prisma-client.mjs';
 const ids = {
   users: {
     sofiaQuiroga: '8f4e8eb5-f02f-49f3-8c1e-e8fba2264ec6',
@@ -31,7 +31,7 @@ const ids = {
   },
 };
 
-async function main() {
+export async function seedDatabase(prisma) {
   await prisma.session.deleteMany();
   await prisma.staffSchedule.deleteMany();
   await prisma.clinicalHistoryEvent.deleteMany();
@@ -59,12 +59,72 @@ async function main() {
       {
         id: ids.residents.martaDiaz,
         firstName: 'Marta',
+        middleNames: '',
         lastName: 'Diaz',
+        otherLastNames: '',
+        documentType: 'dni',
+        documentNumber: '30123456',
+        documentIssuingCountry: 'Argentina',
+        internalNumber: 'resident-internal-marta-diaz-30123456-a-101',
+        procedureNumber: 'TRM-30123456',
+        cuil: '27-30123456-3',
         birthDate: new Date('1942-05-19T00:00:00.000Z'),
         admissionDate: new Date('2024-11-03T12:00:00.000Z'),
+        sex: 'femenino',
+        maritalStatus: 'Viuda',
+        nationality: 'Argentina',
+        email: 'marta.diaz@sin-email.local',
         room: 'A-101',
         careLevel: 'assisted',
         status: 'active',
+        attachments: [],
+        insurance: {
+          provider: 'PAMI',
+          memberNumber: '4587-221904',
+        },
+        transfer: {
+          provider: 'SAME',
+          address: 'Av. Directorio 1800, CABA',
+          phone: '+54 11 4321-7788',
+        },
+        psychiatry: {
+          provider: 'Centro Amelia Salud Mental',
+          careLocation: 'Consultorio externo',
+          address: 'Av. Rivadavia 5200, CABA',
+          phone: '+54 11 4567-8832',
+        },
+        clinicalProfile: {
+          allergies: 'Sin alergias medicamentosas informadas.',
+          emergencyCareLocation: 'Hospital Durand',
+          clinicalRecordNumber: 'HC-77541',
+          primaryDoctorName: 'Dra. Lucia Mendez',
+          primaryDoctorOfficeAddress: 'Av. Medrano 1120, CABA',
+          primaryDoctorOfficePhone: '+54 11 4988-1200',
+          pathologies: 'Hipertension arterial y deterioro cognitivo leve.',
+          surgeries: 'Apendicectomia y reemplazo total de rodilla derecha.',
+          smokes: false,
+          drinksAlcohol: false,
+          currentWeightKg: 62.4,
+        },
+        belongings: {
+          glasses: true,
+          dentures: false,
+          walker: false,
+          orthopedicBed: false,
+          notes: 'Ropa de cambio, album familiar y calzado ortopedico.',
+        },
+        familyContacts: [
+          {
+            id: 'resident-family-contact-marta-diaz',
+            fullName: 'Laura Perez',
+            relationship: 'Hija',
+            phone: '+54 11 5555-0101',
+            email: 'laura.perez@familia.local',
+            address: 'Paysandu 1402, CABA',
+            notes: 'Coordina tramites y acompanamiento en consultas.',
+          },
+        ],
+        discharge: {},
         address: {
           street: 'Av. Siempreviva 742',
           city: 'Buenos Aires',
@@ -85,12 +145,72 @@ async function main() {
       {
         id: ids.residents.elenaSuarez,
         firstName: 'Elena',
+        middleNames: '',
         lastName: 'Suarez',
+        otherLastNames: '',
+        documentType: 'dni',
+        documentNumber: '28987456',
+        documentIssuingCountry: 'Argentina',
+        internalNumber: 'resident-internal-elena-suarez-28987456-b-204',
+        procedureNumber: 'TRM-28987456',
+        cuil: '27-28987456-1',
         birthDate: new Date('1943-06-12T00:00:00.000Z'),
         admissionDate: new Date('2024-12-01T12:00:00.000Z'),
+        sex: 'femenino',
+        maritalStatus: 'Casada',
+        nationality: 'Argentina',
+        email: 'elena.suarez@sin-email.local',
         room: 'B-204',
         careLevel: 'memory-care',
         status: 'active',
+        attachments: [],
+        insurance: {
+          provider: 'PAMI',
+          memberNumber: '5120-338761',
+        },
+        transfer: {
+          provider: 'SAME',
+          address: 'Av. Directorio 1800, CABA',
+          phone: '+54 11 4321-7788',
+        },
+        psychiatry: {
+          provider: 'Centro Amelia Salud Mental',
+          careLocation: 'Consultorio externo',
+          address: 'Av. Rivadavia 5200, CABA',
+          phone: '+54 11 4567-8832',
+        },
+        clinicalProfile: {
+          allergies: 'Sin alergias medicamentosas informadas.',
+          emergencyCareLocation: 'Hospital Durand',
+          clinicalRecordNumber: 'HC-77542',
+          primaryDoctorName: 'Dra. Lucia Mendez',
+          primaryDoctorOfficeAddress: 'Av. Medrano 1120, CABA',
+          primaryDoctorOfficePhone: '+54 11 4988-1200',
+          pathologies: 'Deterioro cognitivo con desorientacion vespertina.',
+          surgeries: 'Colecistectomia laparoscopica.',
+          smokes: false,
+          drinksAlcohol: false,
+          currentWeightKg: 58.1,
+        },
+        belongings: {
+          glasses: true,
+          dentures: true,
+          walker: false,
+          orthopedicBed: false,
+          notes: 'Caja organizadora de medicacion y manta personal.',
+        },
+        familyContacts: [
+          {
+            id: 'resident-family-contact-elena-suarez',
+            fullName: 'Claudia Suarez',
+            relationship: 'Hija',
+            phone: '+54 11 5555-0132',
+            email: 'claudia.suarez@familia.local',
+            address: 'Av. Montes de Oca 1100, CABA',
+            notes: 'Referencia principal para tramites y acompanamiento.',
+          },
+        ],
+        discharge: {},
         address: {
           street: 'Av. Siempreviva 742',
           city: 'Buenos Aires',
@@ -99,9 +219,9 @@ async function main() {
           room: 'B-204',
         },
         emergencyContact: {
-          fullName: 'Laura Perez',
+          fullName: 'Claudia Suarez',
           relationship: 'Hija',
-          phone: '+54 11 5555-0101',
+          phone: '+54 11 5555-0132',
         },
         createdAt: new Date('2026-01-10T09:00:00.000Z'),
         createdBy: 'seed-script',
@@ -111,12 +231,72 @@ async function main() {
       {
         id: ids.residents.raulBenitez,
         firstName: 'Raul',
+        middleNames: '',
         lastName: 'Benitez',
+        otherLastNames: '',
+        documentType: 'dni',
+        documentNumber: '25440991',
+        documentIssuingCountry: 'Argentina',
+        internalNumber: 'resident-internal-raul-benitez-25440991-c-301',
+        procedureNumber: 'TRM-25440991',
+        cuil: '20-25440991-7',
         birthDate: new Date('1939-02-08T00:00:00.000Z'),
         admissionDate: new Date('2025-01-14T12:00:00.000Z'),
+        sex: 'masculino',
+        maritalStatus: 'Viudo',
+        nationality: 'Argentina',
+        email: 'raul.benitez@sin-email.local',
         room: 'C-301',
         careLevel: 'high-dependency',
         status: 'active',
+        attachments: [],
+        insurance: {
+          provider: 'OSDE',
+          memberNumber: '8842-110321',
+        },
+        transfer: {
+          provider: 'SAME',
+          address: 'Av. Directorio 1800, CABA',
+          phone: '+54 11 4321-7788',
+        },
+        psychiatry: {
+          provider: '',
+          careLocation: '',
+          address: '',
+          phone: '',
+        },
+        clinicalProfile: {
+          allergies: 'Alergia reportada a penicilina.',
+          emergencyCareLocation: 'Hospital Italiano',
+          clinicalRecordNumber: 'HC-77543',
+          primaryDoctorName: 'Dr. Lucio Ferreyra',
+          primaryDoctorOfficeAddress: 'Av. Rivadavia 3311, CABA',
+          primaryDoctorOfficePhone: '+54 11 4822-9911',
+          pathologies: 'Secuela motora post ACV y diabetes tipo 2.',
+          surgeries: 'Bypass femoropopliteo.',
+          smokes: false,
+          drinksAlcohol: false,
+          currentWeightKg: 74.8,
+        },
+        belongings: {
+          glasses: false,
+          dentures: true,
+          walker: true,
+          orthopedicBed: true,
+          notes: 'Baston plegable y documentacion de cobertura medica.',
+        },
+        familyContacts: [
+          {
+            id: 'resident-family-contact-raul-benitez',
+            fullName: 'Nadia Benitez',
+            relationship: 'Hija',
+            phone: '+54 11 5555-0140',
+            email: 'nadia.benitez@familia.local',
+            address: 'Constitucion 944, CABA',
+            notes: 'Autoriza traslados y acompanamiento clinico.',
+          },
+        ],
+        discharge: {},
         address: {
           street: 'Av. Siempreviva 742',
           city: 'Buenos Aires',
@@ -309,12 +489,20 @@ async function main() {
   });
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (error) => {
-    console.error(error);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+const isDirectExecution =
+  typeof process.argv[1] === 'string' &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectExecution) {
+  const prisma = createPrismaClient();
+
+  seedDatabase(prisma)
+    .then(async () => {
+      await prisma.$disconnect();
+    })
+    .catch(async (error) => {
+      console.error(error);
+      await prisma.$disconnect();
+      process.exit(1);
+    });
+}
