@@ -5,10 +5,12 @@ import { AuthCheckingScreen } from '../features/auth/ui/auth-checking-screen';
 import { LoginScreen } from '../features/auth/ui/login-screen';
 import { useDashboardRoute } from '../features/dashboard/hooks/use-dashboard-route';
 import { DashboardWorkspace } from '../features/dashboard/ui/dashboard-workspace';
+import { useResidentEditRoute } from '../features/residents/hooks/use-resident-edit-route';
 import { useResidentDetailRoute } from '../features/residents/hooks/use-resident-detail-route';
 import { useResidentsRoute } from '../features/residents/hooks/use-residents-route';
 import { ResidentCreateWorkspace } from '../features/residents/ui/resident-create-workspace';
 import { ResidentDetailWorkspace } from '../features/residents/ui/resident-detail-workspace';
+import { ResidentEditWorkspace } from '../features/residents/ui/resident-edit-workspace';
 import { ResidentsWorkspace } from '../features/residents/ui/residents-workspace';
 
 function LoginRoute() {
@@ -146,6 +148,50 @@ function ResidentDetailRoute() {
   );
 }
 
+function ResidentEditRoute() {
+  const auth = useAuthSession();
+  const residents = useResidentsRoute();
+  const { residentId } = useParams();
+  const edit = useResidentEditRoute(residentId);
+  const navigate = useNavigate();
+
+  if (auth.status === 'checking') {
+    return <AuthCheckingScreen />;
+  }
+
+  if (!auth.session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <ResidentEditWorkspace
+      screenState={edit.screenState}
+      session={auth.session}
+      residentCount={residents.residentCount}
+      resident={edit.resident}
+      residentError={edit.residentError}
+      isSavingResident={edit.isSavingResident}
+      residentNoticeTone={edit.residentNoticeTone}
+      residentNotice={edit.residentNotice}
+      onResidentUpdate={async (values) => {
+        const updatedResident = await edit.handleResidentUpdate(values);
+
+        if (updatedResident) {
+          navigate(`/residentes/${updatedResident.id}`, {
+            replace: true,
+            state: {
+              residentNotice: `Paciente ${updatedResident.fullName} actualizado correctamente.`,
+              residentNoticeTone: 'success',
+            },
+          });
+        }
+      }}
+      onLogout={auth.logout}
+      onRetry={edit.handleRetry}
+    />
+  );
+}
+
 function RootRedirect() {
   const auth = useAuthSession();
 
@@ -166,6 +212,7 @@ export function AppRouter() {
       <Route path="/dashboard" element={<DashboardRoute />} />
       <Route path="/residentes" element={<ResidentsRoute />} />
       <Route path="/residentes/nuevo" element={<ResidentCreateRoute />} />
+      <Route path="/residentes/:residentId/editar" element={<ResidentEditRoute />} />
       <Route path="/residentes/:residentId" element={<ResidentDetailRoute />} />
       <Route path="*" element={<RootRedirect />} />
     </Routes>

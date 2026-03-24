@@ -1,4 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import type { AuthSession, ResidentDetail } from '@gentrix/shared-types';
 
@@ -16,6 +17,7 @@ import {
   shellCardClassName,
   surfaceCardClassName,
 } from '../../../shared/ui/class-names';
+import { BackChevronButton } from '../../../shared/ui/back-chevron-button';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
@@ -33,6 +35,11 @@ interface ResidentDetailWorkspaceProps {
 interface DetailFieldProps {
   label: string;
   value: string;
+}
+
+interface ResidentDetailLocationState {
+  residentNotice?: string;
+  residentNoticeTone?: 'success' | 'error';
 }
 
 const dateFormatter = new Intl.DateTimeFormat('es-AR', {
@@ -94,6 +101,11 @@ export function ResidentDetailWorkspace({
   onRetry,
 }: ResidentDetailWorkspaceProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const detailLocationState =
+    (location.state as ResidentDetailLocationState | null) ?? null;
+  const residentNotice = detailLocationState?.residentNotice ?? null;
+  const residentNoticeTone = detailLocationState?.residentNoticeTone ?? 'success';
   const headerDetails = resident
     ? [
         {
@@ -127,6 +139,17 @@ export function ResidentDetailWorkspace({
       ]
     : [];
 
+  useEffect(() => {
+    if (!residentNotice) {
+      return;
+    }
+
+    navigate(location.pathname, {
+      replace: true,
+      state: null,
+    });
+  }, [location.pathname, navigate, residentNotice]);
+
   return (
     <WorkspaceShell
       residentCount={residentCount}
@@ -137,9 +160,15 @@ export function ResidentDetailWorkspace({
         className={`${shellCardClassName} flex flex-wrap items-start justify-between gap-5 px-7 py-6`}
       >
         <div className="grid gap-2.5">
-          <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-            Residentes
-          </span>
+          <div className="flex items-center gap-3">
+            <BackChevronButton
+              title="Volver a residentes"
+              fallbackTo="/residentes"
+            />
+            <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
+              Residentes
+            </span>
+          </div>
           <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
             {resident?.fullName ?? 'Detalle del residente'}
           </h1>
@@ -167,19 +196,36 @@ export function ResidentDetailWorkspace({
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Link className={secondaryButtonClassName} to="/residentes">
-            Volver a residentes
-          </Link>
-          <button
-            className={`${primaryButtonClassName} cursor-not-allowed opacity-70`}
-            type="button"
-            disabled
-            title="La edicion del residente se habilitara en la proxima iteracion."
-          >
-            Editar paciente
-          </button>
+          {resident ? (
+            <Link
+              className={primaryButtonClassName}
+              to={`/residentes/${resident.id}/editar`}
+            >
+              Editar paciente
+            </Link>
+          ) : (
+            <button
+              className={`${primaryButtonClassName} cursor-not-allowed opacity-70`}
+              type="button"
+              disabled
+            >
+              Editar paciente
+            </button>
+          )}
         </div>
       </section>
+
+      {residentNotice && (
+        <section
+          className={`${shellCardClassName} px-6 py-[22px] ${
+            residentNoticeTone === 'error'
+              ? 'border border-[rgba(168,43,17,0.16)] bg-[rgba(168,43,17,0.08)] text-[rgb(130,44,25)]'
+              : 'border border-[rgba(0,102,132,0.14)] bg-[rgba(0,102,132,0.08)] text-brand-secondary'
+          }`}
+        >
+          <span className="leading-[1.55]">{residentNotice}</span>
+        </section>
+      )}
 
       {screenState === 'loading' && (
         <StatusNotice message="Cargando el detalle del residente." />
@@ -196,7 +242,7 @@ export function ResidentDetailWorkspace({
             },
             {
               label: 'Volver a residentes',
-              onClick: () => navigate('/residentes'),
+              onClick: () => navigate(-1),
               variant: 'secondary',
             },
           ]}

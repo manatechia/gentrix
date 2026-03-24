@@ -22,6 +22,7 @@ import type {
   IsoDateString,
   ResidentCreateInput,
   ResidentCareLevel,
+  ResidentUpdateInput,
 } from '@gentrix/shared-types';
 import {
   calculateAge,
@@ -307,6 +308,140 @@ export function createResidentFromIntake(
   referenceDate: Date = new Date(),
 ): Resident {
   const now = toIsoDateString(referenceDate);
+  const editableFields = mapResidentIntakeFields(input, now);
+
+  return createResidentSeed({
+    id: createRandomEntityId(),
+    internalNumber: createRandomEntityId(),
+    status: 'active',
+    ...editableFields,
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      room: editableFields.room,
+    },
+    emergencyContact: buildEmergencyContact(editableFields.familyContacts),
+    audit: {
+      createdAt: now,
+      updatedAt: now,
+      createdBy: 'dashboard-intake',
+      updatedBy: 'dashboard-intake',
+    },
+  });
+}
+
+export function updateResidentFromIntake(
+  currentResident: Resident,
+  input: ResidentUpdateInput,
+  actor: string,
+  referenceDate: Date = new Date(),
+): Resident {
+  const now = toIsoDateString(referenceDate);
+  const editableFields = mapResidentIntakeFields(input, now);
+
+  return {
+    ...currentResident,
+    ...editableFields,
+    address: {
+      ...currentResident.address,
+      room: editableFields.room,
+    },
+    emergencyContact: buildEmergencyContact(
+      editableFields.familyContacts,
+      currentResident.emergencyContact,
+    ),
+    audit: {
+      ...currentResident.audit,
+      updatedAt: now,
+      updatedBy: actor,
+    },
+  };
+}
+
+export function toResidentCard(resident: Resident): ResidentCard {
+  return {
+    id: resident.id,
+    fullName: buildResidentFullName(resident),
+    age: calculateAge(resident.birthDate),
+    room: resident.room,
+    careLevel: resident.careLevel,
+    status: resident.status,
+  };
+}
+
+export function toResidentDetail(resident: Resident): ResidentDetail {
+  return {
+    id: resident.id,
+    fullName: buildResidentFullName(resident),
+    firstName: resident.firstName,
+    middleNames: resident.middleNames,
+    lastName: resident.lastName,
+    otherLastNames: resident.otherLastNames,
+    documentType: resident.documentType,
+    documentNumber: resident.documentNumber,
+    documentIssuingCountry: resident.documentIssuingCountry,
+    internalNumber: resident.internalNumber,
+    procedureNumber: resident.procedureNumber,
+    cuil: resident.cuil,
+    age: calculateAge(resident.birthDate),
+    birthDate: resident.birthDate,
+    admissionDate: resident.admissionDate,
+    sex: resident.sex,
+    maritalStatus: resident.maritalStatus,
+    nationality: resident.nationality,
+    email: resident.email,
+    room: resident.room,
+    careLevel: resident.careLevel,
+    status: resident.status,
+    medicalHistory: resident.medicalHistory.map((entry) => ({ ...entry })),
+    attachments: resident.attachments.map((attachment) => ({ ...attachment })),
+    insurance: { ...resident.insurance },
+    transfer: { ...resident.transfer },
+    psychiatry: { ...resident.psychiatry },
+    clinicalProfile: { ...resident.clinicalProfile },
+    belongings: { ...resident.belongings },
+    familyContacts: resident.familyContacts.map((contact) => ({ ...contact })),
+    discharge: { ...resident.discharge },
+    address: { ...resident.address },
+    emergencyContact: { ...resident.emergencyContact },
+    audit: { ...resident.audit },
+  };
+}
+
+function mapResidentIntakeFields(
+  input: ResidentCreateInput | ResidentUpdateInput,
+  now: IsoDateString,
+): Pick<
+  Resident,
+  | 'firstName'
+  | 'middleNames'
+  | 'lastName'
+  | 'otherLastNames'
+  | 'documentType'
+  | 'documentNumber'
+  | 'documentIssuingCountry'
+  | 'procedureNumber'
+  | 'cuil'
+  | 'birthDate'
+  | 'admissionDate'
+  | 'sex'
+  | 'maritalStatus'
+  | 'nationality'
+  | 'email'
+  | 'room'
+  | 'careLevel'
+  | 'medicalHistory'
+  | 'attachments'
+  | 'insurance'
+  | 'transfer'
+  | 'psychiatry'
+  | 'clinicalProfile'
+  | 'belongings'
+  | 'familyContacts'
+  | 'discharge'
+> {
   const familyContacts = input.familyContacts.map((contact) =>
     ({
       id: createRandomEntityId(),
@@ -318,10 +453,8 @@ export function createResidentFromIntake(
       notes: contact.notes?.trim() || undefined,
     }) satisfies ResidentFamilyContact,
   );
-  const primaryFamilyContact = familyContacts[0];
 
-  return createResidentSeed({
-    id: createRandomEntityId(),
+  return {
     firstName: input.firstName.trim(),
     middleNames: input.middleNames?.trim() || undefined,
     lastName: input.lastName.trim(),
@@ -329,7 +462,6 @@ export function createResidentFromIntake(
     documentType: input.documentType,
     documentNumber: input.documentNumber.trim(),
     documentIssuingCountry: input.documentIssuingCountry.trim(),
-    internalNumber: createRandomEntityId(),
     procedureNumber: input.procedureNumber?.trim() || undefined,
     cuil: input.cuil?.trim() || undefined,
     birthDate: toIsoDateString(input.birthDate),
@@ -340,7 +472,6 @@ export function createResidentFromIntake(
     email: input.email?.trim() || undefined,
     room: input.room.trim(),
     careLevel: input.careLevel,
-    status: 'active',
     medicalHistory: input.medicalHistory.map((entry) =>
       ({
         id: createRandomEntityId(),
@@ -408,74 +539,29 @@ export function createResidentFromIntake(
         : undefined,
       reason: input.discharge.reason?.trim() || undefined,
     },
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      room: input.room.trim(),
-    },
-    emergencyContact: {
-      fullName: primaryFamilyContact?.fullName ?? 'Contacto pendiente',
-      relationship: primaryFamilyContact?.relationship ?? 'Pendiente',
-      phone: primaryFamilyContact?.phone ?? 'Pendiente',
-      email: primaryFamilyContact?.email,
-    },
-    audit: {
-      createdAt: now,
-      updatedAt: now,
-      createdBy: 'dashboard-intake',
-      updatedBy: 'dashboard-intake',
-    },
-  });
-}
-
-export function toResidentCard(resident: Resident): ResidentCard {
-  return {
-    id: resident.id,
-    fullName: buildResidentFullName(resident),
-    age: calculateAge(resident.birthDate),
-    room: resident.room,
-    careLevel: resident.careLevel,
-    status: resident.status,
   };
 }
 
-export function toResidentDetail(resident: Resident): ResidentDetail {
+function buildEmergencyContact(
+  familyContacts: ResidentFamilyContact[],
+  fallbackContact?: ContactPerson,
+): ContactPerson {
+  const primaryFamilyContact = familyContacts[0];
+
+  if (!primaryFamilyContact) {
+    return fallbackContact
+      ? { ...fallbackContact }
+      : {
+          fullName: 'Contacto pendiente',
+          relationship: 'Pendiente',
+          phone: 'Pendiente',
+        };
+  }
+
   return {
-    id: resident.id,
-    fullName: buildResidentFullName(resident),
-    firstName: resident.firstName,
-    middleNames: resident.middleNames,
-    lastName: resident.lastName,
-    otherLastNames: resident.otherLastNames,
-    documentType: resident.documentType,
-    documentNumber: resident.documentNumber,
-    documentIssuingCountry: resident.documentIssuingCountry,
-    internalNumber: resident.internalNumber,
-    procedureNumber: resident.procedureNumber,
-    cuil: resident.cuil,
-    age: calculateAge(resident.birthDate),
-    birthDate: resident.birthDate,
-    admissionDate: resident.admissionDate,
-    sex: resident.sex,
-    maritalStatus: resident.maritalStatus,
-    nationality: resident.nationality,
-    email: resident.email,
-    room: resident.room,
-    careLevel: resident.careLevel,
-    status: resident.status,
-    medicalHistory: resident.medicalHistory.map((entry) => ({ ...entry })),
-    attachments: resident.attachments.map((attachment) => ({ ...attachment })),
-    insurance: { ...resident.insurance },
-    transfer: { ...resident.transfer },
-    psychiatry: { ...resident.psychiatry },
-    clinicalProfile: { ...resident.clinicalProfile },
-    belongings: { ...resident.belongings },
-    familyContacts: resident.familyContacts.map((contact) => ({ ...contact })),
-    discharge: { ...resident.discharge },
-    address: { ...resident.address },
-    emergencyContact: { ...resident.emergencyContact },
-    audit: { ...resident.audit },
+    fullName: primaryFamilyContact.fullName,
+    relationship: primaryFamilyContact.relationship,
+    phone: primaryFamilyContact.phone,
+    email: primaryFamilyContact.email,
   };
 }

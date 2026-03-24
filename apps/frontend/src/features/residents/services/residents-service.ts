@@ -3,6 +3,7 @@ import type {
   ResidentCreateInput,
   ResidentDetail,
   ResidentOverview,
+  ResidentUpdateInput,
 } from '@gentrix/shared-types';
 
 import { apiClient } from '../../../shared/config/api-client';
@@ -30,6 +31,18 @@ export async function createResident(
 ): Promise<ApiEnvelope<ResidentOverview>> {
   const response = await apiClient.post<ApiEnvelope<ResidentOverview>>(
     '/api/residents',
+    input,
+  );
+
+  return response.data;
+}
+
+export async function updateResident(
+  residentId: string,
+  input: ResidentUpdateInput,
+): Promise<ApiEnvelope<ResidentDetail>> {
+  const response = await apiClient.put<ApiEnvelope<ResidentDetail>>(
+    `/api/residents/${residentId}`,
     input,
   );
 

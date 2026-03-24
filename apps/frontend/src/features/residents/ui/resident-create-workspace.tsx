@@ -1,13 +1,11 @@
-import { Link } from 'react-router-dom';
-
 import type { AuthSession } from '@gentrix/shared-types';
 
 import type { ResidentFormValues } from '../types/resident-form-values';
 import {
   primaryButtonClassName,
-  secondaryButtonClassName,
   shellCardClassName,
 } from '../../../shared/ui/class-names';
+import { BackChevronButton } from '../../../shared/ui/back-chevron-button';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
@@ -46,9 +44,15 @@ export function ResidentCreateWorkspace({
         className={`${shellCardClassName} flex flex-wrap items-start justify-between gap-5 px-7 py-6`}
       >
         <div className="grid gap-2.5">
-          <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-            Residentes
-          </span>
+          <div className="flex items-center gap-3">
+            <BackChevronButton
+              title="Volver a residentes"
+              fallbackTo="/residentes"
+            />
+            <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
+              Residentes
+            </span>
+          </div>
           <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
             Alta de paciente
           </h1>
@@ -60,14 +64,7 @@ export function ResidentCreateWorkspace({
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Link className={secondaryButtonClassName} to="/residentes">
-            Volver a residentes
-          </Link>
-          <span className={primaryButtonClassName}>
-            {residentCount} residentes
-          </span>
-        </div>
+        <span className={primaryButtonClassName}>{residentCount} residentes</span>
       </section>
 
       {screenState === 'error' && authError && (

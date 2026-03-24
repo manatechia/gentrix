@@ -29,6 +29,7 @@ type ResidentRecord = Prisma.ResidentGetPayload<{
     clinicalEvents: true;
   };
 }>;
+const residentMedicalHistoryEventType = 'medical-history';
 
 const residentDocumentTypes = new Set([
   'dni',
@@ -96,35 +97,9 @@ export class PrismaResidentRepository implements ResidentRepository {
     const created = await this.prisma.resident.create({
       data: {
         id: resident.id,
-        firstName: resident.firstName,
-        middleNames: resident.middleNames,
-        lastName: resident.lastName,
-        otherLastNames: resident.otherLastNames,
-        documentType: resident.documentType,
-        documentNumber: resident.documentNumber,
-        documentIssuingCountry: resident.documentIssuingCountry,
         internalNumber: resident.internalNumber,
-        procedureNumber: resident.procedureNumber,
-        cuil: resident.cuil,
-        birthDate: new Date(resident.birthDate),
-        admissionDate: new Date(resident.admissionDate),
-        sex: resident.sex,
-        maritalStatus: resident.maritalStatus,
-        nationality: resident.nationality,
-        email: resident.email,
-        room: resident.room,
-        careLevel: resident.careLevel,
         status: resident.status,
-        attachments: toJsonInput(resident.attachments),
-        insurance: toJsonInput(resident.insurance),
-        transfer: toJsonInput(resident.transfer),
-        psychiatry: toJsonInput(resident.psychiatry),
-        clinicalProfile: toJsonInput(resident.clinicalProfile),
-        belongings: toJsonInput(resident.belongings),
-        familyContacts: toJsonInput(resident.familyContacts),
-        discharge: toJsonInput(resident.discharge),
-        address: toJsonInput(resident.address),
-        emergencyContact: toJsonInput(resident.emergencyContact),
+        ...toResidentPersistenceData(resident),
         createdAt: new Date(resident.audit.createdAt),
         createdBy: resident.audit.createdBy,
         updatedAt: new Date(resident.audit.updatedAt),
@@ -135,22 +110,15 @@ export class PrismaResidentRepository implements ResidentRepository {
         deletedBy: resident.audit.deletedBy ?? null,
         clinicalEvents: resident.medicalHistory.length
           ? {
-              create: resident.medicalHistory.map((entry) => ({
-                id: entry.id,
-                eventType: 'medical-history',
-                title: entry.title,
-                description: entry.notes,
-                occurredAt: new Date(entry.recordedAt),
-                createdAt: new Date(entry.createdAt),
-                createdBy: resident.audit.createdBy,
-                updatedAt: new Date(entry.createdAt),
-                updatedBy: resident.audit.updatedBy,
-              })),
+              create: toMedicalHistoryEventRecords(resident),
             }
           : undefined,
       },
       include: {
         clinicalEvents: {
+          where: {
+            deletedAt: null,
+          },
           orderBy: {
             occurredAt: 'desc',
           },
@@ -159,6 +127,58 @@ export class PrismaResidentRepository implements ResidentRepository {
     });
 
     return mapResidentRecord(created);
+  }
+
+  async update(resident: Resident): Promise<Resident> {
+    const persistedResident = await this.prisma.$transaction(async (transaction) => {
+      const updatedAt = new Date(resident.audit.updatedAt);
+
+      await transaction.clinicalHistoryEvent.updateMany({
+        where: {
+          residentId: resident.id,
+          deletedAt: null,
+          eventType: residentMedicalHistoryEventType,
+        },
+        data: {
+          deletedAt: updatedAt,
+          deletedBy: resident.audit.updatedBy,
+          updatedAt,
+          updatedBy: resident.audit.updatedBy,
+        },
+      });
+
+      return transaction.resident.update({
+        where: {
+          id: resident.id,
+        },
+        data: {
+          ...toResidentPersistenceData(resident),
+          updatedAt,
+          updatedBy: resident.audit.updatedBy,
+          deletedAt: resident.audit.deletedAt
+            ? new Date(resident.audit.deletedAt)
+            : null,
+          deletedBy: resident.audit.deletedBy ?? null,
+          clinicalEvents: resident.medicalHistory.length
+            ? {
+                create: toMedicalHistoryEventRecords(resident),
+              }
+            : undefined,
+        },
+        include: {
+          clinicalEvents: {
+            where: {
+              deletedAt: null,
+            },
+            orderBy: {
+              occurredAt: 'desc',
+            },
+          },
+        },
+      });
+    });
+
+    return mapResidentRecord(persistedResident);
   }
 }
 
@@ -175,6 +195,9 @@ function mapResidentRecord(record: ResidentRecord): Resident {
     relationship: 'Pendiente',
     phone: 'Pendiente',
   });
+  const medicalHistoryEvents = record.clinicalEvents.filter(
+    (event) => event.eventType === residentMedicalHistoryEventType,
+  );
 
   return {
     id: record.id as Resident['id'],
@@ -199,7 +222,7 @@ function mapResidentRecord(record: ResidentRecord): Resident {
       ? record.careLevel
       : 'assisted',
     status: normalizeResidentStatus(record.status),
-    medicalHistory: record.clinicalEvents.map((event) => ({
+    medicalHistory: medicalHistoryEvents.map((event) => ({
       id: event.id as Resident['medicalHistory'][number]['id'],
       recordedAt: toIsoDateString(event.occurredAt),
       title: event.title,
@@ -244,6 +267,52 @@ function fromJson<T>(value: Prisma.JsonValue | null, fallback: T): T {
 
 function toJsonInput(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
+
+function toResidentPersistenceData(resident: Resident) {
+  return {
+    firstName: resident.firstName,
+    middleNames: resident.middleNames,
+    lastName: resident.lastName,
+    otherLastNames: resident.otherLastNames,
+    documentType: resident.documentType,
+    documentNumber: resident.documentNumber,
+    documentIssuingCountry: resident.documentIssuingCountry,
+    procedureNumber: resident.procedureNumber,
+    cuil: resident.cuil,
+    birthDate: new Date(resident.birthDate),
+    admissionDate: new Date(resident.admissionDate),
+    sex: resident.sex,
+    maritalStatus: resident.maritalStatus,
+    nationality: resident.nationality,
+    email: resident.email,
+    room: resident.room,
+    careLevel: resident.careLevel,
+    attachments: toJsonInput(resident.attachments),
+    insurance: toJsonInput(resident.insurance),
+    transfer: toJsonInput(resident.transfer),
+    psychiatry: toJsonInput(resident.psychiatry),
+    clinicalProfile: toJsonInput(resident.clinicalProfile),
+    belongings: toJsonInput(resident.belongings),
+    familyContacts: toJsonInput(resident.familyContacts),
+    discharge: toJsonInput(resident.discharge),
+    address: toJsonInput(resident.address),
+    emergencyContact: toJsonInput(resident.emergencyContact),
+  };
+}
+
+function toMedicalHistoryEventRecords(resident: Resident) {
+  return resident.medicalHistory.map((entry) => ({
+    id: entry.id,
+    eventType: residentMedicalHistoryEventType,
+    title: entry.title,
+    description: entry.notes,
+    occurredAt: new Date(entry.recordedAt),
+    createdAt: new Date(entry.createdAt),
+    createdBy: resident.audit.updatedBy,
+    updatedAt: new Date(resident.audit.updatedAt),
+    updatedBy: resident.audit.updatedBy,
+  }));
 }
 
 function normalizeResidentDocumentType(value: string | null): Resident['documentType'] {

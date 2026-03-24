@@ -29,6 +29,20 @@ export class InMemoryResidentRepository implements ResidentRepository {
     this.residents.unshift(persistedResident);
     return cloneResident(persistedResident);
   }
+
+  async update(resident: Resident): Promise<Resident> {
+    const residentIndex = this.residents.findIndex(
+      (candidate) => candidate.id === resident.id,
+    );
+
+    if (residentIndex === -1) {
+      throw new Error(`Resident ${resident.id} not found.`);
+    }
+
+    const persistedResident = cloneResident(resident);
+    this.residents.splice(residentIndex, 1, persistedResident);
+    return cloneResident(persistedResident);
+  }
 }
 
 function cloneResident(resident: Resident): Resident {

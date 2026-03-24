@@ -234,6 +234,8 @@ export interface ResidentCreateInput {
   discharge: ResidentDischargeInfo;
 }
 
+export interface ResidentUpdateInput extends ResidentCreateInput {}
+
 export interface StaffOverview {
   id: EntityId;
   name: string;

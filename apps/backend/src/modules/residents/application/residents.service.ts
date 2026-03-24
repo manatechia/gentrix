@@ -9,12 +9,14 @@ import {
   createResidentFromIntake,
   toResidentCard,
   toResidentDetail,
+  updateResidentFromIntake,
   type Resident,
 } from '@gentrix/domain-residents';
 import type {
   ResidentCreateInput,
   ResidentDetail,
   ResidentOverview,
+  ResidentUpdateInput,
 } from '@gentrix/shared-types';
 
 import {
@@ -51,6 +53,34 @@ export class ResidentsService {
     input: ResidentCreateInput,
     actor: string,
   ): Promise<ResidentOverview> {
+    this.validateResidentInput(input);
+    const resident = createResidentFromIntake(input);
+    resident.audit.createdBy = actor;
+    resident.audit.updatedBy = actor;
+    const created = await this.residents.create(resident);
+    return toResidentCard(created);
+  }
+
+  async updateResident(
+    id: string,
+    input: ResidentUpdateInput,
+    actor: string,
+  ): Promise<ResidentDetail> {
+    const currentResident = await this.residents.findById(id);
+
+    if (!currentResident) {
+      throw new NotFoundException('No encontre el residente solicitado.');
+    }
+
+    this.validateResidentInput(input);
+    const updatedResident = updateResidentFromIntake(currentResident, input, actor);
+    const persistedResident = await this.residents.update(updatedResident);
+    return toResidentDetail(persistedResident);
+  }
+
+  private validateResidentInput(
+    input: ResidentCreateInput | ResidentUpdateInput,
+  ): void {
     const today = new Date().toISOString().slice(0, 10);
     const birthDay = new Date(input.birthDate).toISOString().slice(0, 10);
     const admissionDay = new Date(input.admissionDate).toISOString().slice(0, 10);
@@ -112,11 +142,5 @@ export class ResidentsService {
         );
       }
     }
-
-    const resident = createResidentFromIntake(input);
-    resident.audit.createdBy = actor;
-    resident.audit.updatedBy = actor;
-    const created = await this.residents.create(resident);
-    return toResidentCard(created);
   }
 }

@@ -1,5 +1,13 @@
 import { FieldArray, Formik, getIn } from 'formik';
-import { useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
+import {
+  useMemo,
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from 'react';
+import { Link } from 'react-router-dom';
 
 import {
   documentIssuingCountryOptions,
@@ -40,10 +48,20 @@ import {
 import { SelectField } from '../../../shared/ui/select-field';
 
 interface AdmissionsPanelProps {
+  mode?: 'create' | 'edit';
+  initialValues?: ResidentFormValues;
   isSavingResident: boolean;
   residentCount: number;
   residentNoticeTone: 'success' | 'error';
   residentNotice: string | null;
+  panelEyebrow?: string;
+  panelTitle?: string;
+  panelDescription?: string;
+  submitLabel?: string;
+  secondaryAction?: {
+    href: string;
+    label: string;
+  };
   onSubmit: (values: ResidentFormValues) => Promise<unknown>;
 }
 
@@ -277,23 +295,53 @@ function getCuitMessage(errors: unknown, touched: unknown): string | undefined {
 }
 
 export function AdmissionsPanel({
+  mode = 'create',
+  initialValues,
   isSavingResident,
   residentCount,
   residentNoticeTone,
   residentNotice,
+  panelEyebrow,
+  panelTitle,
+  panelDescription,
+  submitLabel,
+  secondaryAction,
   onSubmit,
 }: AdmissionsPanelProps) {
-  const [cuitDocumentSegment, setCuitDocumentSegment] = useState('');
+  const [createInitialValues] = useState<ResidentFormValues>(() => ({
+    ...residentFormInitialValues,
+    admissionDate: formatCurrentDateForResidentInput(),
+  }));
+  const formInitialValues = useMemo(
+    () =>
+      initialValues ?? createInitialValues,
+    [createInitialValues, initialValues],
+  );
+  const [cuitDocumentSegment, setCuitDocumentSegment] = useState(
+    getResidentDocumentDigits(formInitialValues.documentNumber),
+  );
+  const resolvedPanelEyebrow = panelEyebrow ?? (mode === 'edit' ? 'Edicion' : 'Alta');
+  const resolvedPanelTitle =
+    panelTitle ?? (mode === 'edit' ? 'Editar paciente' : 'Agregar paciente');
+  const resolvedPanelDescription =
+    panelDescription ??
+    'El alta ahora se completa por bloques desplegables para separar identificacion, contacto, cobertura, salud, pertenencias, familiares y adjuntos. La fecha de ingreso se precarga con hoy y la edad se calcula automaticamente desde la fecha de nacimiento.';
+  const resolvedSubmitLabel =
+    submitLabel ?? (mode === 'edit' ? 'Guardar cambios' : 'Guardar paciente');
+
+  useEffect(() => {
+    setCuitDocumentSegment(getResidentDocumentDigits(formInitialValues.documentNumber));
+  }, [formInitialValues.documentNumber]);
 
   return (
     <article id="intake-panel" className={surfaceCardClassName}>
       <div className="mb-[18px] flex items-start justify-between gap-4">
         <div>
           <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-            Alta
+            {resolvedPanelEyebrow}
           </span>
           <h2 className="mt-1 text-[1.35rem] font-bold tracking-[-0.04em] text-brand-text">
-            Agregar paciente
+            {resolvedPanelTitle}
           </h2>
         </div>
         <span
@@ -304,10 +352,7 @@ export function AdmissionsPanel({
       </div>
 
       <p className="leading-[1.65] text-brand-text-secondary">
-        El alta ahora se completa por bloques desplegables para separar
-        identificacion, contacto, cobertura, salud, pertenencias, familiares
-        y adjuntos. La fecha de ingreso se precarga con hoy y la edad se
-        calcula automaticamente desde la fecha de nacimiento.
+        {resolvedPanelDescription}
       </p>
 
       {residentNotice && (
@@ -323,20 +368,22 @@ export function AdmissionsPanel({
       )}
 
       <Formik<ResidentFormValues>
-        initialValues={{
-          ...residentFormInitialValues,
-          admissionDate: formatCurrentDateForResidentInput(),
-        }}
+        enableReinitialize
+        initialValues={formInitialValues}
         validationSchema={residentIntakeSchema}
         onSubmit={async (values, helpers) => {
           await onSubmit(values);
-          setCuitDocumentSegment('');
-          helpers.resetForm({
-            values: {
-              ...residentFormInitialValues,
-              admissionDate: formatCurrentDateForResidentInput(),
-            },
-          });
+          setCuitDocumentSegment(getResidentDocumentDigits(values.documentNumber));
+
+          if (mode === 'create') {
+            setCuitDocumentSegment('');
+            helpers.resetForm({
+              values: {
+                ...residentFormInitialValues,
+                admissionDate: formatCurrentDateForResidentInput(),
+              },
+            });
+          }
         }}
       >
         {({
@@ -512,13 +559,13 @@ export function AdmissionsPanel({
                       type="text"
                       name="documentNumber"
                       value={values.documentNumber}
-                      onBlur={(event) => {
-                        handleBlur(event);
+                      onBlur={handleBlur}
+                      onChange={(event) => {
+                        handleChange(event);
                         setCuitDocumentSegment(
                           getResidentDocumentDigits(event.target.value),
                         );
                       }}
-                      onChange={handleChange}
                     />
                     <ValidationMessage
                       message={getFieldMessage(
@@ -1626,6 +1673,11 @@ export function AdmissionsPanel({
               </CollapsibleSection>
 
               <div className="flex flex-wrap items-center gap-3">
+                {secondaryAction && (
+                  <Link className={secondaryButtonClassName} to={secondaryAction.href}>
+                    {secondaryAction.label}
+                  </Link>
+                )}
                 <button
                   className={primaryButtonClassName}
                   type="button"
@@ -1634,7 +1686,7 @@ export function AdmissionsPanel({
                     void submitForm();
                   }}
                 >
-                  {isSavingResident ? 'Guardando...' : 'Guardar paciente'}
+                  {isSavingResident ? 'Guardando...' : resolvedSubmitLabel}
                 </button>
               </div>
             </form>
