@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Inject,
+  UnauthorizedException,
   Param,
   Post,
   Put,
@@ -22,13 +23,21 @@ export class ResidentsController {
   ) {}
 
   @Get()
-  getResidents() {
-    return this.residentsService.getResidents();
+  getResidents(@Req() request: RequestWithSession) {
+    return this.residentsService.getResidents(
+      request.authSession!.activeOrganization.id,
+    );
   }
 
   @Get(':residentId')
-  getResidentById(@Param('residentId') residentId: string) {
-    return this.residentsService.getResidentById(residentId);
+  getResidentById(
+    @Param('residentId') residentId: string,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.residentsService.getResidentById(
+      residentId,
+      request.authSession!.activeOrganization.id,
+    );
   }
 
   @Post()
@@ -36,7 +45,20 @@ export class ResidentsController {
     @Body() body: CreateResidentDto,
     @Req() request: RequestWithSession,
   ) {
-    return this.residentsService.createResident(body, request.authSession!.user.email);
+    const activeFacility = request.authSession!.activeFacility;
+
+    if (!activeFacility) {
+      throw new UnauthorizedException(
+        'No hay una residencia activa seleccionada para esta sesion.',
+      );
+    }
+
+    return this.residentsService.createResident(
+      body,
+      request.authSession!.user.email,
+      request.authSession!.activeOrganization.id,
+      activeFacility.id,
+    );
   }
 
   @Put(':residentId')
@@ -49,6 +71,7 @@ export class ResidentsController {
       residentId,
       body,
       request.authSession!.user.email,
+      request.authSession!.activeOrganization.id,
     );
   }
 }

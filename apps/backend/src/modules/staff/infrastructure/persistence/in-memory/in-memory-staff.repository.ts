@@ -12,10 +12,14 @@ export class InMemoryStaffRepository implements StaffRepository {
     audit: { ...member.audit },
   }));
 
-  async list(): Promise<StaffMember[]> {
-    return this.staff.map((member) => ({
-      ...member,
-      audit: { ...member.audit },
-    }));
+  async list(organizationId?: string): Promise<StaffMember[]> {
+    return this.staff
+      .filter((member) =>
+        organizationId ? member.organizationId === organizationId : true,
+      )
+      .map((member) => ({
+        ...member,
+        audit: { ...member.audit },
+      }));
   }
 }

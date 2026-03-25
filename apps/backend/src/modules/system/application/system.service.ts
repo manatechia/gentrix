@@ -61,11 +61,13 @@ export class SystemService {
     };
   }
 
-  async getDashboardSnapshot(): Promise<DashboardSnapshot> {
+  async getDashboardSnapshot(
+    organizationId?: string,
+  ): Promise<DashboardSnapshot> {
     const [residents, staff, medications] = await Promise.all([
-      this.residentsService.getResidents(),
-      this.staffService.getStaff(),
-      this.medicationService.getMedications(),
+      this.residentsService.getResidents(organizationId),
+      this.staffService.getStaff(organizationId),
+      this.medicationService.getMedications(organizationId),
     ]);
 
     return {

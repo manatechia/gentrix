@@ -31,30 +31,40 @@ export class ResidentsService {
     private readonly residents: ResidentRepository,
   ) {}
 
-  async getResidents(): Promise<ResidentOverview[]> {
-    return (await this.residents.list()).map(toResidentCard);
+  async getResidents(organizationId?: string): Promise<ResidentOverview[]> {
+    return (await this.residents.list(organizationId)).map(toResidentCard);
   }
 
-  async getResidentEntities(): Promise<Resident[]> {
-    return this.residents.list();
+  async getResidentEntities(organizationId?: string): Promise<Resident[]> {
+    return this.residents.list(organizationId);
   }
 
-  async getResidentById(id: string): Promise<ResidentDetail> {
-    const resident = await this.residents.findById(id);
+  async getResidentEntityById(
+    id: string,
+    organizationId?: string,
+  ): Promise<Resident> {
+    const resident = await this.residents.findById(id, organizationId);
 
     if (!resident) {
       throw new NotFoundException('No encontre el residente solicitado.');
     }
 
+    return resident;
+  }
+
+  async getResidentById(id: string, organizationId?: string): Promise<ResidentDetail> {
+    const resident = await this.getResidentEntityById(id, organizationId);
     return toResidentDetail(resident);
   }
 
   async createResident(
     input: ResidentCreateInput,
     actor: string,
+    organizationId: Resident['organizationId'],
+    facilityId: Resident['facilityId'],
   ): Promise<ResidentOverview> {
     this.validateResidentInput(input);
-    const resident = createResidentFromIntake(input);
+    const resident = createResidentFromIntake(input, organizationId, facilityId);
     resident.audit.createdBy = actor;
     resident.audit.updatedBy = actor;
     const created = await this.residents.create(resident);
@@ -65,8 +75,9 @@ export class ResidentsService {
     id: string,
     input: ResidentUpdateInput,
     actor: string,
+    organizationId?: Resident['organizationId'],
   ): Promise<ResidentDetail> {
-    const currentResident = await this.residents.findById(id);
+    const currentResident = await this.residents.findById(id, organizationId);
 
     if (!currentResident) {
       throw new NotFoundException('No encontre el residente solicitado.');

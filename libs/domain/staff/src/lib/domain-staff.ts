@@ -12,6 +12,7 @@ export type ShiftWindow = 'morning' | 'afternoon' | 'night';
 
 export interface StaffMember {
   id: EntityId;
+  organizationId: EntityId;
   firstName: string;
   lastName: string;
   role: StaffRole;
@@ -29,12 +30,15 @@ const baseAudit: AuditTrail = {
   updatedBy: 'setup-script',
 };
 
+const defaultOrganizationId = createEntityId('organization', 'gentrix demo');
+
 export function createStaffSeed(
   role: StaffRole,
   overrides: Partial<StaffMember> = {},
 ): StaffMember {
   const memberBase: StaffMember = {
     id: createEntityId('staff', `Ana Gomez ${role} Unidad A`),
+    organizationId: defaultOrganizationId,
     firstName: 'Ana',
     lastName: 'Gomez',
     role,

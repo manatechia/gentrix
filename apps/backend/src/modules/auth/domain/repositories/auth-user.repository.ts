@@ -1,7 +1,13 @@
-import type { AuthUser } from '@gentrix/shared-types';
+import type {
+  AuthFacility,
+  AuthOrganization,
+  AuthUser,
+} from '@gentrix/shared-types';
 
 export interface StoredAuthUser extends AuthUser {
   password: string;
+  activeOrganization: AuthOrganization;
+  activeFacility?: AuthFacility;
 }
 
 export interface AuthUserRepository {

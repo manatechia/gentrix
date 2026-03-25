@@ -30,7 +30,7 @@ export class InMemoryAuthSessionRepository implements AuthSessionRepository {
     return session;
   }
 
-  async delete(token: string): Promise<boolean> {
+  async delete(token: string, _actor: string): Promise<boolean> {
     return this.sessions.delete(token);
   }
 }

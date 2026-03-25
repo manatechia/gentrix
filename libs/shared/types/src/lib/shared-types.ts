@@ -141,6 +141,18 @@ export interface AuthUser {
   role: AuthRole;
 }
 
+export interface AuthOrganization {
+  id: EntityId;
+  slug: string;
+  displayName: string;
+}
+
+export interface AuthFacility {
+  id: EntityId;
+  code: string;
+  name: string;
+}
+
 export interface AuthLoginRequest {
   email: string;
   password: string;
@@ -148,6 +160,8 @@ export interface AuthLoginRequest {
 
 export interface AuthSession {
   user: AuthUser;
+  activeOrganization: AuthOrganization;
+  activeFacility?: AuthFacility;
   expiresAt: IsoDateString;
 }
 

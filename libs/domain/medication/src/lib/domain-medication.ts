@@ -19,6 +19,8 @@ import {
 
 export interface MedicationOrder {
   id: EntityId;
+  organizationId: EntityId;
+  facilityId: EntityId;
   medicationCatalogId: EntityId;
   residentId: EntityId;
   medicationName: string;
@@ -46,6 +48,9 @@ const baseAudit: AuditTrail = {
   createdBy: 'setup-script',
   updatedBy: 'setup-script',
 };
+
+const defaultOrganizationId = createEntityId('organization', 'gentrix demo');
+const defaultFacilityId = createEntityId('facility', 'residencia central');
 
 export const medicationRoutes: MedicationRoute[] = [
   'oral',
@@ -111,6 +116,8 @@ export function createMedicationSeed(
       'medication',
       `${catalogItem.medicationName} ${residentId} 09:00-21:00`,
     ),
+    organizationId: defaultOrganizationId,
+    facilityId: defaultFacilityId,
     medicationCatalogId: catalogItem.id,
     residentId,
     medicationName: catalogItem.medicationName,
@@ -145,6 +152,8 @@ export function createMedicationSeed(
 export function createMedicationFromInput(
   input: MedicationCreateInput,
   medicationName: string,
+  organizationId: MedicationOrder['organizationId'],
+  facilityId: MedicationOrder['facilityId'],
   actor: string,
   referenceDate: Date = new Date(),
 ): MedicationOrder {
@@ -152,6 +161,8 @@ export function createMedicationFromInput(
 
   return {
     id: createRandomEntityId(),
+    organizationId,
+    facilityId,
     ...mapMedicationInput(input, medicationName),
     audit: {
       createdAt: now,
@@ -166,11 +177,15 @@ export function updateMedicationFromInput(
   currentOrder: MedicationOrder,
   input: MedicationUpdateInput,
   medicationName: string,
+  organizationId: MedicationOrder['organizationId'],
+  facilityId: MedicationOrder['facilityId'],
   actor: string,
   referenceDate: Date = new Date(),
 ): MedicationOrder {
   return {
     ...currentOrder,
+    organizationId,
+    facilityId,
     ...mapMedicationInput(input, medicationName),
     audit: {
       ...currentOrder.audit,
@@ -244,7 +259,7 @@ export function isMedicationActive(
 function mapMedicationInput(
   input: MedicationCreateInput | MedicationUpdateInput,
   medicationName: string,
-): Omit<MedicationOrder, 'id' | 'audit'> {
+): Omit<MedicationOrder, 'id' | 'organizationId' | 'facilityId' | 'audit'> {
   return {
     medicationCatalogId: input.medicationCatalogId,
     residentId: input.residentId,

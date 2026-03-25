@@ -1,6 +1,7 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Inject, Req } from '@nestjs/common';
 
 import { Public } from '../../../../common/auth/public.decorator';
+import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { SystemService } from '../../application/system.service';
 
 @Controller()
@@ -35,12 +36,16 @@ export class SystemController {
   }
 
   @Get('snapshot')
-  getRootDashboard() {
-    return this.systemService.getDashboardSnapshot();
+  getRootDashboard(@Req() request: RequestWithSession) {
+    return this.systemService.getDashboardSnapshot(
+      request.authSession!.activeOrganization.id,
+    );
   }
 
   @Get('api/dashboard')
-  getApiDashboard() {
-    return this.systemService.getDashboardSnapshot();
+  getApiDashboard(@Req() request: RequestWithSession) {
+    return this.systemService.getDashboardSnapshot(
+      request.authSession!.activeOrganization.id,
+    );
   }
 }

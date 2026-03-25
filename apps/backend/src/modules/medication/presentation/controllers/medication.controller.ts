@@ -22,8 +22,10 @@ export class MedicationController {
   ) {}
 
   @Get()
-  getMedications() {
-    return this.medicationService.getMedications();
+  getMedications(@Req() request: RequestWithSession) {
+    return this.medicationService.getMedications(
+      request.authSession!.activeOrganization.id,
+    );
   }
 
   @Get('catalog')
@@ -32,8 +34,14 @@ export class MedicationController {
   }
 
   @Get(':medicationId')
-  getMedicationById(@Param('medicationId') medicationId: string) {
-    return this.medicationService.getMedicationById(medicationId);
+  getMedicationById(
+    @Param('medicationId') medicationId: string,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.medicationService.getMedicationById(
+      medicationId,
+      request.authSession!.activeOrganization.id,
+    );
   }
 
   @Post()
@@ -44,6 +52,7 @@ export class MedicationController {
     return this.medicationService.createMedication(
       body,
       request.authSession!.user.email,
+      request.authSession!.activeOrganization.id,
     );
   }
 
@@ -57,6 +66,7 @@ export class MedicationController {
       medicationId,
       body,
       request.authSession!.user.email,
+      request.authSession!.activeOrganization.id,
     );
   }
 }

@@ -6,79 +6,188 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id        String    @id @default(uuid()) @db.Uuid
-  fullName  String
-  email     String    @unique
-  password  String
-  role      String
-  createdAt DateTime
-  createdBy String
-  updatedAt DateTime
-  updatedBy String
-  deletedAt DateTime?
-  deletedBy String?
-  sessions  Session[]
-
-  @@index([deletedAt])
-}
-
-model Session {
-  token     String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  expiresAt DateTime
-  createdAt DateTime
-  createdBy String
-  updatedAt DateTime
-  updatedBy String
-  deletedAt DateTime?
-  deletedBy String?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([deletedAt])
-}
-
-model Resident {
-  id               String                @id @default(uuid()) @db.Uuid
-  firstName        String
-  middleNames      String?
-  lastName         String
-  otherLastNames   String?
-  documentType     String?
-  documentNumber   String?
-  documentIssuingCountry String?
-  internalNumber   String?
-  procedureNumber  String?
-  cuil             String?
-  birthDate        DateTime
-  admissionDate    DateTime
-  sex              String?
-  maritalStatus    String?
-  nationality      String?
-  email            String?
-  room             String
-  careLevel        String
+model Organization {
+  id               String                 @id @default(uuid()) @db.Uuid
+  slug             String                 @unique
+  legalName        String
+  displayName      String
   status           String
-  attachments      Json?
-  insurance        Json?
-  transfer         Json?
-  psychiatry       Json?
-  clinicalProfile  Json?
-  belongings       Json?
-  familyContacts   Json?
-  discharge        Json?
-  address          Json
-  emergencyContact Json
+  timezone         String
+  defaultLocale    String
   createdAt        DateTime
   createdBy        String
   updatedAt        DateTime
   updatedBy        String
   deletedAt        DateTime?
   deletedBy        String?
-  medications      MedicationOrder[]
   clinicalEvents   ClinicalHistoryEvent[]
+  facilities       Facility[]
+  medicationOrders MedicationOrder[]
+  memberships      OrganizationMembership[]
+  residents        Resident[]
+  sessions         AuthSession[]
 
+  @@index([deletedAt])
+}
+
+model Facility {
+  id               String                 @id @default(uuid()) @db.Uuid
+  organizationId   String                 @db.Uuid
+  code             String
+  name             String
+  status           String
+  address          Json?
+  phone            String?
+  email            String?
+  capacity         Int?
+  createdAt        DateTime
+  createdBy        String
+  updatedAt        DateTime
+  updatedBy        String
+  deletedAt        DateTime?
+  deletedBy        String?
+  clinicalEvents   ClinicalHistoryEvent[]
+  medicationOrders MedicationOrder[]
+  membershipScopes MembershipFacilityScope[]
+  organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  residents        Resident[]
+  sessions         AuthSession[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, deletedAt])
+  @@index([deletedAt])
+}
+
+model UserAccount {
+  id          String                   @id @default(uuid()) @db.Uuid
+  fullName    String
+  email       String                   @unique
+  password    String
+  role        String
+  status      String                   @default("active")
+  createdAt   DateTime
+  createdBy   String
+  updatedAt   DateTime
+  updatedBy   String
+  deletedAt   DateTime?
+  deletedBy   String?
+  memberships OrganizationMembership[]
+  sessions    AuthSession[]
+
+  @@index([deletedAt])
+  @@map("User")
+}
+
+model AuthSession {
+  token                String       @id @default(uuid()) @db.Uuid
+  userId               String       @db.Uuid
+  activeOrganizationId String       @db.Uuid
+  activeFacilityId     String?      @db.Uuid
+  expiresAt            DateTime
+  lastSeenAt           DateTime?
+  createdAt            DateTime
+  createdBy            String
+  updatedAt            DateTime
+  updatedBy            String
+  deletedAt            DateTime?
+  deletedBy            String?
+  activeFacility       Facility?    @relation(fields: [activeFacilityId], references: [id], onDelete: SetNull)
+  activeOrganization   Organization @relation(fields: [activeOrganizationId], references: [id], onDelete: Restrict)
+  user                 UserAccount  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([activeOrganizationId])
+  @@index([deletedAt])
+  @@map("Session")
+}
+
+model OrganizationMembership {
+  id             String                  @id @default(uuid()) @db.Uuid
+  organizationId String                  @db.Uuid
+  userId         String                  @db.Uuid
+  roleCode       String
+  status         String
+  isDefault      Boolean                 @default(false)
+  joinedAt       DateTime
+  leftAt         DateTime?
+  createdAt      DateTime
+  createdBy      String
+  updatedAt      DateTime
+  updatedBy      String
+  deletedAt      DateTime?
+  deletedBy      String?
+  facilityScopes MembershipFacilityScope[]
+  organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user           UserAccount             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId, status])
+  @@index([organizationId, status])
+  @@index([deletedAt])
+}
+
+model MembershipFacilityScope {
+  id          String                 @id @default(uuid()) @db.Uuid
+  membershipId String                @db.Uuid
+  facilityId   String                @db.Uuid
+  scopeType    String
+  createdAt    DateTime
+  createdBy    String
+  updatedAt    DateTime
+  updatedBy    String
+  facility     Facility              @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  membership   OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipId, facilityId])
+  @@index([facilityId])
+}
+
+model Resident {
+  id                     String                 @id @default(uuid()) @db.Uuid
+  organizationId         String                 @db.Uuid
+  facilityId             String                 @db.Uuid
+  firstName              String
+  middleNames            String?
+  lastName               String
+  otherLastNames         String?
+  documentType           String?
+  documentNumber         String?
+  documentIssuingCountry String?
+  internalNumber         String?
+  procedureNumber        String?
+  cuil                   String?
+  birthDate              DateTime
+  admissionDate          DateTime
+  sex                    String?
+  maritalStatus          String?
+  nationality            String?
+  email                  String?
+  room                   String
+  careLevel              String
+  status                 String
+  attachments            Json?
+  insurance              Json?
+  transfer               Json?
+  psychiatry             Json?
+  clinicalProfile        Json?
+  belongings             Json?
+  familyContacts         Json?
+  discharge              Json?
+  address                Json
+  emergencyContact       Json
+  createdAt              DateTime
+  createdBy              String
+  updatedAt              DateTime
+  updatedBy              String
+  deletedAt              DateTime?
+  deletedBy              String?
+  clinicalEvents         ClinicalHistoryEvent[]
+  facility               Facility               @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  medications            MedicationOrder[]
+  organization           Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, deletedAt])
+  @@index([organizationId, facilityId, deletedAt])
   @@index([deletedAt])
 }
 
@@ -119,48 +228,59 @@ model MedicationCatalogItem {
 }
 
 model MedicationOrder {
-  id                String              @id @default(uuid()) @db.Uuid
-  medicationCatalogId String            @db.Uuid
-  residentId        String              @db.Uuid
-  medicationName    String
-  dose              String
-  route             String
-  frequency         String
-  scheduleTimes     Json
-  prescribedBy      String
-  startDate         DateTime
-  endDate           DateTime?
-  status            String
-  createdAt         DateTime
-  createdBy         String
-  updatedAt         DateTime
-  updatedBy         String
-  deletedAt         DateTime?
-  deletedBy         String?
-  medicationCatalog MedicationCatalogItem @relation(fields: [medicationCatalogId], references: [id], onDelete: Restrict)
-  resident          Resident            @relation(fields: [residentId], references: [id], onDelete: Restrict)
+  id                 String               @id @default(uuid()) @db.Uuid
+  organizationId     String               @db.Uuid
+  facilityId         String               @db.Uuid
+  medicationCatalogId String              @db.Uuid
+  residentId         String               @db.Uuid
+  medicationName     String
+  dose               String
+  route              String
+  frequency          String
+  scheduleTimes      Json
+  prescribedBy       String
+  startDate          DateTime
+  endDate            DateTime?
+  status             String
+  createdAt          DateTime
+  createdBy          String
+  updatedAt          DateTime
+  updatedBy          String
+  deletedAt          DateTime?
+  deletedBy          String?
+  facility           Facility             @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  medicationCatalog  MedicationCatalogItem @relation(fields: [medicationCatalogId], references: [id], onDelete: Restrict)
+  organization       Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  resident           Resident             @relation(fields: [residentId], references: [id], onDelete: Restrict)
 
+  @@index([organizationId, deletedAt])
+  @@index([organizationId, facilityId, deletedAt])
   @@index([medicationCatalogId])
   @@index([residentId])
   @@index([deletedAt])
 }
 
 model ClinicalHistoryEvent {
-  id          String    @id @default(uuid()) @db.Uuid
-  residentId  String    @db.Uuid
-  eventType   String
-  title       String
-  description String
-  occurredAt  DateTime
-  createdAt   DateTime
-  createdBy   String
-  updatedAt   DateTime
-  updatedBy   String
-  deletedAt   DateTime?
-  deletedBy   String?
-  resident    Resident  @relation(fields: [residentId], references: [id], onDelete: Restrict)
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  facilityId     String?      @db.Uuid
+  residentId     String       @db.Uuid
+  eventType      String
+  title          String
+  description    String
+  occurredAt     DateTime
+  createdAt      DateTime
+  createdBy      String
+  updatedAt      DateTime
+  updatedBy      String
+  deletedAt      DateTime?
+  deletedBy      String?
+  facility       Facility?    @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  resident       Resident     @relation(fields: [residentId], references: [id], onDelete: Restrict)
 
-  @@index([residentId, occurredAt])
+  @@index([organizationId, residentId, occurredAt])
+  @@index([facilityId, occurredAt])
   @@index([deletedAt])
 }
 

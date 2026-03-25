@@ -15,12 +15,23 @@ export class InMemoryMedicationRepository implements MedicationRepository {
     }),
   );
 
-  async list(): Promise<MedicationOrder[]> {
-    return this.medications.map(cloneMedicationOrder);
+  async list(organizationId?: string): Promise<MedicationOrder[]> {
+    return this.medications
+      .filter((order) =>
+        organizationId ? order.organizationId === organizationId : true,
+      )
+      .map(cloneMedicationOrder);
   }
 
-  async findById(id: string): Promise<MedicationOrder | null> {
-    const medication = this.medications.find((candidate) => candidate.id === id);
+  async findById(
+    id: string,
+    organizationId?: string,
+  ): Promise<MedicationOrder | null> {
+    const medication = this.medications.find(
+      (candidate) =>
+        candidate.id === id &&
+        (organizationId ? candidate.organizationId === organizationId : true),
+    );
 
     return medication ? cloneMedicationOrder(medication) : null;
   }

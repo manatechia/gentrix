@@ -50,6 +50,8 @@ export class AuthService {
         email: user.email,
         role: user.role,
       },
+      activeOrganization: user.activeOrganization,
+      activeFacility: user.activeFacility,
       expiresAt: toIsoDateString(new Date(Date.now() + SESSION_TTL_MS)),
     };
 
@@ -66,6 +68,8 @@ export class AuthService {
 
     return {
       user: session.user,
+      activeOrganization: session.activeOrganization,
+      activeFacility: session.activeFacility,
       expiresAt: session.expiresAt,
     };
   }
@@ -76,8 +80,8 @@ export class AuthService {
     return this.sessions.findValidByToken(token);
   }
 
-  async logout(token: string): Promise<LogoutResponse> {
-    const deleted = await this.sessions.delete(token);
+  async logout(token: string, actor: string): Promise<LogoutResponse> {
+    const deleted = await this.sessions.delete(token, actor);
 
     if (!deleted) {
       throw new UnauthorizedException('Unauthorized.');

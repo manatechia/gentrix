@@ -155,6 +155,8 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       setToken(nextSession.token);
       setSession({
         user: nextSession.user,
+        activeOrganization: nextSession.activeOrganization,
+        activeFacility: nextSession.activeFacility,
         expiresAt: nextSession.expiresAt,
       });
       setStatus('authenticated');

@@ -40,8 +40,8 @@ export class StaffService {
     private readonly staffRepository: StaffRepository,
   ) {}
 
-  async getStaff(): Promise<StaffOverview[]> {
-    return (await this.staffRepository.list()).map((member) => ({
+  async getStaff(organizationId?: string): Promise<StaffOverview[]> {
+    return (await this.staffRepository.list(organizationId)).map((member) => ({
       id: member.id,
       name: `${member.firstName} ${member.lastName}`,
       role: member.role,
@@ -52,7 +52,7 @@ export class StaffService {
     }));
   }
 
-  async getStaffEntities(): Promise<StaffMember[]> {
-    return this.staffRepository.list();
+  async getStaffEntities(organizationId?: string): Promise<StaffMember[]> {
+    return this.staffRepository.list(organizationId);
   }
 }

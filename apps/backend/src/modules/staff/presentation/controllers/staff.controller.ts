@@ -1,5 +1,6 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Inject, Req } from '@nestjs/common';
 
+import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { StaffService } from '../../application/staff.service';
 
 @Controller('api/staff')
@@ -10,7 +11,9 @@ export class StaffController {
   ) {}
 
   @Get()
-  getStaff() {
-    return this.staffService.getStaff();
+  getStaff(@Req() request: RequestWithSession) {
+    return this.staffService.getStaff(
+      request.authSession!.activeOrganization.id,
+    );
   }
 }

@@ -1,8 +1,8 @@
 import type { Resident } from '@gentrix/domain-residents';
 
 export interface ResidentRepository {
-  list(): Promise<Resident[]>;
-  findById(id: string): Promise<Resident | null>;
+  list(organizationId?: string): Promise<Resident[]>;
+  findById(id: string, organizationId?: string): Promise<Resident | null>;
   create(resident: Resident): Promise<Resident>;
   update(resident: Resident): Promise<Resident>;
 }

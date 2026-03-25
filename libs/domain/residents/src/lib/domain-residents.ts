@@ -35,6 +35,8 @@ export type CareLevel = ResidentCareLevel;
 
 export interface Resident {
   id: EntityId;
+  organizationId: EntityId;
+  facilityId: EntityId;
   firstName: string;
   middleNames?: string;
   lastName: string;
@@ -149,6 +151,9 @@ const baseAudit: AuditTrail = {
   updatedBy: 'setup-script',
 };
 
+const defaultOrganizationId = createEntityId('organization', 'gentrix demo');
+const defaultFacilityId = createEntityId('facility', 'residencia central');
+
 export const residentCareLevels: CareLevel[] = [
   'independent',
   'assisted',
@@ -232,6 +237,8 @@ export function createResidentSeed(
   ];
   const residentBase: Resident = {
     id: createEntityId('resident', 'Marta Diaz A-101'),
+    organizationId: defaultOrganizationId,
+    facilityId: defaultFacilityId,
     firstName: 'Marta',
     middleNames: '',
     lastName: 'Diaz',
@@ -305,6 +312,8 @@ export function createResidentSeed(
 
 export function createResidentFromIntake(
   input: ResidentCreateInput,
+  organizationId: Resident['organizationId'],
+  facilityId: Resident['facilityId'],
   referenceDate: Date = new Date(),
 ): Resident {
   const now = toIsoDateString(referenceDate);
@@ -313,6 +322,8 @@ export function createResidentFromIntake(
   return createResidentSeed({
     id: createRandomEntityId(),
     internalNumber: createRandomEntityId(),
+    organizationId,
+    facilityId,
     status: 'active',
     ...editableFields,
     address: {

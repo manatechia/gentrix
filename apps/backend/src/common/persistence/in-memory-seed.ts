@@ -1,12 +1,31 @@
 import { createMedicationSeed } from '@gentrix/domain-medication';
 import { createResidentSeed } from '@gentrix/domain-residents';
 import { createStaffSeed } from '@gentrix/domain-staff';
-import type { AuthRole, AuthUser } from '@gentrix/shared-types';
+import type {
+  AuthFacility,
+  AuthOrganization,
+  AuthRole,
+  AuthUser,
+} from '@gentrix/shared-types';
 import { createEntityId } from '@gentrix/shared-utils';
 
 export interface SeedUser extends AuthUser {
   password: string;
+  activeOrganization: AuthOrganization;
+  activeFacility?: AuthFacility;
 }
+
+export const seedDefaultOrganization: AuthOrganization = {
+  id: createEntityId('organization', 'gentrix demo'),
+  slug: 'gentrix-demo',
+  displayName: 'Gentrix Demo',
+};
+
+export const seedDefaultFacility: AuthFacility = {
+  id: createEntityId('facility', 'residencia central'),
+  code: 'central',
+  name: 'Residencia Central',
+};
 
 export const seedUsers: SeedUser[] = [
   {
@@ -15,6 +34,8 @@ export const seedUsers: SeedUser[] = [
     email: 'admin@gentrix.local',
     password: 'gentrix123',
     role: 'admin' satisfies AuthRole,
+    activeOrganization: seedDefaultOrganization,
+    activeFacility: seedDefaultFacility,
   },
 ];
 

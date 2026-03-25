@@ -4,7 +4,7 @@ import { createPrismaClient } from './prisma-client.mjs';
 import { seedDatabase } from './seed.mjs';
 
 export async function seedIfEmpty(prisma) {
-  const userCount = await prisma.user.count();
+  const userCount = await prisma.userAccount.count();
 
   if (userCount > 0) {
     console.log('Skipping demo seed: la base ya tiene usuarios.');

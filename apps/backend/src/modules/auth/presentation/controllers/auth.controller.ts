@@ -29,12 +29,17 @@ export class AuthController {
   getSession(@Req() request: RequestWithSession) {
     return {
       user: request.authSession!.user,
+      activeOrganization: request.authSession!.activeOrganization,
+      activeFacility: request.authSession!.activeFacility,
       expiresAt: request.authSession!.expiresAt,
     };
   }
 
   @Post('logout')
   logout(@Req() request: RequestWithSession) {
-    return this.authService.logout(request.authSession!.token);
+    return this.authService.logout(
+      request.authSession!.token,
+      request.authSession!.user.email,
+    );
   }
 }

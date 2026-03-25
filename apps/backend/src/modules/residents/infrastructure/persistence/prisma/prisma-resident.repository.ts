@@ -49,10 +49,11 @@ export class PrismaResidentRepository implements ResidentRepository {
     private readonly prisma: PrismaService,
   ) {}
 
-  async list(): Promise<Resident[]> {
+  async list(organizationId?: string): Promise<Resident[]> {
     const residents = await this.prisma.resident.findMany({
       where: {
         deletedAt: null,
+        organizationId: organizationId ?? undefined,
       },
       include: {
         clinicalEvents: {
@@ -72,11 +73,12 @@ export class PrismaResidentRepository implements ResidentRepository {
     return residents.map(mapResidentRecord);
   }
 
-  async findById(id: string): Promise<Resident | null> {
+  async findById(id: string, organizationId?: string): Promise<Resident | null> {
     const resident = await this.prisma.resident.findFirst({
       where: {
         id,
         deletedAt: null,
+        organizationId: organizationId ?? undefined,
       },
       include: {
         clinicalEvents: {
@@ -97,6 +99,8 @@ export class PrismaResidentRepository implements ResidentRepository {
     const created = await this.prisma.resident.create({
       data: {
         id: resident.id,
+        organizationId: resident.organizationId,
+        facilityId: resident.facilityId,
         internalNumber: resident.internalNumber,
         status: resident.status,
         ...toResidentPersistenceData(resident),
@@ -152,6 +156,8 @@ export class PrismaResidentRepository implements ResidentRepository {
           id: resident.id,
         },
         data: {
+          organizationId: resident.organizationId,
+          facilityId: resident.facilityId,
           ...toResidentPersistenceData(resident),
           updatedAt,
           updatedBy: resident.audit.updatedBy,
@@ -201,6 +207,8 @@ function mapResidentRecord(record: ResidentRecord): Resident {
 
   return {
     id: record.id as Resident['id'],
+    organizationId: record.organizationId as Resident['organizationId'],
+    facilityId: record.facilityId as Resident['facilityId'],
     firstName: record.firstName,
     middleNames: record.middleNames ?? undefined,
     lastName: record.lastName,
@@ -271,6 +279,8 @@ function toJsonInput(value: unknown): Prisma.InputJsonValue {
 
 function toResidentPersistenceData(resident: Resident) {
   return {
+    organizationId: resident.organizationId,
+    facilityId: resident.facilityId,
     firstName: resident.firstName,
     middleNames: resident.middleNames,
     lastName: resident.lastName,
@@ -304,6 +314,8 @@ function toResidentPersistenceData(resident: Resident) {
 function toMedicalHistoryEventRecords(resident: Resident) {
   return resident.medicalHistory.map((entry) => ({
     id: entry.id,
+    organizationId: resident.organizationId,
+    facilityId: resident.facilityId,
     eventType: residentMedicalHistoryEventType,
     title: entry.title,
     description: entry.notes,

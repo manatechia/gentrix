@@ -27,10 +27,11 @@ export class PrismaMedicationRepository implements MedicationRepository {
     private readonly prisma: PrismaService,
   ) {}
 
-  async list(): Promise<MedicationOrder[]> {
+  async list(organizationId?: string): Promise<MedicationOrder[]> {
     const medications = await this.prisma.medicationOrder.findMany({
       where: {
         deletedAt: null,
+        organizationId: organizationId ?? undefined,
       },
       orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
     });
@@ -38,11 +39,15 @@ export class PrismaMedicationRepository implements MedicationRepository {
     return medications.map(mapMedicationRecord);
   }
 
-  async findById(id: string): Promise<MedicationOrder | null> {
+  async findById(
+    id: string,
+    organizationId?: string,
+  ): Promise<MedicationOrder | null> {
     const medication = await this.prisma.medicationOrder.findFirst({
       where: {
         id,
         deletedAt: null,
+        organizationId: organizationId ?? undefined,
       },
     });
 
@@ -53,6 +58,8 @@ export class PrismaMedicationRepository implements MedicationRepository {
     const created = await this.prisma.medicationOrder.create({
       data: {
         id: order.id,
+        organizationId: order.organizationId,
+        facilityId: order.facilityId,
         medicationCatalogId: order.medicationCatalogId,
         residentId: order.residentId,
         ...toMedicationPersistenceData(order),
@@ -74,6 +81,8 @@ export class PrismaMedicationRepository implements MedicationRepository {
         id: order.id,
       },
       data: {
+        organizationId: order.organizationId,
+        facilityId: order.facilityId,
         medicationCatalogId: order.medicationCatalogId,
         residentId: order.residentId,
         ...toMedicationPersistenceData(order),
@@ -91,6 +100,8 @@ export class PrismaMedicationRepository implements MedicationRepository {
 function mapMedicationRecord(record: MedicationRecord): MedicationOrder {
   return {
     id: record.id as MedicationOrder['id'],
+    organizationId: record.organizationId as MedicationOrder['organizationId'],
+    facilityId: record.facilityId as MedicationOrder['facilityId'],
     medicationCatalogId:
       record.medicationCatalogId as MedicationOrder['medicationCatalogId'],
     residentId: record.residentId as MedicationOrder['residentId'],

@@ -47,10 +47,10 @@ export class MedicationService {
     return catalogItems.filter((item) => item.status === 'active');
   }
 
-  async getMedications(): Promise<MedicationOverview[]> {
+  async getMedications(organizationId?: string): Promise<MedicationOverview[]> {
     const [medications, residents] = await Promise.all([
-      this.medicationRepository.list(),
-      this.residentsService.getResidents(),
+      this.medicationRepository.list(organizationId),
+      this.residentsService.getResidents(organizationId),
     ]);
 
     const residentNames = new Map(
@@ -65,8 +65,11 @@ export class MedicationService {
     );
   }
 
-  async getMedicationById(id: string): Promise<MedicationDetail> {
-    const medication = await this.medicationRepository.findById(id);
+  async getMedicationById(
+    id: string,
+    organizationId?: string,
+  ): Promise<MedicationDetail> {
+    const medication = await this.medicationRepository.findById(id, organizationId);
 
     if (!medication) {
       throw new NotFoundException('No encontre la medicacion solicitada.');
@@ -74,18 +77,20 @@ export class MedicationService {
 
     const resident = await this.residentsService.getResidentById(
       medication.residentId,
+      organizationId,
     );
 
     return toMedicationDetail(medication, resident.fullName);
   }
 
-  async getMedicationEntities(): Promise<MedicationOrder[]> {
-    return this.medicationRepository.list();
+  async getMedicationEntities(organizationId?: string): Promise<MedicationOrder[]> {
+    return this.medicationRepository.list(organizationId);
   }
 
   async createMedication(
     input: MedicationCreateInput,
     actor: string,
+    organizationId: MedicationOrder['organizationId'],
   ): Promise<MedicationOverview> {
     const createInput: MedicationCreateInput = {
       ...input,
@@ -95,25 +100,37 @@ export class MedicationService {
     this.validateMedicationInput(createInput);
 
     const [resident, medicationCatalogItem] = await Promise.all([
-      this.residentsService.getResidentById(createInput.residentId),
+      this.residentsService.getResidentEntityById(
+        createInput.residentId,
+        organizationId,
+      ),
       this.getRequiredMedicationCatalogItem(createInput.medicationCatalogId),
     ]);
     const medication = createMedicationFromInput(
       createInput,
       medicationCatalogItem.medicationName,
+      resident.organizationId,
+      resident.facilityId,
       actor,
     );
     const createdMedication = await this.medicationRepository.create(medication);
 
-    return toMedicationOverview(createdMedication, resident.fullName);
+    return toMedicationOverview(
+      createdMedication,
+      `${resident.firstName} ${resident.lastName}`.trim(),
+    );
   }
 
   async updateMedication(
     id: string,
     input: MedicationUpdateInput,
     actor: string,
+    organizationId: MedicationOrder['organizationId'],
   ): Promise<MedicationDetail> {
-    const currentMedication = await this.medicationRepository.findById(id);
+    const currentMedication = await this.medicationRepository.findById(
+      id,
+      organizationId,
+    );
 
     if (!currentMedication) {
       throw new NotFoundException('No encontre la medicacion solicitada.');
@@ -122,20 +139,25 @@ export class MedicationService {
     this.validateMedicationInput(input);
 
     const [resident, medicationCatalogItem] = await Promise.all([
-      this.residentsService.getResidentById(input.residentId),
+      this.residentsService.getResidentEntityById(input.residentId, organizationId),
       this.getRequiredMedicationCatalogItem(input.medicationCatalogId),
     ]);
     const updatedMedication = updateMedicationFromInput(
       currentMedication,
       input,
       medicationCatalogItem.medicationName,
+      resident.organizationId,
+      resident.facilityId,
       actor,
     );
     const persistedMedication = await this.medicationRepository.update(
       updatedMedication,
     );
 
-    return toMedicationDetail(persistedMedication, resident.fullName);
+    return toMedicationDetail(
+      persistedMedication,
+      `${resident.firstName} ${resident.lastName}`.trim(),
+    );
   }
 
   private async getRequiredMedicationCatalogItem(

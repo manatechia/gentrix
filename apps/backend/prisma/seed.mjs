@@ -2,8 +2,17 @@ import { pathToFileURL } from 'node:url';
 
 import { createPrismaClient } from './prisma-client.mjs';
 const ids = {
+  organizations: {
+    gentrixDemo: '91000000-0000-4000-8000-000000000001',
+  },
+  facilities: {
+    residenciaCentral: '91000000-0000-4000-8000-000000000002',
+  },
   users: {
     sofiaQuiroga: '8f4e8eb5-f02f-49f3-8c1e-e8fba2264ec6',
+  },
+  memberships: {
+    sofiaQuirogaDemo: '91000000-0000-4000-8000-000000000003',
   },
   residents: {
     martaDiaz: 'f3bf3160-6a6e-492f-a632-e7485915a54d',
@@ -42,22 +51,28 @@ const ids = {
 };
 
 export async function seedDatabase(prisma) {
-  await prisma.session.deleteMany();
+  await prisma.authSession.deleteMany();
   await prisma.staffSchedule.deleteMany();
   await prisma.clinicalHistoryEvent.deleteMany();
   await prisma.medicationOrder.deleteMany();
   await prisma.medicationCatalogItem.deleteMany();
   await prisma.staffMember.deleteMany();
   await prisma.resident.deleteMany();
-  await prisma.user.deleteMany();
+  await prisma.membershipFacilityScope.deleteMany();
+  await prisma.organizationMembership.deleteMany();
+  await prisma.facility.deleteMany();
+  await prisma.organization.deleteMany();
+  await prisma.userAccount.deleteMany();
 
-  await prisma.user.create({
+  await prisma.organization.create({
     data: {
-      id: ids.users.sofiaQuiroga,
-      fullName: 'Sofia Quiroga',
-      email: 'admin@gentrix.local',
-      password: 'gentrix123',
-      role: 'admin',
+      id: ids.organizations.gentrixDemo,
+      slug: 'gentrix-demo',
+      legalName: 'Gentrix Demo SA',
+      displayName: 'Gentrix Demo',
+      status: 'active',
+      timezone: 'America/Argentina/Buenos_Aires',
+      defaultLocale: 'es-AR',
       createdAt: new Date('2026-01-10T09:00:00.000Z'),
       createdBy: 'seed-script',
       updatedAt: new Date('2026-03-20T09:00:00.000Z'),
@@ -65,10 +80,76 @@ export async function seedDatabase(prisma) {
     },
   });
 
+  await prisma.facility.create({
+    data: {
+      id: ids.facilities.residenciaCentral,
+      organizationId: ids.organizations.gentrixDemo,
+      code: 'central',
+      name: 'Residencia Central',
+      status: 'active',
+      address: {
+        street: 'Av. Siempreviva 742',
+        city: 'Buenos Aires',
+        state: 'CABA',
+        postalCode: 'C1405',
+      },
+      phone: '+54 11 5555-0000',
+      email: 'central@gentrix.local',
+      capacity: 24,
+      createdAt: new Date('2026-01-10T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
+  await prisma.userAccount.create({
+    data: {
+      id: ids.users.sofiaQuiroga,
+      fullName: 'Sofia Quiroga',
+      email: 'admin@gentrix.local',
+      password: 'gentrix123',
+      role: 'admin',
+      status: 'active',
+      createdAt: new Date('2026-01-10T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
+  await prisma.organizationMembership.create({
+    data: {
+      id: ids.memberships.sofiaQuirogaDemo,
+      organizationId: ids.organizations.gentrixDemo,
+      userId: ids.users.sofiaQuiroga,
+      roleCode: 'admin',
+      status: 'active',
+      isDefault: true,
+      joinedAt: new Date('2026-01-10T09:00:00.000Z'),
+      createdAt: new Date('2026-01-10T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+      facilityScopes: {
+        create: {
+          facilityId: ids.facilities.residenciaCentral,
+          scopeType: 'assigned',
+          createdAt: new Date('2026-01-10T09:00:00.000Z'),
+          createdBy: 'seed-script',
+          updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+          updatedBy: 'seed-script',
+        },
+      },
+    },
+  });
+
   await prisma.resident.createMany({
     data: [
       {
         id: ids.residents.martaDiaz,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
         firstName: 'Marta',
         middleNames: '',
         lastName: 'Diaz',
@@ -155,6 +236,8 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.residents.elenaSuarez,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
         firstName: 'Elena',
         middleNames: '',
         lastName: 'Suarez',
@@ -241,6 +324,8 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.residents.raulBenitez,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
         firstName: 'Raul',
         middleNames: '',
         lastName: 'Benitez',
@@ -379,6 +464,8 @@ export async function seedDatabase(prisma) {
     data: [
       {
         id: ids.clinicalHistory.martaAdmission,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
         residentId: ids.residents.martaDiaz,
         eventType: 'admission-note',
         title: 'Ingreso y evaluacion inicial',
@@ -392,6 +479,8 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.clinicalHistory.elenaNeurologyReview,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
         residentId: ids.residents.elenaSuarez,
         eventType: 'follow-up',
         title: 'Seguimiento cognitivo',
@@ -495,6 +584,8 @@ export async function seedDatabase(prisma) {
     data: [
       {
         id: ids.medications.paracetamolMarta,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
         medicationCatalogId: ids.medicationCatalog.paracetamol,
         residentId: ids.residents.martaDiaz,
         medicationName: 'Paracetamol',
@@ -512,6 +603,8 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.medications.donepezilElena,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
         medicationCatalogId: ids.medicationCatalog.donepezil,
         residentId: ids.residents.elenaSuarez,
         medicationName: 'Donepezil',
@@ -529,6 +622,8 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.medications.enoxaparinaRaul,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
         medicationCatalogId: ids.medicationCatalog.enoxaparina,
         residentId: ids.residents.raulBenitez,
         medicationName: 'Enoxaparina',

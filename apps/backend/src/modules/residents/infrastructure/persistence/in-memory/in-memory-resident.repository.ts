@@ -9,12 +9,20 @@ import type { ResidentRepository } from '../../../domain/repositories/resident.r
 export class InMemoryResidentRepository implements ResidentRepository {
   private readonly residents: Resident[] = seedResidents.map(cloneResident);
 
-  async list(): Promise<Resident[]> {
-    return this.residents.map(cloneResident);
+  async list(organizationId?: string): Promise<Resident[]> {
+    return this.residents
+      .filter((resident) =>
+        organizationId ? resident.organizationId === organizationId : true,
+      )
+      .map(cloneResident);
   }
 
-  async findById(id: string): Promise<Resident | null> {
-    const resident = this.residents.find((candidate) => candidate.id === id);
+  async findById(id: string, organizationId?: string): Promise<Resident | null> {
+    const resident = this.residents.find(
+      (candidate) =>
+        candidate.id === id &&
+        (organizationId ? candidate.organizationId === organizationId : true),
+    );
 
     if (!resident) {
       return null;
