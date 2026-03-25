@@ -18,7 +18,7 @@ export function Sidebar({
   onLogout,
 }: SidebarProps) {
   return (
-    <aside className="sticky top-0 z-10 flex h-screen max-h-screen flex-col gap-3.5 overflow-hidden rounded-r-[28px] bg-[linear-gradient(180deg,rgba(47,79,79,0.98),rgba(37,63,63,0.98))] px-[18px] py-[22px] text-white shadow-sidebar max-[1180px]:static max-[1180px]:h-auto max-[1180px]:max-h-none max-[1180px]:rounded-b-[28px] max-[1180px]:rounded-tr-none max-[1180px]:shadow-panel">
+    <aside className="sticky top-0 z-10 flex h-screen max-h-screen min-h-0 flex-col gap-3.5 overflow-y-auto rounded-r-[28px] bg-[linear-gradient(180deg,rgba(47,79,79,0.98),rgba(37,63,63,0.98))] px-[18px] py-[22px] text-white shadow-sidebar max-[1180px]:static max-[1180px]:h-auto max-[1180px]:max-h-none max-[1180px]:rounded-b-[28px] max-[1180px]:rounded-tr-none max-[1180px]:shadow-panel">
       <div className="flex items-center gap-3.5">
         <div className="grid h-[46px] w-[46px] place-items-center rounded-[14px] bg-[linear-gradient(180deg,#def6fb,#b7e7f0)] font-bold text-brand-secondary">
           G
@@ -40,7 +40,7 @@ export function Sidebar({
         </strong>
       </div>
 
-      <nav className="grid gap-2">
+      <nav className="grid min-h-0 gap-2">
         {sidebarSections.map((section) => (
           'path' in section ? (
             <NavLink

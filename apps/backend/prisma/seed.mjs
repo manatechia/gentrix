@@ -15,6 +15,16 @@ const ids = {
     mauroPaz: 'dcd490ca-605b-4adb-8a4d-7d83972db84a',
     luciaMendez: '54b355fb-6515-4800-9443-0b0577f52350',
   },
+  medicationCatalog: {
+    paracetamol: '11111111-1111-4111-8111-111111111111',
+    donepezil: '22222222-2222-4222-8222-222222222222',
+    enoxaparina: '33333333-3333-4333-8333-333333333333',
+    metformina: '44444444-4444-4444-8444-444444444444',
+    levotiroxina: '55555555-5555-4555-8555-555555555555',
+    furosemida: '66666666-6666-4666-8666-666666666666',
+    quetiapina: '77777777-7777-4777-8777-777777777777',
+    risperidona: '88888888-8888-4888-8888-888888888888',
+  },
   medications: {
     paracetamolMarta: '4595044f-f7f8-4a0a-8a1e-a0a37662789a',
     donepezilElena: '32d18f29-f891-42ea-83ec-269b055f933a',
@@ -36,6 +46,7 @@ export async function seedDatabase(prisma) {
   await prisma.staffSchedule.deleteMany();
   await prisma.clinicalHistoryEvent.deleteMany();
   await prisma.medicationOrder.deleteMany();
+  await prisma.medicationCatalogItem.deleteMany();
   await prisma.staffMember.deleteMany();
   await prisma.resident.deleteMany();
   await prisma.user.deleteMany();
@@ -395,10 +406,96 @@ export async function seedDatabase(prisma) {
     ],
   });
 
+  await prisma.medicationCatalogItem.createMany({
+    data: [
+      {
+        id: ids.medicationCatalog.paracetamol,
+        medicationName: 'Paracetamol',
+        activeIngredient: 'Paracetamol',
+        status: 'active',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.medicationCatalog.donepezil,
+        medicationName: 'Donepezil',
+        activeIngredient: 'Donepezil',
+        status: 'active',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.medicationCatalog.enoxaparina,
+        medicationName: 'Enoxaparina',
+        activeIngredient: 'Enoxaparina sodica',
+        status: 'active',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.medicationCatalog.metformina,
+        medicationName: 'Metformina',
+        activeIngredient: 'Metformina',
+        status: 'active',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.medicationCatalog.levotiroxina,
+        medicationName: 'Levotiroxina',
+        activeIngredient: 'Levotiroxina sodica',
+        status: 'active',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.medicationCatalog.furosemida,
+        medicationName: 'Furosemida',
+        activeIngredient: 'Furosemida',
+        status: 'active',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.medicationCatalog.quetiapina,
+        medicationName: 'Quetiapina',
+        activeIngredient: 'Quetiapina',
+        status: 'active',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.medicationCatalog.risperidona,
+        medicationName: 'Risperidona',
+        activeIngredient: 'Risperidona',
+        status: 'active',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+    ],
+  });
+
   await prisma.medicationOrder.createMany({
     data: [
       {
         id: ids.medications.paracetamolMarta,
+        medicationCatalogId: ids.medicationCatalog.paracetamol,
         residentId: ids.residents.martaDiaz,
         medicationName: 'Paracetamol',
         dose: '500 mg',
@@ -415,6 +512,7 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.medications.donepezilElena,
+        medicationCatalogId: ids.medicationCatalog.donepezil,
         residentId: ids.residents.elenaSuarez,
         medicationName: 'Donepezil',
         dose: '10 mg',
@@ -431,6 +529,7 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.medications.enoxaparinaRaul,
+        medicationCatalogId: ids.medicationCatalog.enoxaparina,
         residentId: ids.residents.raulBenitez,
         medicationName: 'Enoxaparina',
         dose: '40 mg',

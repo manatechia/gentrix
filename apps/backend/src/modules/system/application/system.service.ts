@@ -36,6 +36,7 @@ export class SystemService {
         '/api/residents',
         '/api/staff',
         '/api/medications',
+        '/api/medications/catalog',
       ],
       authEndpoints: [
         '/api/auth/login',

@@ -1,6 +1,8 @@
 import type {
   AuthRole,
   EntityStatus,
+  MedicationFrequency,
+  MedicationRoute,
   ResidentAttachmentKind,
   ResidentCareLevel,
   ResidentDocumentType,
@@ -44,6 +46,20 @@ const authRoleLabels: Record<AuthRole, string> = {
   coordinator: 'Coordinacion',
 };
 
+const medicationRouteLabels: Record<MedicationRoute, string> = {
+  oral: 'Oral',
+  intravenous: 'Intravenosa',
+  subcutaneous: 'Subcutanea',
+  topical: 'Topica',
+};
+
+const medicationFrequencyLabels: Record<MedicationFrequency, string> = {
+  daily: 'A diario',
+  'twice-daily': 'Dos veces al dia',
+  nightly: 'Por la noche',
+  'as-needed': 'Segun necesidad',
+};
+
 const staffRoleLabels: Record<string, string> = {
   nurse: 'Enfermeria',
   doctor: 'Medico',
@@ -83,6 +99,16 @@ export function formatResidentAttachmentKind(
 
 export function formatAuthRole(role: AuthRole): string {
   return authRoleLabels[role] ?? role;
+}
+
+export function formatMedicationRoute(route: MedicationRoute): string {
+  return medicationRouteLabels[route] ?? route;
+}
+
+export function formatMedicationFrequency(
+  frequency: MedicationFrequency,
+): string {
+  return medicationFrequencyLabels[frequency] ?? frequency;
 }
 
 export function formatStaffRole(role: string): string {

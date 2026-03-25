@@ -49,10 +49,38 @@ services:
     build:
       context: .
       dockerfile: docker/app.Dockerfile
+      target: frontend-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      GENTRIX_FRONTEND_HOST: 0.0.0.0
+      GENTRIX_FRONTEND_PORT: 4200
+      GENTRIX_BACKEND_PROXY_TARGET: http://backend:3333
+      GENTRIX_FRONTEND_WATCH_POLLING: 'true'
+    ports:
+      - '${FRONTEND_PORT:-4200}:4200'
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./apps:/app/apps
+      - ./libs:/app/libs
+      - ./package.json:/app/package.json:ro
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
+      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
+      - ./nx.json:/app/nx.json:ro
+      - ./tsconfig.base.json:/app/tsconfig.base.json:ro
+      - ./prisma.config.ts:/app/prisma.config.ts:ro
+
+  frontend-preview:
+    profiles: ['preview']
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
       target: frontend-runtime
     restart: unless-stopped
     ports:
-      - '${FRONTEND_PORT:-4200}:80'
+      - '${FRONTEND_PREVIEW_PORT:-4201}:80'
     depends_on:
       backend:
         condition: service_healthy

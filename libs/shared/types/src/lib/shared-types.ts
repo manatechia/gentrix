@@ -246,14 +246,61 @@ export interface StaffOverview {
   status: EntityStatus;
 }
 
+export type MedicationRoute =
+  | 'oral'
+  | 'intravenous'
+  | 'subcutaneous'
+  | 'topical';
+
+export type MedicationFrequency =
+  | 'daily'
+  | 'twice-daily'
+  | 'nightly'
+  | 'as-needed';
+
+export interface MedicationCatalogItem {
+  id: EntityId;
+  medicationName: string;
+  activeIngredient?: string;
+  status: EntityStatus;
+}
+
 export interface MedicationOverview {
   id: EntityId;
+  medicationCatalogId: EntityId;
   residentId: EntityId;
   residentName: string;
   medicationName: string;
+  dose: string;
+  route: MedicationRoute;
+  frequency: MedicationFrequency;
+  scheduleTimes: string[];
+  prescribedBy: string;
+  startDate: IsoDateString;
+  endDate?: IsoDateString;
+  status: EntityStatus;
   active: boolean;
   schedule: string;
 }
+
+export interface MedicationDetail extends MedicationOverview {
+  audit: AuditTrail;
+}
+
+export interface MedicationCreateInput {
+  medicationCatalogId: EntityId;
+  residentId: EntityId;
+  dose: string;
+  route: MedicationRoute;
+  frequency: MedicationFrequency;
+  scheduleTimes: string[];
+  prescribedBy: string;
+  startDate: IsoDateString;
+  endDate?: IsoDateString;
+  status: EntityStatus;
+}
+
+export interface MedicationUpdateInput extends MedicationCreateInput {}
 
 export interface DashboardSummary {
   residentCount: number;

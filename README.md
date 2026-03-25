@@ -53,13 +53,12 @@ Package manager oficial del repo: `pnpm`.
 - Frontend: `http://localhost:4200`
 - Backend: `http://localhost:3333`
 - PostgreSQL: `localhost:55432`
-- Para desarrollo rapido del frontend con hot reload en Docker:
-  `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build frontend-dev`
-- Si ya esta corriendo el frontend productivo de Docker, primero detenerlo con:
-  `docker compose stop frontend`
+- `frontend` ahora corre con Vite dentro de Docker y refleja cambios del repo por bind mounts + polling, sin rebuild por cada ajuste de UI.
+- Para una vista estatica tipo produccion:
+  `docker compose --profile preview up --build frontend-preview`
 - El backend aplica `prisma migrate deploy` al arrancar.
 - Si la base esta vacia y `AUTO_SEED_DEMO=true`, carga los datos demo una sola vez.
-- Se pueden sobreescribir los puertos host con `FRONTEND_PORT`, `BACKEND_PORT` y `POSTGRES_PORT`.
+- Se pueden sobreescribir los puertos host con `FRONTEND_PORT`, `FRONTEND_PREVIEW_PORT`, `BACKEND_PORT` y `POSTGRES_PORT`.
 - Para resetear todo el estado local: `docker compose down -v`
 - Para resembrar manualmente una base ya creada: `docker compose exec backend node apps/backend/prisma/seed.mjs`
 
@@ -75,5 +74,5 @@ Package manager oficial del repo: `pnpm`.
 ## Nota De Desarrollo
 
 El frontend usa proxy de Vite para redirigir `/api/*` al backend local en desarrollo.
-La variante `docker-compose.dev.yml` monta `apps/` y `libs/` dentro del contenedor y usa polling para reflejar cambios rapido en Docker Desktop.
+El servicio `frontend` ya monta `apps/` y `libs/` dentro del contenedor y usa polling para reflejar cambios rapido en Docker Desktop.
 Las sesiones actuales viven en memoria del backend, asi que se reinician al reiniciar el servidor.

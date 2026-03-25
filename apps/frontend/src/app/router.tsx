@@ -1,10 +1,22 @@
-import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
+import { useState } from 'react';
+import {
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
 
 import { useAuthSession } from '../features/auth/hooks/use-auth-session';
 import { AuthCheckingScreen } from '../features/auth/ui/auth-checking-screen';
-import { LoginScreen } from '../features/auth/ui/login-screen';
 import { useDashboardRoute } from '../features/dashboard/hooks/use-dashboard-route';
 import { DashboardWorkspace } from '../features/dashboard/ui/dashboard-workspace';
+import { LoginScreen } from '../features/auth/ui/login-screen';
+import { useMedicationEditRoute } from '../features/medication/hooks/use-medication-edit-route';
+import { useMedicationsRoute } from '../features/medication/hooks/use-medications-route';
+import { MedicationCreateWorkspace } from '../features/medication/ui/medication-create-workspace';
+import { MedicationEditWorkspace } from '../features/medication/ui/medication-edit-workspace';
+import { MedicationsWorkspace } from '../features/medication/ui/medications-workspace';
 import { useResidentEditRoute } from '../features/residents/hooks/use-resident-edit-route';
 import { useResidentDetailRoute } from '../features/residents/hooks/use-resident-detail-route';
 import { useResidentsRoute } from '../features/residents/hooks/use-residents-route';
@@ -192,6 +204,113 @@ function ResidentEditRoute() {
   );
 }
 
+function MedicationsRoute() {
+  const auth = useAuthSession();
+  const medications = useMedicationsRoute();
+
+  if (auth.status === 'checking') {
+    return <AuthCheckingScreen />;
+  }
+
+  if (!auth.session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <MedicationsWorkspace
+      screenState={medications.screenState}
+      session={auth.session}
+      authError={medications.medicationsError}
+      residentCount={medications.residentCount}
+      medicationCount={medications.medicationCount}
+      activeMedicationCount={medications.activeMedicationCount}
+      medications={medications.medications}
+      residentOptions={medications.residentOptions}
+      onLogout={auth.logout}
+      onRetry={medications.handleRetry}
+    />
+  );
+}
+
+function MedicationCreateRoute() {
+  const auth = useAuthSession();
+  const medications = useMedicationsRoute();
+
+  if (auth.status === 'checking') {
+    return <AuthCheckingScreen />;
+  }
+
+  if (!auth.session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <MedicationCreateWorkspace
+      screenState={medications.screenState}
+      session={auth.session}
+      authError={medications.medicationsError}
+      residentCount={medications.residentCount}
+      medicationCount={medications.medicationCount}
+      residentOptions={medications.residentOptions}
+      medicationCatalogOptions={medications.medicationCatalogOptions}
+      isSavingMedication={medications.isSavingMedication}
+      medicationNoticeTone={medications.medicationNoticeTone}
+      medicationNotice={medications.medicationNotice}
+      onMedicationCreate={medications.handleMedicationCreate}
+      onLogout={auth.logout}
+    />
+  );
+}
+
+function MedicationEditRoute() {
+  const auth = useAuthSession();
+  const { medicationId } = useParams();
+  const edit = useMedicationEditRoute(medicationId);
+  const [redirectState, setRedirectState] = useState<{
+    medicationNotice: string;
+    medicationNoticeTone: 'success' | 'error';
+  } | null>(null);
+
+  if (auth.status === 'checking') {
+    return <AuthCheckingScreen />;
+  }
+
+  if (!auth.session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (redirectState) {
+    return <Navigate to="/medicacion" replace state={redirectState} />;
+  }
+
+  return (
+    <MedicationEditWorkspace
+      screenState={edit.screenState}
+      session={auth.session}
+      residentCount={edit.residentCount}
+      medication={edit.medication}
+      medicationError={edit.medicationError}
+      residentOptions={edit.residentOptions}
+      medicationCatalogOptions={edit.medicationCatalogOptions}
+      isSavingMedication={edit.isSavingMedication}
+      medicationNoticeTone={edit.medicationNoticeTone}
+      medicationNotice={edit.medicationNotice}
+      onMedicationUpdate={async (values) => {
+        const updatedMedication = await edit.handleMedicationUpdate(values);
+
+        if (updatedMedication) {
+          setRedirectState({
+            medicationNotice: `Orden de ${updatedMedication.medicationName} actualizada correctamente.`,
+            medicationNoticeTone: 'success',
+          });
+        }
+      }}
+      onLogout={auth.logout}
+      onRetry={edit.handleRetry}
+    />
+  );
+}
+
 function RootRedirect() {
   const auth = useAuthSession();
 
@@ -199,9 +318,17 @@ function RootRedirect() {
     return <AuthCheckingScreen />;
   }
 
-  return (
-    <Navigate to={auth.session ? '/dashboard' : '/login'} replace />
-  );
+  return <Navigate to={auth.session ? '/dashboard' : '/login'} replace />;
+}
+
+function MedicationPluralEditRedirect() {
+  const { medicationId } = useParams();
+
+  if (!medicationId) {
+    return <Navigate to="/medicacion" replace />;
+  }
+
+  return <Navigate to={`/medicacion/${medicationId}/editar`} replace />;
 }
 
 export function AppRouter() {
@@ -214,6 +341,18 @@ export function AppRouter() {
       <Route path="/residentes/nuevo" element={<ResidentCreateRoute />} />
       <Route path="/residentes/:residentId/editar" element={<ResidentEditRoute />} />
       <Route path="/residentes/:residentId" element={<ResidentDetailRoute />} />
+      <Route path="/medicacion" element={<MedicationsRoute />} />
+      <Route path="/medicacion/nueva" element={<MedicationCreateRoute />} />
+      <Route path="/medicacion/:medicationId/editar" element={<MedicationEditRoute />} />
+      <Route path="/medicaciones" element={<Navigate to="/medicacion" replace />} />
+      <Route
+        path="/medicaciones/nueva"
+        element={<Navigate to="/medicacion/nueva" replace />}
+      />
+      <Route
+        path="/medicaciones/:medicationId/editar"
+        element={<MedicationPluralEditRedirect />}
+      />
       <Route path="*" element={<RootRedirect />} />
     </Routes>
   );

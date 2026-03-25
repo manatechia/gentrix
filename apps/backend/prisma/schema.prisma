@@ -102,26 +102,45 @@ model StaffMember {
   @@index([deletedAt])
 }
 
-model MedicationOrder {
-  id             String   @id @default(uuid()) @db.Uuid
-  residentId     String   @db.Uuid
-  medicationName String
-  dose           String
-  route          String
-  frequency      String
-  scheduleTimes  Json
-  prescribedBy   String
-  startDate      DateTime
-  endDate        DateTime?
-  status         String
-  createdAt      DateTime
-  createdBy      String
-  updatedAt      DateTime
-  updatedBy      String
-  deletedAt      DateTime?
-  deletedBy      String?
-  resident       Resident @relation(fields: [residentId], references: [id], onDelete: Restrict)
+model MedicationCatalogItem {
+  id               String            @id @default(uuid()) @db.Uuid
+  medicationName   String            @unique
+  activeIngredient String?
+  status           String
+  createdAt        DateTime
+  createdBy        String
+  updatedAt        DateTime
+  updatedBy        String
+  deletedAt        DateTime?
+  deletedBy        String?
+  orders           MedicationOrder[]
 
+  @@index([deletedAt])
+}
+
+model MedicationOrder {
+  id                String              @id @default(uuid()) @db.Uuid
+  medicationCatalogId String            @db.Uuid
+  residentId        String              @db.Uuid
+  medicationName    String
+  dose              String
+  route             String
+  frequency         String
+  scheduleTimes     Json
+  prescribedBy      String
+  startDate         DateTime
+  endDate           DateTime?
+  status            String
+  createdAt         DateTime
+  createdBy         String
+  updatedAt         DateTime
+  updatedBy         String
+  deletedAt         DateTime?
+  deletedBy         String?
+  medicationCatalog MedicationCatalogItem @relation(fields: [medicationCatalogId], references: [id], onDelete: Restrict)
+  resident          Resident            @relation(fields: [residentId], references: [id], onDelete: Restrict)
+
+  @@index([medicationCatalogId])
   @@index([residentId])
   @@index([deletedAt])
 }

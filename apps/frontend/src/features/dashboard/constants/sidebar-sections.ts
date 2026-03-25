@@ -14,5 +14,11 @@ export const sidebarSections = [
     end: false,
   },
   { label: 'Personal', meta: 'cobertura del turno', badge: 'PE' },
-  { label: 'Medicacion', meta: 'agenda clinica', badge: 'MD' },
+  {
+    label: 'Medicacion',
+    meta: 'agenda clinica',
+    badge: 'MD',
+    path: '/medicacion',
+    end: false,
+  },
 ] as const;

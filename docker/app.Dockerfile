@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim AS workspace
+FROM node:22-bookworm-slim AS workspace-deps
 
 WORKDIR /app
 
@@ -12,10 +12,13 @@ RUN corepack enable
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json prisma.config.ts ./
-COPY apps ./apps
-COPY libs ./libs
 
 RUN pnpm install --frozen-lockfile
+
+FROM workspace-deps AS workspace
+
+COPY apps ./apps
+COPY libs ./libs
 RUN pnpm prisma generate
 
 FROM workspace AS backend-build

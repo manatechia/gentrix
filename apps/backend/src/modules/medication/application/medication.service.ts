@@ -1,59 +1,218 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
-import { isMedicationActive, type MedicationOrder } from '@gentrix/domain-medication';
-import type { MedicationOverview } from '@gentrix/shared-types';
+import {
+  createMedicationFromInput,
+  toMedicationDetail,
+  toMedicationOverview,
+  updateMedicationFromInput,
+  type MedicationOrder,
+} from '@gentrix/domain-medication';
+import type {
+  MedicationCatalogItem,
+  MedicationCreateInput,
+  MedicationDetail,
+  MedicationOverview,
+  MedicationUpdateInput,
+} from '@gentrix/shared-types';
 
 import { ResidentsService } from '../../residents/application/residents.service';
+import {
+  MEDICATION_CATALOG_REPOSITORY,
+  type MedicationCatalogRepository,
+} from '../domain/repositories/medication-catalog.repository';
 import {
   MEDICATION_REPOSITORY,
   type MedicationRepository,
 } from '../domain/repositories/medication.repository';
-
-function formatMedicationFrequency(frequency: string): string {
-  const labels: Record<string, string> = {
-    daily: 'A diario',
-    'twice-daily': 'Dos veces al dia',
-    nightly: 'Por la noche',
-    'as-needed': 'Segun necesidad',
-  };
-
-  return labels[frequency] ?? frequency;
-}
 
 @Injectable()
 export class MedicationService {
   constructor(
     @Inject(MEDICATION_REPOSITORY)
     private readonly medicationRepository: MedicationRepository,
+    @Inject(MEDICATION_CATALOG_REPOSITORY)
+    private readonly medicationCatalogRepository: MedicationCatalogRepository,
     @Inject(ResidentsService)
     private readonly residentsService: ResidentsService,
   ) {}
 
+  async getMedicationCatalog(): Promise<MedicationCatalogItem[]> {
+    const catalogItems = await this.medicationCatalogRepository.list();
+
+    return catalogItems.filter((item) => item.status === 'active');
+  }
+
   async getMedications(): Promise<MedicationOverview[]> {
     const [medications, residents] = await Promise.all([
       this.medicationRepository.list(),
-      this.residentsService.getResidentEntities(),
+      this.residentsService.getResidents(),
     ]);
 
     const residentNames = new Map(
-      residents.map((resident) => [
-        resident.id,
-        `${resident.firstName} ${resident.lastName}`,
-      ]),
+      residents.map((resident) => [resident.id, resident.fullName]),
     );
 
-    return medications.map((order) => ({
-      id: order.id,
-      residentId: order.residentId,
-      residentName:
+    return medications.map((order) =>
+      toMedicationOverview(
+        order,
         residentNames.get(order.residentId) ?? 'Residente no identificado',
-      medicationName: order.medicationName,
-      active: isMedicationActive(order),
-      schedule: `${formatMedicationFrequency(order.frequency)} a las ${order.scheduleTimes.join(', ')}`,
-    }));
+      ),
+    );
+  }
+
+  async getMedicationById(id: string): Promise<MedicationDetail> {
+    const medication = await this.medicationRepository.findById(id);
+
+    if (!medication) {
+      throw new NotFoundException('No encontre la medicacion solicitada.');
+    }
+
+    const resident = await this.residentsService.getResidentById(
+      medication.residentId,
+    );
+
+    return toMedicationDetail(medication, resident.fullName);
   }
 
   async getMedicationEntities(): Promise<MedicationOrder[]> {
     return this.medicationRepository.list();
+  }
+
+  async createMedication(
+    input: MedicationCreateInput,
+    actor: string,
+  ): Promise<MedicationOverview> {
+    const createInput: MedicationCreateInput = {
+      ...input,
+      status: 'active',
+    };
+
+    this.validateMedicationInput(createInput);
+
+    const [resident, medicationCatalogItem] = await Promise.all([
+      this.residentsService.getResidentById(createInput.residentId),
+      this.getRequiredMedicationCatalogItem(createInput.medicationCatalogId),
+    ]);
+    const medication = createMedicationFromInput(
+      createInput,
+      medicationCatalogItem.medicationName,
+      actor,
+    );
+    const createdMedication = await this.medicationRepository.create(medication);
+
+    return toMedicationOverview(createdMedication, resident.fullName);
+  }
+
+  async updateMedication(
+    id: string,
+    input: MedicationUpdateInput,
+    actor: string,
+  ): Promise<MedicationDetail> {
+    const currentMedication = await this.medicationRepository.findById(id);
+
+    if (!currentMedication) {
+      throw new NotFoundException('No encontre la medicacion solicitada.');
+    }
+
+    this.validateMedicationInput(input);
+
+    const [resident, medicationCatalogItem] = await Promise.all([
+      this.residentsService.getResidentById(input.residentId),
+      this.getRequiredMedicationCatalogItem(input.medicationCatalogId),
+    ]);
+    const updatedMedication = updateMedicationFromInput(
+      currentMedication,
+      input,
+      medicationCatalogItem.medicationName,
+      actor,
+    );
+    const persistedMedication = await this.medicationRepository.update(
+      updatedMedication,
+    );
+
+    return toMedicationDetail(persistedMedication, resident.fullName);
+  }
+
+  private async getRequiredMedicationCatalogItem(
+    medicationCatalogId: string,
+  ): Promise<MedicationCatalogItem> {
+    const medicationCatalogItem =
+      await this.medicationCatalogRepository.findById(medicationCatalogId);
+
+    if (!medicationCatalogItem || medicationCatalogItem.status !== 'active') {
+      throw new BadRequestException(
+        'Selecciona un medicamento valido del catalogo.',
+      );
+    }
+
+    return medicationCatalogItem;
+  }
+
+  private validateMedicationInput(
+    input: MedicationCreateInput | MedicationUpdateInput,
+  ): void {
+    if (!input.medicationCatalogId.trim()) {
+      throw new BadRequestException(
+        'Selecciona un medicamento del catalogo.',
+      );
+    }
+
+    if (!input.dose.trim()) {
+      throw new BadRequestException('La dosis es obligatoria.');
+    }
+
+    if (!input.prescribedBy.trim()) {
+      throw new BadRequestException('Debes indicar quien prescribio la orden.');
+    }
+
+    const scheduleTimes = input.scheduleTimes
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0);
+
+    if (scheduleTimes.length > 4) {
+      throw new BadRequestException(
+        'Puedes cargar hasta 4 horarios por medicamento.',
+      );
+    }
+
+    const uniqueScheduleTimes = new Set(scheduleTimes);
+
+    if (uniqueScheduleTimes.size !== scheduleTimes.length) {
+      throw new BadRequestException(
+        'Los horarios de medicacion no pueden repetirse.',
+      );
+    }
+
+    const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+    for (const scheduleTime of scheduleTimes) {
+      if (!timePattern.test(scheduleTime)) {
+        throw new BadRequestException(
+          'Cada horario debe respetar el formato HH:MM.',
+        );
+      }
+    }
+
+    if (input.frequency !== 'as-needed' && scheduleTimes.length === 0) {
+      throw new BadRequestException(
+        'Debes cargar al menos un horario para esta frecuencia.',
+      );
+    }
+
+    if (input.endDate) {
+      const startDay = new Date(input.startDate).toISOString().slice(0, 10);
+      const endDay = new Date(input.endDate).toISOString().slice(0, 10);
+
+      if (endDay < startDay) {
+        throw new BadRequestException(
+          'La fecha de fin no puede ser anterior a la fecha de inicio.',
+        );
+      }
+    }
   }
 }
