@@ -84,12 +84,32 @@ Si una decision de codigo entra en conflicto con este archivo, primero pedir con
 - Los horarios del personal arrancan con turnos semanales y soporte para excepciones o coberturas.
 - Por ahora no se pide infraestructura de logging avanzada.
 - Por ahora no se exige una nota arquitectonica por cada feature.
+- Norte validado para la siguiente etapa:
+  - tenant real por `Organization`
+  - una organizacion puede operar una o varias residencias
+  - `Facility` es el nombre tecnico preferido para la residencia o geriatrico
+  - el personal pertenece a la organizacion y puede operar en ninguna, una o varias residencias
+  - el modelo debe dejar abierta la puerta a identidad global de paciente para evitar duplicacion futura entre organizaciones
+  - los familiares no se modelaran solo como contacto embebido si van a tener acceso, permisos o pagos
+  - el acceso de familiares debe resolverse con grants explicitos, no por parentesco implicito
+  - FHIR es un objetivo de compatibilidad futura, no el modelo interno obligatorio
 
 ### Decisiones Pendientes
 
 - Cuan estrictos seran los boundaries de Nx.
 - Politica de boundaries de Nx y ownership tecnico.
 - Reglas de nombres de archivos, modulos y paquetes.
+- Estrategia concreta de deduplicacion global de personas.
+- Matriz exacta de permisos y alcance por residencia.
+- Modelo financiero detallado para pagos de estadia y responsables.
+
+## Norte De Dominio 2026-03-24
+
+- Existe una nota detallada para esta direccion en `docs/multitenancy-rbac-domain-north.md`.
+- Existe una propuesta mas concreta de entidades en `docs/domain-entity-model.md`.
+- Existe una propuesta concreta de primera ola Prisma en `docs/prisma-phase-1-design.md`.
+- Esa nota fija el norte para multi-tenant, RBAC, pacientes, personal y acceso de familiares.
+- El codigo actual todavia no refleja ese modelo; se trata de direccion confirmada antes de implementar.
 
 ## Respuestas Confirmadas 2026-03-20
 

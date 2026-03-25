@@ -26,6 +26,13 @@ Si cambia el estado real o cambia la prioridad de negocio, actualizarlo rapido.
 - Existen en el repo modulos/backend/endpoints para `auth`, `residents`, `staff`, `medication` y `system`.
 - Existen `schema.prisma`, migraciones y seeds.
 - Que algo exista en codigo no lo convierte en funcionalidad validada.
+- Norte confirmado para la siguiente etapa:
+  - tenant por `Organization`
+  - multiples residencias por organizacion
+  - nombre tecnico preferido para residencia: `Facility`
+  - personal con alcance organizacional y posible asignacion a varias residencias
+  - necesidad de dejar abierta la puerta a identidad global de paciente
+  - acceso futuro para familiares con permisos y pagos
 
 ## No validado
 
@@ -46,10 +53,15 @@ Si cambia el estado real o cambia la prioridad de negocio, actualizarlo rapido.
 
 ## Direccion futura
 
-- Existe una vision posible de escalar a multiples geriatricos, multiples intervinientes, roles, servicios y backoffice interno.
-- Esa vision no es estado actual.
-- No tomar multi-tenant, RBAC, backoffice, integraciones ni separacion fuerte de modulos como decisiones cerradas.
-- La direccion futura puede cambiar rapido si negocio cambia la prioridad.
+- Existe una direccion validada para la siguiente etapa:
+  - multi-tenant por organizacion
+  - multiples residencias por organizacion
+  - RBAC por membership y alcance
+  - familiares como actores con permisos explicitos
+  - compatibilidad futura con FHIR
+- Esa direccion no es estado actual del codigo.
+- Los detalles finos de migracion, permisos y deduplicacion de personas siguen abiertos.
+- La direccion futura puede cambiar si negocio cambia la prioridad, pero ya no debe asumirse modelo single-tenant como norte.
 
 ## Riesgos de interpretacion
 

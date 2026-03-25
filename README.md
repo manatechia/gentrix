@@ -15,6 +15,14 @@ Package manager oficial del repo: `pnpm`.
 - `libs/shared/types`: contratos compartidos entre frontend y backend.
 - `libs/shared/utils`: utilidades compartidas.
 
+## Documentacion De Arquitectura
+
+- `docs/engineering-working-agreement.md`: decisiones tecnicas y de trabajo confirmadas.
+- `docs/multitenancy-rbac-domain-north.md`: norte de dominio para multi-tenant, RBAC, pacientes, personal y acceso de familiares.
+- `docs/domain-entity-model.md`: propuesta concreta de entidades, relaciones y corte recomendado para implementacion.
+- `docs/prisma-phase-1-design.md`: corte concreto para la primera implementacion en Prisma y estrategia de migracion.
+- `AGENT.md`: contexto operativo y advertencias para no confundir direccion futura con estado actual.
+
 ## Comandos
 
 - `pnpm serve:frontend`: levanta el frontend en `http://localhost:4200`.
