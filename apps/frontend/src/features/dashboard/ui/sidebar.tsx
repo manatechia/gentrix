@@ -10,28 +10,63 @@ interface SidebarProps {
   residentCount: number;
   session: AuthSession;
   onLogout: () => void | Promise<void>;
+  isMobileOpen: boolean;
+  isMobileViewport: boolean;
+  onClose: () => void;
 }
 
 export function Sidebar({
   residentCount,
   session,
   onLogout,
+  isMobileOpen,
+  isMobileViewport,
+  onClose,
 }: SidebarProps) {
+  const mobileVisibilityClassName = isMobileOpen
+    ? 'max-[1180px]:translate-x-0 max-[1180px]:opacity-100 max-[1180px]:pointer-events-auto'
+    : 'max-[1180px]:-translate-x-[110%] max-[1180px]:opacity-0 max-[1180px]:pointer-events-none';
+
   return (
-    <aside className="sticky top-0 z-10 flex h-screen max-h-screen min-h-0 flex-col gap-3.5 overflow-y-auto rounded-r-[28px] bg-[linear-gradient(180deg,rgba(47,79,79,0.98),rgba(37,63,63,0.98))] px-[18px] py-[22px] text-white shadow-sidebar max-[1180px]:static max-[1180px]:h-auto max-[1180px]:max-h-none max-[1180px]:rounded-b-[28px] max-[1180px]:rounded-tr-none max-[1180px]:shadow-panel">
-      <div className="flex items-center gap-3.5">
-        <div className="grid h-[46px] w-[46px] place-items-center rounded-[14px] bg-[linear-gradient(180deg,#def6fb,#b7e7f0)] font-bold text-brand-secondary">
-          G
+    <aside
+      id="workspace-sidebar"
+      aria-hidden={isMobileViewport ? !isMobileOpen : undefined}
+      className={[
+        'flex min-h-0 flex-col gap-3.5 overflow-y-auto bg-[linear-gradient(180deg,rgba(47,79,79,0.98),rgba(37,63,63,0.98))] px-[18px] py-[22px] text-white shadow-sidebar',
+        'min-[1181px]:sticky min-[1181px]:top-0 min-[1181px]:z-10 min-[1181px]:h-screen min-[1181px]:max-h-screen min-[1181px]:rounded-r-[28px]',
+        'max-[1180px]:fixed max-[1180px]:inset-y-0 max-[1180px]:left-0 max-[1180px]:z-50 max-[1180px]:h-screen max-[1180px]:w-[min(86vw,320px)] max-[1180px]:max-h-screen max-[1180px]:rounded-r-[28px] max-[1180px]:transition-[transform,opacity] max-[1180px]:duration-200 max-[1180px]:ease-out',
+        mobileVisibilityClassName,
+      ].join(' ')}
+    >
+      <div className="shrink-0 flex items-center justify-between gap-3.5">
+        <div className="flex items-center gap-3.5">
+          <div className="grid h-[46px] w-[46px] place-items-center rounded-[14px] bg-[linear-gradient(180deg,#def6fb,#b7e7f0)] font-bold text-brand-secondary">
+            G
+          </div>
+          <div>
+            <strong className="block text-[0.98rem] font-bold">
+              Gentrix MVP
+            </strong>
+            <span className="mt-1 block text-[0.78rem] uppercase tracking-[0.12em] text-white/72">
+              OPERACION CENTRALIZADA
+            </span>
+          </div>
         </div>
-        <div>
-          <strong className="block text-[0.98rem] font-bold">Gentrix MVP</strong>
-          <span className="mt-1 block text-[0.78rem] uppercase tracking-[0.12em] text-white/72">
-            OPERACION CENTRALIZADA
+
+        <button
+          aria-label="Cerrar menu lateral"
+          className="grid h-11 w-11 place-items-center rounded-2xl border border-white/14 bg-white/8 text-white transition hover:bg-white/12 min-[1181px]:hidden"
+          type="button"
+          onClick={onClose}
+        >
+          <span className="relative block h-4 w-4">
+            <span className="absolute left-0 top-1/2 h-0.5 w-full -translate-y-1/2 rotate-45 rounded-full bg-current" />
+            <span className="absolute left-0 top-1/2 h-0.5 w-full -translate-y-1/2 -rotate-45 rounded-full bg-current" />
           </span>
-        </div>
+        </button>
       </div>
 
-      <div className="grid gap-1.5 rounded-[22px] border border-white/10 bg-white/8 p-4">
+      <div className="shrink-0 grid gap-1.5 rounded-[22px] border border-white/10 bg-white/8 p-4">
         <span className="text-[0.76rem] uppercase tracking-[0.16em] text-white/72">
           Residentes
         </span>
@@ -40,13 +75,14 @@ export function Sidebar({
         </strong>
       </div>
 
-      <nav className="grid min-h-0 gap-2">
+      <nav className="shrink-0 grid min-h-0 gap-2">
         {sidebarSections.map((section) => (
           'path' in section ? (
             <NavLink
               key={section.label}
               to={section.path}
               end={section.end}
+              onClick={onClose}
             >
               {({ isActive }) => (
                 <span
@@ -116,7 +152,7 @@ export function Sidebar({
         ))}
       </nav>
 
-      <div className="mt-auto grid gap-3 border-t border-white/12 pt-3.5">
+      <div className="mt-auto shrink-0 grid gap-3 border-t border-white/12 pt-3.5">
         <div className="grid gap-1.5 rounded-[22px] border border-white/12 bg-white/8 px-4 py-3.5">
           <strong className="text-[0.98rem] font-semibold text-white">
             {session.user.fullName}
@@ -132,6 +168,7 @@ export function Sidebar({
           className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/14 bg-white/8 px-4 text-white font-semibold transition hover:-translate-y-px hover:border-white/18 hover:bg-white/12"
           type="button"
           onClick={() => {
+            onClose();
             void onLogout();
           }}
         >
