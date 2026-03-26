@@ -92,6 +92,14 @@ export class ResidentsService {
   private validateResidentInput(
     input: ResidentCreateInput | ResidentUpdateInput,
   ): void {
+    this.validateResidentBaseProfile(input);
+    this.validateResidentSupportingRecords(input);
+    this.validateResidentDischarge(input);
+  }
+
+  private validateResidentBaseProfile(
+    input: ResidentCreateInput | ResidentUpdateInput,
+  ): void {
     const today = new Date().toISOString().slice(0, 10);
     const birthDay = new Date(input.birthDate).toISOString().slice(0, 10);
     const admissionDay = new Date(input.admissionDate).toISOString().slice(0, 10);
@@ -107,6 +115,12 @@ export class ResidentsService {
         'La fecha de ingreso no puede estar en el futuro.',
       );
     }
+  }
+
+  private validateResidentSupportingRecords(
+    input: ResidentCreateInput | ResidentUpdateInput,
+  ): void {
+    const today = new Date().toISOString().slice(0, 10);
 
     for (const entry of input.medicalHistory) {
       const recordedDay = new Date(entry.recordedAt).toISOString().slice(0, 10);
@@ -135,6 +149,13 @@ export class ResidentsService {
         );
       }
     }
+  }
+
+  private validateResidentDischarge(
+    input: ResidentCreateInput | ResidentUpdateInput,
+  ): void {
+    const today = new Date().toISOString().slice(0, 10);
+    const admissionDay = new Date(input.admissionDate).toISOString().slice(0, 10);
 
     if (input.discharge.date) {
       const dischargeDay = new Date(input.discharge.date)

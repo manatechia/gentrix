@@ -134,6 +134,73 @@ export interface ResidentDischargeInfo {
   reason?: string;
 }
 
+/**
+ * Stable resident data identifies the person and their base profile.
+ * It must stay separate from temporal events and derived operational signals.
+ */
+export interface ResidentBaseProfileInput {
+  firstName: string;
+  middleNames?: string;
+  lastName: string;
+  otherLastNames?: string;
+  documentType: ResidentDocumentType;
+  documentNumber: string;
+  documentIssuingCountry: string;
+  procedureNumber?: string;
+  cuil?: string;
+  birthDate: IsoDateString;
+  admissionDate: IsoDateString;
+  sex: ResidentSex;
+  maritalStatus?: string;
+  nationality?: string;
+  email?: string;
+}
+
+export interface ResidentBaseProfile extends ResidentBaseProfileInput {
+  internalNumber?: string;
+}
+
+/**
+ * Current resident state can change during operations without redefining identity.
+ * Active medication belongs to this group even if it is served from another module.
+ */
+export interface ResidentCurrentStateInput {
+  room: string;
+  careLevel: ResidentCareLevel;
+}
+
+export interface ResidentCurrentState extends ResidentCurrentStateInput {
+  status: EntityStatus;
+}
+
+/**
+ * These records are captured around admission/intake today, but they are not
+ * the resident's stable identity and must not become a catch-all write contract.
+ */
+export interface ResidentSupportingRecordInput {
+  medicalHistory: ResidentMedicalHistoryEntryInput[];
+  attachments: ResidentAttachmentInput[];
+  insurance: ResidentInsuranceInfo;
+  transfer: ResidentTransferInfo;
+  psychiatry: ResidentPsychiatricCareInfo;
+  clinicalProfile: ResidentClinicalProfile;
+  belongings: ResidentBelongings;
+  familyContacts: ResidentFamilyContactInput[];
+  discharge: ResidentDischargeInfo;
+}
+
+export interface ResidentSupportingRecordSnapshot {
+  medicalHistory: ResidentMedicalHistoryEntry[];
+  attachments: ResidentAttachment[];
+  insurance: ResidentInsuranceInfo;
+  transfer: ResidentTransferInfo;
+  psychiatry: ResidentPsychiatricCareInfo;
+  clinicalProfile: ResidentClinicalProfile;
+  belongings: ResidentBelongings;
+  familyContacts: ResidentFamilyContact[];
+  discharge: ResidentDischargeInfo;
+}
+
 export interface AuthUser {
   id: EntityId;
   fullName: string;
@@ -173,81 +240,33 @@ export interface LogoutResponse {
   success: boolean;
 }
 
-export interface ResidentOverview {
+export interface ResidentOverview extends ResidentCurrentState {
   id: EntityId;
   fullName: string;
   age: number;
-  room: string;
-  careLevel: ResidentCareLevel;
-  status: EntityStatus;
 }
 
-export interface ResidentDetail {
+export interface ResidentDetail
+  extends ResidentBaseProfile,
+    ResidentCurrentState,
+    ResidentSupportingRecordSnapshot {
   id: EntityId;
   fullName: string;
-  firstName: string;
-  middleNames?: string;
-  lastName: string;
-  otherLastNames?: string;
-  documentType: ResidentDocumentType;
-  documentNumber: string;
-  documentIssuingCountry: string;
-  internalNumber?: string;
-  procedureNumber?: string;
-  cuil?: string;
   age: number;
-  birthDate: IsoDateString;
-  admissionDate: IsoDateString;
-  sex: ResidentSex;
-  maritalStatus?: string;
-  nationality?: string;
-  email?: string;
-  room: string;
-  careLevel: ResidentCareLevel;
-  status: EntityStatus;
-  medicalHistory: ResidentMedicalHistoryEntry[];
-  attachments: ResidentAttachment[];
-  insurance: ResidentInsuranceInfo;
-  transfer: ResidentTransferInfo;
-  psychiatry: ResidentPsychiatricCareInfo;
-  clinicalProfile: ResidentClinicalProfile;
-  belongings: ResidentBelongings;
-  familyContacts: ResidentFamilyContact[];
-  discharge: ResidentDischargeInfo;
   address: Address;
   emergencyContact: ContactPerson;
   audit: AuditTrail;
 }
 
-export interface ResidentCreateInput {
-  firstName: string;
-  middleNames?: string;
-  lastName: string;
-  otherLastNames?: string;
-  documentType: ResidentDocumentType;
-  documentNumber: string;
-  documentIssuingCountry: string;
-  procedureNumber?: string;
-  cuil?: string;
-  birthDate: IsoDateString;
-  admissionDate: IsoDateString;
-  sex: ResidentSex;
-  maritalStatus?: string;
-  nationality?: string;
-  email?: string;
-  room: string;
-  careLevel: ResidentCareLevel;
-  medicalHistory: ResidentMedicalHistoryEntryInput[];
-  attachments: ResidentAttachmentInput[];
-  insurance: ResidentInsuranceInfo;
-  transfer: ResidentTransferInfo;
-  psychiatry: ResidentPsychiatricCareInfo;
-  clinicalProfile: ResidentClinicalProfile;
-  belongings: ResidentBelongings;
-  familyContacts: ResidentFamilyContactInput[];
-  discharge: ResidentDischargeInfo;
-}
+export interface ResidentCreateInput
+  extends ResidentBaseProfileInput,
+    ResidentCurrentStateInput,
+    ResidentSupportingRecordInput {}
 
+/**
+ * Transitional legacy contract until TASK-001 splits resident base updates
+ * from temporal/supporting records. Do not add resident events or derived data here.
+ */
 export interface ResidentUpdateInput extends ResidentCreateInput {}
 
 export interface StaffOverview {

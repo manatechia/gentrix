@@ -6,8 +6,10 @@ import type {
   ResidentAttachment,
   ResidentAttachmentInput,
   ResidentAttachmentKind,
+  ResidentBaseProfile,
   ResidentBelongings,
   ResidentClinicalProfile,
+  ResidentCurrentState,
   ResidentDetail,
   ResidentDischargeInfo,
   ResidentDocumentType,
@@ -17,6 +19,7 @@ import type {
   ResidentMedicalHistoryEntryInput,
   ResidentPsychiatricCareInfo,
   ResidentSex,
+  ResidentSupportingRecordSnapshot,
   ResidentTransferInfo,
   EntityStatus,
   IsoDateString,
@@ -33,38 +36,13 @@ import {
 
 export type CareLevel = ResidentCareLevel;
 
-export interface Resident {
+export interface Resident
+  extends ResidentBaseProfile,
+    ResidentCurrentState,
+    ResidentSupportingRecordSnapshot {
   id: EntityId;
   organizationId: EntityId;
   facilityId: EntityId;
-  firstName: string;
-  middleNames?: string;
-  lastName: string;
-  otherLastNames?: string;
-  documentType: ResidentDocumentType;
-  documentNumber: string;
-  documentIssuingCountry: string;
-  internalNumber?: string;
-  procedureNumber?: string;
-  cuil?: string;
-  birthDate: IsoDateString;
-  admissionDate: IsoDateString;
-  sex: ResidentSex;
-  maritalStatus?: string;
-  nationality?: string;
-  email?: string;
-  room: string;
-  careLevel: CareLevel;
-  status: EntityStatus;
-  medicalHistory: ResidentMedicalHistoryEntry[];
-  attachments: ResidentAttachment[];
-  insurance: ResidentInsuranceInfo;
-  transfer: ResidentTransferInfo;
-  psychiatry: ResidentPsychiatricCareInfo;
-  clinicalProfile: ResidentClinicalProfile;
-  belongings: ResidentBelongings;
-  familyContacts: ResidentFamilyContact[];
-  discharge: ResidentDischargeInfo;
   address: Address;
   emergencyContact: ContactPerson;
   audit: AuditTrail;
@@ -421,10 +399,7 @@ export function toResidentDetail(resident: Resident): ResidentDetail {
   };
 }
 
-function mapResidentIntakeFields(
-  input: ResidentCreateInput | ResidentUpdateInput,
-  now: IsoDateString,
-): Pick<
+type ResidentStableProfileFields = Pick<
   Resident,
   | 'firstName'
   | 'middleNames'
@@ -441,8 +416,12 @@ function mapResidentIntakeFields(
   | 'maritalStatus'
   | 'nationality'
   | 'email'
-  | 'room'
-  | 'careLevel'
+>;
+
+type ResidentCurrentStateFields = Pick<Resident, 'room' | 'careLevel'>;
+
+type ResidentSupportingIntakeFields = Pick<
+  Resident,
   | 'medicalHistory'
   | 'attachments'
   | 'insurance'
@@ -452,7 +431,18 @@ function mapResidentIntakeFields(
   | 'belongings'
   | 'familyContacts'
   | 'discharge'
-> {
+>;
+
+type ResidentEditableIntakeFields = ResidentStableProfileFields &
+  ResidentCurrentStateFields &
+  ResidentSupportingIntakeFields;
+
+function mapResidentIntakeFields(
+  input: ResidentCreateInput | ResidentUpdateInput,
+  now: IsoDateString,
+): ResidentEditableIntakeFields {
+  // This intake snapshot is still shared by create and legacy update flows.
+  // Resident events and derived signals must stay out of this mapping.
   const familyContacts = input.familyContacts.map((contact) =>
     ({
       id: createRandomEntityId(),
