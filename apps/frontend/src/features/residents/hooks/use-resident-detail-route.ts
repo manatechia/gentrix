@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 
-import type { ResidentDetail } from '@gentrix/shared-types';
+import type {
+  ResidentDetail,
+  ResidentLiveProfile,
+} from '@gentrix/shared-types';
 
 import { useAuthSession } from '../../auth/hooks/use-auth-session';
 import {
@@ -15,11 +18,14 @@ export function useResidentDetailRoute(residentId: string | undefined) {
   const [screenState, setScreenState] =
     useState<DashboardScreenState>('loading');
   const [resident, setResident] = useState<ResidentDetail | null>(null);
+  const [residentLiveProfile, setResidentLiveProfile] =
+    useState<ResidentLiveProfile | null>(null);
   const [residentError, setResidentError] = useState<string | null>(null);
 
   async function loadResidentDetail(): Promise<void> {
     if (!residentId) {
       setResident(null);
+      setResidentLiveProfile(null);
       setResidentError('No encontre el residente solicitado.');
       setScreenState('error');
       return;
@@ -27,6 +33,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
 
     if (!auth.token) {
       setResident(null);
+      setResidentLiveProfile(null);
       setResidentError(null);
       setScreenState('loading');
       return;
@@ -36,8 +43,12 @@ export function useResidentDetailRoute(residentId: string | undefined) {
     setResidentError(null);
 
     try {
-      const payload = await residentsService.getResidentById(residentId);
-      setResident(unwrapEnvelope(payload));
+      const [residentPayload, residentLiveProfilePayload] = await Promise.all([
+        residentsService.getResidentById(residentId),
+        residentsService.getResidentLiveProfile(residentId),
+      ]);
+      setResident(unwrapEnvelope(residentPayload));
+      setResidentLiveProfile(unwrapEnvelope(residentLiveProfilePayload));
       setScreenState('ready');
     } catch (error) {
       const message = getApiErrorMessage(
@@ -51,6 +62,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
       }
 
       setResident(null);
+      setResidentLiveProfile(null);
       setResidentError(message);
       setScreenState('error');
     }
@@ -59,6 +71,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
   useEffect(() => {
     if (auth.status !== 'authenticated' || !auth.token) {
       setResident(null);
+      setResidentLiveProfile(null);
       setResidentError(null);
       setScreenState('loading');
       return;
@@ -70,8 +83,8 @@ export function useResidentDetailRoute(residentId: string | undefined) {
   return {
     screenState,
     resident,
+    residentLiveProfile,
     residentError,
     handleRetry: loadResidentDetail,
   };
 }
-

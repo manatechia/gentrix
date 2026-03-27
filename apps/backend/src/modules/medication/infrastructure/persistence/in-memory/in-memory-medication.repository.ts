@@ -23,6 +23,19 @@ export class InMemoryMedicationRepository implements MedicationRepository {
       .map(cloneMedicationOrder);
   }
 
+  async listByResidentId(
+    residentId: MedicationOrder['residentId'],
+    organizationId?: MedicationOrder['organizationId'],
+  ): Promise<MedicationOrder[]> {
+    return this.medications
+      .filter(
+        (order) =>
+          order.residentId === residentId &&
+          (organizationId ? order.organizationId === organizationId : true),
+      )
+      .map(cloneMedicationOrder);
+  }
+
   async findById(
     id: string,
     organizationId?: string,

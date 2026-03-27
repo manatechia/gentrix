@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
+import { ResidentLiveProfileQueryService } from '../../application/resident-live-profile.query.service';
 import { ResidentsService } from '../../application/residents.service';
 import { CreateResidentDto } from '../dto/create-resident.dto';
 import { CreateResidentEventDto } from '../dto/create-resident-event.dto';
@@ -21,6 +22,8 @@ export class ResidentsController {
   constructor(
     @Inject(ResidentsService)
     private readonly residentsService: ResidentsService,
+    @Inject(ResidentLiveProfileQueryService)
+    private readonly residentLiveProfileQuery: ResidentLiveProfileQueryService,
   ) {}
 
   @Get()
@@ -36,6 +39,17 @@ export class ResidentsController {
     @Req() request: RequestWithSession,
   ) {
     return this.residentsService.getResidentById(
+      residentId,
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  @Get(':residentId/live-profile')
+  getResidentLiveProfile(
+    @Param('residentId') residentId: string,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.residentLiveProfileQuery.getResidentLiveProfile(
       residentId,
       request.authSession!.activeOrganization.id,
     );

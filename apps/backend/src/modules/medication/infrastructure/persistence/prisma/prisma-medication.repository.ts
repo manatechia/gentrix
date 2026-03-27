@@ -39,6 +39,22 @@ export class PrismaMedicationRepository implements MedicationRepository {
     return medications.map(mapMedicationRecord);
   }
 
+  async listByResidentId(
+    residentId: MedicationOrder['residentId'],
+    organizationId?: MedicationOrder['organizationId'],
+  ): Promise<MedicationOrder[]> {
+    const medications = await this.prisma.medicationOrder.findMany({
+      where: {
+        residentId,
+        deletedAt: null,
+        organizationId: organizationId ?? undefined,
+      },
+      orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
+    });
+
+    return medications.map(mapMedicationRecord);
+  }
+
   async findById(
     id: string,
     organizationId?: string,

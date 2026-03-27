@@ -153,6 +153,7 @@ function ResidentDetailRoute() {
       session={auth.session}
       residentCount={residents.residentCount}
       resident={detail.resident}
+      residentLiveProfile={detail.residentLiveProfile}
       residentError={detail.residentError}
       onLogout={auth.logout}
       onRetry={detail.handleRetry}

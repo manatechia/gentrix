@@ -306,6 +306,22 @@ export interface ResidentEventCreateInput {
   occurredAt: IsoDateString;
 }
 
+export interface ResidentLiveProfileResident
+  extends ResidentBaseProfile,
+    ResidentCurrentState {
+  id: EntityId;
+  fullName: string;
+  age: number;
+  internalNumber?: string;
+  status: EntityStatus;
+}
+
+export interface ResidentLiveProfile {
+  resident: ResidentLiveProfileResident;
+  activeMedications: MedicationOverview[];
+  recentEvents: ResidentEvent[];
+}
+
 export interface StaffOverview {
   id: EntityId;
   name: string;

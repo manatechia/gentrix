@@ -2,6 +2,7 @@ import type {
   ApiEnvelope,
   ResidentCreateInput,
   ResidentDetail,
+  ResidentLiveProfile,
   ResidentOverview,
   ResidentUpdateInput,
 } from '@gentrix/shared-types';
@@ -21,6 +22,16 @@ export async function getResidentById(
 ): Promise<ApiEnvelope<ResidentDetail>> {
   const response = await apiClient.get<ApiEnvelope<ResidentDetail>>(
     `/api/residents/${residentId}`,
+  );
+
+  return response.data;
+}
+
+export async function getResidentLiveProfile(
+  residentId: string,
+): Promise<ApiEnvelope<ResidentLiveProfile>> {
+  const response = await apiClient.get<ApiEnvelope<ResidentLiveProfile>>(
+    `/api/residents/${residentId}/live-profile`,
   );
 
   return response.data;

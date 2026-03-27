@@ -1,7 +1,11 @@
 import { useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-import type { AuthSession, ResidentDetail } from '@gentrix/shared-types';
+import type {
+  AuthSession,
+  ResidentDetail,
+  ResidentLiveProfile,
+} from '@gentrix/shared-types';
 
 import {
   formatEntityStatus,
@@ -21,12 +25,14 @@ import { BackChevronButton } from '../../../shared/ui/back-chevron-button';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
+import { ResidentLiveProfilePanel } from './resident-live-profile-panel';
 
 interface ResidentDetailWorkspaceProps {
   screenState: DashboardScreenState;
   session: AuthSession;
   residentCount: number;
   resident: ResidentDetail | null;
+  residentLiveProfile: ResidentLiveProfile | null;
   residentError: string | null;
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
@@ -96,6 +102,7 @@ export function ResidentDetailWorkspace({
   session,
   residentCount,
   resident,
+  residentLiveProfile,
   residentError,
   onLogout,
   onRetry,
@@ -251,6 +258,8 @@ export function ResidentDetailWorkspace({
 
       {screenState === 'ready' && resident && (
         <>
+          <ResidentLiveProfilePanel profile={residentLiveProfile} />
+
           <section
             className={`${surfaceCardClassName} grid gap-5 min-[980px]:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)]`}
           >
