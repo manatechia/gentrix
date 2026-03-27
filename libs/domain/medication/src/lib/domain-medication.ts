@@ -17,6 +17,12 @@ import {
   toIsoDateString,
 } from '@gentrix/shared-utils';
 
+/**
+ * MedicationOrder is the durable prescription layer of the medication module.
+ * When the system starts recording what happened to a concrete dose,
+ * administration, omission and rejection must live in a dedicated
+ * MedicationExecution entity linked to the order instead of expanding this model.
+ */
 export interface MedicationOrder {
   id: EntityId;
   organizationId: EntityId;
@@ -27,6 +33,10 @@ export interface MedicationOrder {
   dose: string;
   route: MedicationRoute;
   frequency: MedicationFrequency;
+  /**
+   * Planned times of the current prescription.
+   * They do not prove that a dose was actually executed.
+   */
   scheduleTimes: string[];
   prescribedBy: string;
   startDate: IsoDateString;

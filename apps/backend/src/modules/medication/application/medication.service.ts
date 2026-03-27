@@ -30,6 +30,12 @@ import {
   type MedicationRepository,
 } from '../domain/repositories/medication.repository';
 
+/**
+ * MedicationService manages current prescription orders only.
+ * It does not record whether a particular dose was administered, omitted or rejected.
+ * That execution layer must be introduced later as a dedicated MedicationExecution
+ * model linked to MedicationOrder and then projected into resident read models.
+ */
 @Injectable()
 export class MedicationService {
   constructor(
@@ -178,6 +184,8 @@ export class MedicationService {
   private validateMedicationInput(
     input: MedicationCreateInput | MedicationUpdateInput,
   ): void {
+    // This validation only protects the prescription contract.
+    // Per-dose execution belongs to a future MedicationExecution flow.
     if (!input.medicationCatalogId.trim()) {
       throw new BadRequestException(
         'Selecciona un medicamento del catalogo.',

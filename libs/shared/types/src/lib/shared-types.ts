@@ -351,6 +351,13 @@ export interface MedicationCatalogItem {
   status: EntityStatus;
 }
 
+/**
+ * MedicationOverview is the read model of the current medication order.
+ * It describes the prescribed regimen that is in force for the resident.
+ * It is not evidence that a concrete dose was administered, omitted or rejected.
+ * Those execution facts belong to a future MedicationExecution model linked to
+ * the order and later projected into timelines or alerts.
+ */
 export interface MedicationOverview {
   id: EntityId;
   medicationCatalogId: EntityId;
@@ -360,6 +367,10 @@ export interface MedicationOverview {
   dose: string;
   route: MedicationRoute;
   frequency: MedicationFrequency;
+  /**
+   * Planned times declared by the current prescription.
+   * They are not execution records.
+   */
   scheduleTimes: string[];
   prescribedBy: string;
   startDate: IsoDateString;
@@ -373,6 +384,11 @@ export interface MedicationDetail extends MedicationOverview {
   audit: AuditTrail;
 }
 
+/**
+ * MedicationCreateInput writes the current prescription order only.
+ * Daily execution such as administration, omission or rejection must be modeled
+ * through a future MedicationExecution contract instead of extending this input.
+ */
 export interface MedicationCreateInput {
   medicationCatalogId: EntityId;
   residentId: EntityId;
@@ -386,6 +402,10 @@ export interface MedicationCreateInput {
   status: EntityStatus;
 }
 
+/**
+ * Updating a medication order changes the active prescription, not what happened
+ * to a concrete dose at a specific time.
+ */
 export interface MedicationUpdateInput extends MedicationCreateInput {}
 
 export interface DashboardSummary {

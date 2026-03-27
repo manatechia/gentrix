@@ -114,7 +114,7 @@ export function MedicationIntakePanel({
     panelTitle ?? (isEditMode ? 'Editar medicacion' : 'Cargar medicacion');
   const resolvedPanelDescription =
     panelDescription ??
-    'Registra el residente, la dosis, la via, los horarios, el profesional que indico la orden y la vigencia de la medicacion.';
+    'Registra la prescripcion vigente del residente con dosis, via, horarios previstos, profesional tratante y vigencia de la orden.';
   const resolvedSubmitLabel =
     submitLabel ?? (isEditMode ? 'Guardar cambios' : 'Guardar orden');
   const routeFrequencyGridClassName = isEditMode
@@ -145,6 +145,11 @@ export function MedicationIntakePanel({
       <p className="leading-[1.65] text-brand-text-secondary">
         {resolvedPanelDescription}
       </p>
+
+      <div className="mt-4 rounded-[18px] border border-[rgba(0,102,132,0.14)] bg-[rgba(0,102,132,0.08)] px-4 py-3.5 text-[0.95rem] leading-[1.55] text-brand-secondary">
+        Esta pantalla define la orden vigente. La administracion, omision o
+        rechazo de cada toma se registrara en un flujo separado de ejecucion.
+      </div>
 
       {medicationNotice && (
         <div
@@ -393,8 +398,9 @@ export function MedicationIntakePanel({
                           Horarios
                         </span>
                         <span className="leading-[1.55] text-brand-text-secondary">
-                          Si la frecuencia es segun necesidad, puedes dejar la orden
-                          sin horarios cargados.
+                          Si la frecuencia es segun necesidad, puedes dejar la
+                          prescripcion sin horarios fijos. La ejecucion concreta
+                          de cada toma se registrara aparte.
                         </span>
                       </div>
 
