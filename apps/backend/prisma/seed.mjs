@@ -39,6 +39,11 @@ const ids = {
     donepezilElena: '32d18f29-f891-42ea-83ec-269b055f933a',
     enoxaparinaRaul: 'b5fbd5c4-db9c-4595-a359-c8ba4cca2ceb',
   },
+  medicationExecutions: {
+    paracetamolMartaMorning: '5dbf65d5-8f42-474d-b7f4-48a2f6d4f4b1',
+    donepezilElenaNight: '61193cb0-e234-4adf-a5d0-91db43bf7ef4',
+    enoxaparinaRaulMorning: 'fbad88d8-fbd2-48e1-a60c-044bf2394f6f',
+  },
   clinicalHistory: {
     martaAdmission: 'c1ab5e2a-f96d-45a6-ad33-48f7d41ceb14',
     elenaNeurologyReview: '3e773a38-77f4-4c17-934b-4e4dbd5c287f',
@@ -60,6 +65,7 @@ export async function seedDatabase(prisma) {
   await prisma.staffSchedule.deleteMany();
   await prisma.staffFacilityAssignment.deleteMany();
   await prisma.clinicalHistoryEvent.deleteMany();
+  await prisma.medicationExecution.deleteMany();
   await prisma.medicationOrder.deleteMany();
   await prisma.medicationCatalogItem.deleteMany();
   await prisma.staffMember.deleteMany();
@@ -694,6 +700,53 @@ export async function seedDatabase(prisma) {
         createdBy: 'seed-script',
         updatedAt: new Date('2026-03-20T09:00:00.000Z'),
         updatedBy: 'seed-script',
+      },
+    ],
+  });
+
+  await prisma.medicationExecution.createMany({
+    data: [
+      {
+        id: ids.medicationExecutions.paracetamolMartaMorning,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
+        medicationOrderId: ids.medications.paracetamolMarta,
+        residentId: ids.residents.martaDiaz,
+        medicationName: 'Paracetamol',
+        result: 'administered',
+        occurredAt: new Date('2026-03-26T09:05:00.000Z'),
+        createdAt: new Date('2026-03-26T09:05:00.000Z'),
+        createdBy: 'ana.gomez@gentrix.local',
+        updatedAt: new Date('2026-03-26T09:05:00.000Z'),
+        updatedBy: 'ana.gomez@gentrix.local',
+      },
+      {
+        id: ids.medicationExecutions.donepezilElenaNight,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
+        medicationOrderId: ids.medications.donepezilElena,
+        residentId: ids.residents.elenaSuarez,
+        medicationName: 'Donepezil',
+        result: 'rejected',
+        occurredAt: new Date('2026-03-26T21:10:00.000Z'),
+        createdAt: new Date('2026-03-26T21:10:00.000Z'),
+        createdBy: 'mauro.paz@gentrix.local',
+        updatedAt: new Date('2026-03-26T21:10:00.000Z'),
+        updatedBy: 'mauro.paz@gentrix.local',
+      },
+      {
+        id: ids.medicationExecutions.enoxaparinaRaulMorning,
+        organizationId: ids.organizations.gentrixDemo,
+        facilityId: ids.facilities.residenciaCentral,
+        medicationOrderId: ids.medications.enoxaparinaRaul,
+        residentId: ids.residents.raulBenitez,
+        medicationName: 'Enoxaparina',
+        result: 'omitted',
+        occurredAt: new Date('2026-03-26T08:15:00.000Z'),
+        createdAt: new Date('2026-03-26T08:15:00.000Z'),
+        createdBy: 'ana.gomez@gentrix.local',
+        updatedAt: new Date('2026-03-26T08:15:00.000Z'),
+        updatedBy: 'ana.gomez@gentrix.local',
       },
     ],
   });

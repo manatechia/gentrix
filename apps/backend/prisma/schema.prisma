@@ -21,6 +21,7 @@ model Organization {
   deletedAt        DateTime?
   deletedBy        String?
   clinicalEvents   ClinicalHistoryEvent[]
+  medicationExecutions MedicationExecution[]
   facilities       Facility[]
   medicationOrders MedicationOrder[]
   memberships      OrganizationMembership[]
@@ -48,6 +49,7 @@ model Facility {
   deletedAt        DateTime?
   deletedBy        String?
   clinicalEvents   ClinicalHistoryEvent[]
+  medicationExecutions MedicationExecution[]
   medicationOrders MedicationOrder[]
   membershipScopes MembershipFacilityScope[]
   organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
@@ -185,6 +187,7 @@ model Resident {
   deletedBy              String?
   clinicalEvents         ClinicalHistoryEvent[]
   facility               Facility               @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  medicationExecutions   MedicationExecution[]
   medications            MedicationOrder[]
   organization           Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
 
@@ -278,6 +281,7 @@ model MedicationOrder {
   updatedBy          String
   deletedAt          DateTime?
   deletedBy          String?
+  executions         MedicationExecution[]
   facility           Facility             @relation(fields: [facilityId], references: [id], onDelete: Restrict)
   medicationCatalog  MedicationCatalogItem @relation(fields: [medicationCatalogId], references: [id], onDelete: Restrict)
   organization       Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
@@ -287,6 +291,31 @@ model MedicationOrder {
   @@index([organizationId, facilityId, deletedAt])
   @@index([medicationCatalogId])
   @@index([residentId])
+  @@index([deletedAt])
+}
+
+model MedicationExecution {
+  id                String          @id @default(uuid()) @db.Uuid
+  organizationId    String          @db.Uuid
+  facilityId        String          @db.Uuid
+  medicationOrderId String          @db.Uuid
+  residentId        String          @db.Uuid
+  medicationName    String
+  result            String
+  occurredAt        DateTime
+  createdAt         DateTime
+  createdBy         String
+  updatedAt         DateTime
+  updatedBy         String
+  deletedAt         DateTime?
+  deletedBy         String?
+  facility          Facility        @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  medicationOrder   MedicationOrder @relation(fields: [medicationOrderId], references: [id], onDelete: Restrict)
+  organization      Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  resident          Resident        @relation(fields: [residentId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, residentId, occurredAt])
+  @@index([organizationId, medicationOrderId, occurredAt])
   @@index([deletedAt])
 }
 

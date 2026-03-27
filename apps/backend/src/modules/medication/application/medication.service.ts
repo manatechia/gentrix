@@ -7,7 +7,10 @@ import {
 
 import {
   createMedicationFromInput,
+  createMedicationExecutionFromInput,
+  isMedicationActive,
   toMedicationDetail,
+  toMedicationExecutionOverview,
   toMedicationOverview,
   updateMedicationFromInput,
   type MedicationOrder,
@@ -15,10 +18,13 @@ import {
 import type {
   MedicationCatalogItem,
   MedicationCreateInput,
+  MedicationExecutionCreateInput,
+  MedicationExecutionOverview,
   MedicationDetail,
   MedicationOverview,
   MedicationUpdateInput,
 } from '@gentrix/shared-types';
+import { toIsoDateString } from '@gentrix/shared-utils';
 
 import { ResidentsService } from '../../residents/application/residents.service';
 import {
@@ -26,21 +32,26 @@ import {
   type MedicationCatalogRepository,
 } from '../domain/repositories/medication-catalog.repository';
 import {
+  MEDICATION_EXECUTION_REPOSITORY,
+  type MedicationExecutionRepository,
+} from '../domain/repositories/medication-execution.repository';
+import {
   MEDICATION_REPOSITORY,
   type MedicationRepository,
 } from '../domain/repositories/medication.repository';
 
 /**
  * MedicationService manages current prescription orders only.
- * It does not record whether a particular dose was administered, omitted or rejected.
- * That execution layer must be introduced later as a dedicated MedicationExecution
- * model linked to MedicationOrder and then projected into resident read models.
+ * Concrete dose execution is recorded through the dedicated MedicationExecution
+ * model linked to MedicationOrder instead of mutating the order itself.
  */
 @Injectable()
 export class MedicationService {
   constructor(
     @Inject(MEDICATION_REPOSITORY)
     private readonly medicationRepository: MedicationRepository,
+    @Inject(MEDICATION_EXECUTION_REPOSITORY)
+    private readonly medicationExecutionRepository: MedicationExecutionRepository,
     @Inject(MEDICATION_CATALOG_REPOSITORY)
     private readonly medicationCatalogRepository: MedicationCatalogRepository,
     @Inject(ResidentsService)
@@ -73,14 +84,9 @@ export class MedicationService {
 
   async getMedicationById(
     id: string,
-    organizationId?: string,
+    organizationId?: MedicationOrder['organizationId'],
   ): Promise<MedicationDetail> {
-    const medication = await this.medicationRepository.findById(id, organizationId);
-
-    if (!medication) {
-      throw new NotFoundException('No encontre la medicacion solicitada.');
-    }
-
+    const medication = await this.getRequiredMedicationOrder(id, organizationId);
     const resident = await this.residentsService.getResidentById(
       medication.residentId,
       organizationId,
@@ -91,6 +97,47 @@ export class MedicationService {
 
   async getMedicationEntities(organizationId?: string): Promise<MedicationOrder[]> {
     return this.medicationRepository.list(organizationId);
+  }
+
+  async getMedicationExecutionsByMedicationId(
+    medicationId: string,
+    organizationId?: MedicationOrder['organizationId'],
+  ): Promise<MedicationExecutionOverview[]> {
+    const medication = await this.getRequiredMedicationOrder(
+      medicationId,
+      organizationId,
+    );
+    const resident = await this.residentsService.getResidentById(
+      medication.residentId,
+      organizationId,
+    );
+    const executions =
+      await this.medicationExecutionRepository.listByMedicationOrderId(
+        medication.id,
+        medication.organizationId,
+      );
+
+    return executions.map((execution) =>
+      toMedicationExecutionOverview(execution, resident.fullName),
+    );
+  }
+
+  async getMedicationExecutionsByResidentId(
+    residentId: string,
+    organizationId?: MedicationOrder['organizationId'],
+  ): Promise<MedicationExecutionOverview[]> {
+    const resident = await this.residentsService.getResidentById(
+      residentId,
+      organizationId,
+    );
+    const executions = await this.medicationExecutionRepository.listByResidentId(
+      resident.id,
+      organizationId,
+    );
+
+    return executions.map((execution) =>
+      toMedicationExecutionOverview(execution, resident.fullName),
+    );
   }
 
   async createMedication(
@@ -133,14 +180,10 @@ export class MedicationService {
     actor: string,
     organizationId: MedicationOrder['organizationId'],
   ): Promise<MedicationDetail> {
-    const currentMedication = await this.medicationRepository.findById(
+    const currentMedication = await this.getRequiredMedicationOrder(
       id,
       organizationId,
     );
-
-    if (!currentMedication) {
-      throw new NotFoundException('No encontre la medicacion solicitada.');
-    }
 
     this.validateMedicationInput(input);
 
@@ -166,6 +209,31 @@ export class MedicationService {
     );
   }
 
+  async createMedicationExecution(
+    medicationId: string,
+    input: MedicationExecutionCreateInput,
+    actor: string,
+    organizationId?: MedicationOrder['organizationId'],
+  ): Promise<MedicationExecutionOverview> {
+    const medication = await this.getRequiredMedicationOrder(
+      medicationId,
+      organizationId,
+    );
+    const resident = await this.residentsService.getResidentById(
+      medication.residentId,
+      organizationId,
+    );
+
+    this.validateMedicationExecutionInput(medication, input);
+
+    const execution = createMedicationExecutionFromInput(input, medication, actor);
+    const createdExecution = await this.medicationExecutionRepository.create(
+      execution,
+    );
+
+    return toMedicationExecutionOverview(createdExecution, resident.fullName);
+  }
+
   private async getRequiredMedicationCatalogItem(
     medicationCatalogId: string,
   ): Promise<MedicationCatalogItem> {
@@ -179,6 +247,19 @@ export class MedicationService {
     }
 
     return medicationCatalogItem;
+  }
+
+  private async getRequiredMedicationOrder(
+    id: string,
+    organizationId?: MedicationOrder['organizationId'],
+  ): Promise<MedicationOrder> {
+    const medication = await this.medicationRepository.findById(id, organizationId);
+
+    if (!medication) {
+      throw new NotFoundException('No encontre la medicacion solicitada.');
+    }
+
+    return medication;
   }
 
   private validateMedicationInput(
@@ -243,6 +324,47 @@ export class MedicationService {
           'La fecha de fin no puede ser anterior a la fecha de inicio.',
         );
       }
+    }
+  }
+
+  private validateMedicationExecutionInput(
+    order: MedicationOrder,
+    input: MedicationExecutionCreateInput,
+  ): void {
+    const occurredAt = new Date(input.occurredAt);
+
+    if (Number.isNaN(occurredAt.getTime())) {
+      throw new BadRequestException(
+        'La fecha de ejecucion no tiene un formato valido.',
+      );
+    }
+
+    if (occurredAt.getTime() > Date.now()) {
+      throw new BadRequestException(
+        'La ejecucion de medicacion no puede registrarse en el futuro.',
+      );
+    }
+
+    if (order.status !== 'active' || !isMedicationActive(order, input.occurredAt)) {
+      throw new BadRequestException(
+        'Solo puedes registrar ejecuciones sobre ordenes activas y vigentes.',
+      );
+    }
+
+    const occurredAtDay = toIsoDateString(occurredAt).slice(0, 10);
+    const startDay = order.startDate.slice(0, 10);
+    const endDay = order.endDate?.slice(0, 10);
+
+    if (occurredAtDay < startDay) {
+      throw new BadRequestException(
+        'La ejecucion no puede ser anterior al inicio de la orden.',
+      );
+    }
+
+    if (endDay && occurredAtDay > endDay) {
+      throw new BadRequestException(
+        'La ejecucion no puede ser posterior al fin de la orden.',
+      );
     }
   }
 }

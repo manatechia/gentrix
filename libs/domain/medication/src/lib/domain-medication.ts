@@ -5,6 +5,9 @@ import type {
   IsoDateString,
   MedicationCatalogItem,
   MedicationCreateInput,
+  MedicationExecutionCreateInput,
+  MedicationExecutionOverview,
+  MedicationExecutionResult,
   MedicationDetail,
   MedicationFrequency,
   MedicationOverview,
@@ -19,8 +22,7 @@ import {
 
 /**
  * MedicationOrder is the durable prescription layer of the medication module.
- * When the system starts recording what happened to a concrete dose,
- * administration, omission and rejection must live in a dedicated
+ * Administration, omission and rejection are recorded through the dedicated
  * MedicationExecution entity linked to the order instead of expanding this model.
  */
 export interface MedicationOrder {
@@ -42,6 +44,18 @@ export interface MedicationOrder {
   startDate: IsoDateString;
   endDate?: IsoDateString;
   status: EntityStatus;
+  audit: AuditTrail;
+}
+
+export interface MedicationExecution {
+  id: EntityId;
+  organizationId: EntityId;
+  facilityId: EntityId;
+  medicationOrderId: EntityId;
+  residentId: EntityId;
+  medicationName: string;
+  result: MedicationExecutionResult;
+  occurredAt: IsoDateString;
   audit: AuditTrail;
 }
 
@@ -76,6 +90,12 @@ export const medicationFrequencies: MedicationFrequency[] = [
   'as-needed',
 ];
 
+export const medicationExecutionResults: MedicationExecutionResult[] = [
+  'administered',
+  'omitted',
+  'rejected',
+];
+
 export function isMedicationRoute(value: unknown): value is MedicationRoute {
   return (
     typeof value === 'string' &&
@@ -89,6 +109,15 @@ export function isMedicationFrequency(
   return (
     typeof value === 'string' &&
     medicationFrequencies.includes(value as MedicationFrequency)
+  );
+}
+
+export function isMedicationExecutionResult(
+  value: unknown,
+): value is MedicationExecutionResult {
+  return (
+    typeof value === 'string' &&
+    medicationExecutionResults.includes(value as MedicationExecutionResult)
   );
 }
 
@@ -248,6 +277,49 @@ export function toMedicationDetail(
   return {
     ...toMedicationOverview(order, residentName),
     audit: { ...order.audit },
+  };
+}
+
+export function createMedicationExecutionFromInput(
+  input: MedicationExecutionCreateInput,
+  order: MedicationOrder,
+  actor: string,
+  referenceDate: Date = new Date(),
+): MedicationExecution {
+  const now = toIsoDateString(referenceDate);
+
+  return {
+    id: createRandomEntityId(),
+    organizationId: order.organizationId,
+    facilityId: order.facilityId,
+    medicationOrderId: order.id,
+    residentId: order.residentId,
+    medicationName: order.medicationName,
+    result: input.result,
+    occurredAt: toIsoDateString(input.occurredAt),
+    audit: {
+      createdAt: now,
+      updatedAt: now,
+      createdBy: actor,
+      updatedBy: actor,
+    },
+  };
+}
+
+export function toMedicationExecutionOverview(
+  execution: MedicationExecution,
+  residentName: string,
+): MedicationExecutionOverview {
+  return {
+    id: execution.id,
+    medicationOrderId: execution.medicationOrderId,
+    residentId: execution.residentId,
+    residentName,
+    medicationName: execution.medicationName,
+    result: execution.result,
+    occurredAt: execution.occurredAt,
+    actor: execution.audit.createdBy,
+    audit: { ...execution.audit },
   };
 }
 

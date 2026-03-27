@@ -3,7 +3,9 @@ import { Module } from '@nestjs/common';
 import { ResidentsModule } from '../residents/residents.module';
 import { MedicationService } from './application/medication.service';
 import { MEDICATION_CATALOG_REPOSITORY } from './domain/repositories/medication-catalog.repository';
+import { MEDICATION_EXECUTION_REPOSITORY } from './domain/repositories/medication-execution.repository';
 import { MEDICATION_REPOSITORY } from './domain/repositories/medication.repository';
+import { PrismaMedicationExecutionRepository } from './infrastructure/persistence/prisma/prisma-medication-execution.repository';
 import { PrismaMedicationCatalogRepository } from './infrastructure/persistence/prisma/prisma-medication-catalog.repository';
 import { PrismaMedicationRepository } from './infrastructure/persistence/prisma/prisma-medication.repository';
 import { MedicationController } from './presentation/controllers/medication.controller';
@@ -21,10 +23,15 @@ import { MedicationController } from './presentation/controllers/medication.cont
       provide: MEDICATION_REPOSITORY,
       useClass: PrismaMedicationRepository,
     },
+    {
+      provide: MEDICATION_EXECUTION_REPOSITORY,
+      useClass: PrismaMedicationExecutionRepository,
+    },
   ],
   exports: [
     MedicationService,
     MEDICATION_CATALOG_REPOSITORY,
+    MEDICATION_EXECUTION_REPOSITORY,
     MEDICATION_REPOSITORY,
   ],
 })

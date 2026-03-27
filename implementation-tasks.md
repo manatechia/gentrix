@@ -120,6 +120,7 @@
 
 ### TASK-007 - Crear modelo y persistencia para ejecucion de medicacion
 
+- Estado: `realizada`
 - Tipo: feature / dominio / backend
 - Prioridad: alta
 - Estimacion: L
