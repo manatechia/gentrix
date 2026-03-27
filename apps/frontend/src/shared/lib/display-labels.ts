@@ -3,6 +3,7 @@ import type {
   DashboardAlertSeverity,
   DashboardAlertSource,
   EntityStatus,
+  HandoffMedicationStatus,
   MedicationExecutionResult,
   MedicationFrequency,
   MedicationRoute,
@@ -98,6 +99,12 @@ const dashboardAlertSourceLabels: Record<DashboardAlertSource, string> = {
   'medication-execution': 'Ejecucion',
 };
 
+const handoffMedicationStatusLabels: Record<HandoffMedicationStatus, string> = {
+  pending: 'Pendiente',
+  omitted: 'Omitida',
+  rejected: 'Rechazada',
+};
+
 export function formatEntityStatus(status: EntityStatus): string {
   return entityStatusLabels[status] ?? status;
 }
@@ -160,4 +167,10 @@ export function formatDashboardAlertSource(
   source: DashboardAlertSource,
 ): string {
   return dashboardAlertSourceLabels[source] ?? source;
+}
+
+export function formatHandoffMedicationStatus(
+  status: HandoffMedicationStatus,
+): string {
+  return handoffMedicationStatusLabels[status] ?? status;
 }

@@ -11,6 +11,8 @@ import { useAuthSession } from '../features/auth/hooks/use-auth-session';
 import { AuthCheckingScreen } from '../features/auth/ui/auth-checking-screen';
 import { useDashboardRoute } from '../features/dashboard/hooks/use-dashboard-route';
 import { DashboardWorkspace } from '../features/dashboard/ui/dashboard-workspace';
+import { useHandoffRoute } from '../features/handoff/hooks/use-handoff-route';
+import { HandoffWorkspace } from '../features/handoff/ui/handoff-workspace';
 import { LoginScreen } from '../features/auth/ui/login-screen';
 import { useMedicationEditRoute } from '../features/medication/hooks/use-medication-edit-route';
 import { useMedicationsRoute } from '../features/medication/hooks/use-medications-route';
@@ -242,6 +244,31 @@ function MedicationsRoute() {
   );
 }
 
+function HandoffRoute() {
+  const auth = useAuthSession();
+  const handoff = useHandoffRoute();
+
+  if (auth.status === 'checking') {
+    return <AuthCheckingScreen />;
+  }
+
+  if (!auth.session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <HandoffWorkspace
+      screenState={handoff.screenState}
+      session={auth.session}
+      handoff={handoff.handoff}
+      handoffError={handoff.handoffError}
+      residentCount={handoff.residentCount}
+      onLogout={auth.logout}
+      onRetry={handoff.handleRetry}
+    />
+  );
+}
+
 function MedicationCreateRoute() {
   const auth = useAuthSession();
   const medications = useMedicationsRoute();
@@ -347,14 +374,24 @@ export function AppRouter() {
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginRoute />} />
       <Route path="/dashboard" element={<DashboardRoute />} />
+      <Route path="/handoff" element={<HandoffRoute />} />
       <Route path="/residentes" element={<ResidentsRoute />} />
       <Route path="/residentes/nuevo" element={<ResidentCreateRoute />} />
-      <Route path="/residentes/:residentId/editar" element={<ResidentEditRoute />} />
+      <Route
+        path="/residentes/:residentId/editar"
+        element={<ResidentEditRoute />}
+      />
       <Route path="/residentes/:residentId" element={<ResidentDetailRoute />} />
       <Route path="/medicacion" element={<MedicationsRoute />} />
       <Route path="/medicacion/nueva" element={<MedicationCreateRoute />} />
-      <Route path="/medicacion/:medicationId/editar" element={<MedicationEditRoute />} />
-      <Route path="/medicaciones" element={<Navigate to="/medicacion" replace />} />
+      <Route
+        path="/medicacion/:medicationId/editar"
+        element={<MedicationEditRoute />}
+      />
+      <Route
+        path="/medicaciones"
+        element={<Navigate to="/medicacion" replace />}
+      />
       <Route
         path="/medicaciones/nueva"
         element={<Navigate to="/medicacion/nueva" replace />}

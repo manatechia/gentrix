@@ -42,9 +42,23 @@ export class SystemController {
     );
   }
 
+  @Get('handoff')
+  getRootHandoff(@Req() request: RequestWithSession) {
+    return this.systemService.getHandoffSnapshot(
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
   @Get('api/dashboard')
   getApiDashboard(@Req() request: RequestWithSession) {
     return this.systemService.getDashboardSnapshot(
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  @Get('api/handoff')
+  getApiHandoff(@Req() request: RequestWithSession) {
+    return this.systemService.getHandoffSnapshot(
       request.authSession!.activeOrganization.id,
     );
   }

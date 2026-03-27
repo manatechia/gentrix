@@ -463,6 +463,49 @@ export interface DashboardSnapshot {
   alerts: DashboardAlert[];
 }
 
+export type HandoffShift = 'morning' | 'afternoon' | 'night';
+
+export type HandoffMedicationStatus = 'pending' | 'omitted' | 'rejected';
+
+export interface HandoffMedicationIssue {
+  id: EntityId;
+  medicationOrderId: EntityId;
+  medicationName: string;
+  status: HandoffMedicationStatus;
+  scheduledFor: IsoDateString;
+  occurredAt?: IsoDateString;
+  actor?: string;
+}
+
+export interface HandoffResident {
+  residentId: EntityId;
+  fullName: string;
+  room: string;
+  careLevel: ResidentCareLevel;
+  priority: DashboardAlertSeverity;
+  recentEvents: ResidentEvent[];
+  medicationIssues: HandoffMedicationIssue[];
+}
+
+export interface HandoffSummary {
+  residentCount: number;
+  relevantResidentCount: number;
+  recentEventCount: number;
+  pendingMedicationCount: number;
+  omittedMedicationCount: number;
+  rejectedMedicationCount: number;
+}
+
+export interface HandoffSnapshot {
+  generatedAt: IsoDateString;
+  shift: HandoffShift;
+  nextShift: HandoffShift;
+  shiftStartedAt: IsoDateString;
+  shiftEndsAt: IsoDateString;
+  summary: HandoffSummary;
+  residents: HandoffResident[];
+}
+
 export interface ServiceIndex {
   service: string;
   version: string;

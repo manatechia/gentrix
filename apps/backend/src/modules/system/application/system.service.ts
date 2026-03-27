@@ -4,6 +4,7 @@ import type {
   AuthOrganization,
   DashboardSnapshot,
   HealthCheck,
+  HandoffSnapshot,
   ServiceIndex,
 } from '@gentrix/shared-types';
 import { toIsoDateString } from '@gentrix/shared-utils';
@@ -20,6 +21,7 @@ import {
 } from '../../residents/domain/repositories/resident.repository';
 import { StaffService } from '../../staff/application/staff.service';
 import { deriveDashboardAlerts } from './dashboard-alerts';
+import { deriveHandoffSnapshot } from './handoff-snapshot';
 
 const FACILITY_CAPACITY = 24;
 
@@ -46,6 +48,7 @@ export class SystemService {
       endpoints: [
         '/api/health',
         '/api/dashboard',
+        '/api/handoff',
         '/api/residents',
         '/api/staff',
         '/api/medications',
@@ -77,19 +80,13 @@ export class SystemService {
   async getDashboardSnapshot(
     organizationId?: AuthOrganization['id'],
   ): Promise<DashboardSnapshot> {
-    const [
+    const {
       residents,
       staff,
       medications,
       residentEvents,
       medicationExecutions,
-    ] = await Promise.all([
-      this.residentsService.getResidents(organizationId),
-      this.staffService.getStaff(organizationId),
-      this.medicationService.getMedications(organizationId),
-      this.residentRepository.listEvents(organizationId),
-      this.medicationExecutionRepository.list(organizationId),
-    ]);
+    } = await this.getOperationalContext(organizationId);
 
     return {
       summary: {
@@ -111,6 +108,44 @@ export class SystemService {
         residentEvents,
         medicationExecutions,
       }),
+    };
+  }
+
+  async getHandoffSnapshot(
+    organizationId?: AuthOrganization['id'],
+  ): Promise<HandoffSnapshot> {
+    const { residents, medications, residentEvents, medicationExecutions } =
+      await this.getOperationalContext(organizationId);
+
+    return deriveHandoffSnapshot({
+      residents,
+      medications,
+      residentEvents,
+      medicationExecutions,
+    });
+  }
+
+  private async getOperationalContext(organizationId?: AuthOrganization['id']) {
+    const [
+      residents,
+      staff,
+      medications,
+      residentEvents,
+      medicationExecutions,
+    ] = await Promise.all([
+      this.residentsService.getResidents(organizationId),
+      this.staffService.getStaff(organizationId),
+      this.medicationService.getMedications(organizationId),
+      this.residentRepository.listEvents(organizationId),
+      this.medicationExecutionRepository.list(organizationId),
+    ]);
+
+    return {
+      residents,
+      staff,
+      medications,
+      residentEvents,
+      medicationExecutions,
     };
   }
 }

@@ -170,6 +170,7 @@
 
 ### TASK-010 - Construir vista minima de handoff por turno
 
+- Estado: `realizada`
 - Tipo: feature / producto / backend / frontend
 - Prioridad: media
 - Estimacion: M
