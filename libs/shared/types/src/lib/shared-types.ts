@@ -265,8 +265,8 @@ export interface ResidentCreateInput
 
 /**
  * Resident updates are limited to the base profile and current state.
- * Supporting intake records stay outside this contract until dedicated flows
- * can preserve child identities without rewriting the full snapshot.
+ * Supporting intake records stay outside this contract so base edits can
+ * preserve child identities without rewriting the full snapshot.
  */
 export interface ResidentBaseUpdateInput
   extends ResidentBaseProfileInput,

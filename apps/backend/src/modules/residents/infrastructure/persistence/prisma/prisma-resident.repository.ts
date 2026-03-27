@@ -134,54 +134,29 @@ export class PrismaResidentRepository implements ResidentRepository {
   }
 
   async update(resident: Resident): Promise<Resident> {
-    const persistedResident = await this.prisma.$transaction(async (transaction) => {
-      const updatedAt = new Date(resident.audit.updatedAt);
-
-      await transaction.clinicalHistoryEvent.updateMany({
-        where: {
-          residentId: resident.id,
-          deletedAt: null,
-          eventType: residentMedicalHistoryEventType,
-        },
-        data: {
-          deletedAt: updatedAt,
-          deletedBy: resident.audit.updatedBy,
-          updatedAt,
-          updatedBy: resident.audit.updatedBy,
-        },
-      });
-
-      return transaction.resident.update({
-        where: {
-          id: resident.id,
-        },
-        data: {
-          organizationId: resident.organizationId,
-          facilityId: resident.facilityId,
-          ...toResidentPersistenceData(resident),
-          updatedAt,
-          updatedBy: resident.audit.updatedBy,
-          deletedAt: resident.audit.deletedAt
-            ? new Date(resident.audit.deletedAt)
-            : null,
-          deletedBy: resident.audit.deletedBy ?? null,
-          clinicalEvents: resident.medicalHistory.length
-            ? {
-                create: toMedicalHistoryEventRecords(resident),
-              }
-            : undefined,
-        },
-        include: {
-          clinicalEvents: {
-            where: {
-              deletedAt: null,
-            },
-            orderBy: {
-              occurredAt: 'desc',
-            },
+    const persistedResident = await this.prisma.resident.update({
+      where: {
+        id: resident.id,
+      },
+      data: {
+        ...toResidentBaseUpdatePersistenceData(resident),
+        updatedAt: new Date(resident.audit.updatedAt),
+        updatedBy: resident.audit.updatedBy,
+        deletedAt: resident.audit.deletedAt
+          ? new Date(resident.audit.deletedAt)
+          : null,
+        deletedBy: resident.audit.deletedBy ?? null,
+      },
+      include: {
+        clinicalEvents: {
+          where: {
+            deletedAt: null,
+          },
+          orderBy: {
+            occurredAt: 'desc',
           },
         },
-      });
+      },
     });
 
     return mapResidentRecord(persistedResident);
@@ -308,6 +283,30 @@ function toResidentPersistenceData(resident: Resident) {
     discharge: toJsonInput(resident.discharge),
     address: toJsonInput(resident.address),
     emergencyContact: toJsonInput(resident.emergencyContact),
+  };
+}
+
+function toResidentBaseUpdatePersistenceData(resident: Resident) {
+  return {
+    firstName: resident.firstName,
+    middleNames: resident.middleNames,
+    lastName: resident.lastName,
+    otherLastNames: resident.otherLastNames,
+    documentType: resident.documentType,
+    documentNumber: resident.documentNumber,
+    documentIssuingCountry: resident.documentIssuingCountry,
+    procedureNumber: resident.procedureNumber,
+    cuil: resident.cuil,
+    birthDate: new Date(resident.birthDate),
+    admissionDate: new Date(resident.admissionDate),
+    sex: resident.sex,
+    maritalStatus: resident.maritalStatus,
+    nationality: resident.nationality,
+    email: resident.email,
+    room: resident.room,
+    careLevel: resident.careLevel,
+    status: resident.status,
+    address: toJsonInput(resident.address),
   };
 }
 
