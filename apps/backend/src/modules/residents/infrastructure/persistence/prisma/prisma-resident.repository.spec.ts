@@ -4,6 +4,7 @@ import {
   createResidentSeed,
   type Resident,
 } from '@gentrix/domain-residents';
+import type { ResidentEvent } from '@gentrix/shared-types';
 
 import { PrismaResidentRepository } from './prisma-resident.repository';
 
@@ -100,6 +101,151 @@ describe('PrismaResidentRepository.update', () => {
   });
 });
 
+describe('PrismaResidentRepository.listEventsByResidentId', () => {
+  it('requests all resident timeline events ordered by occurredAt descending', async () => {
+    const resident = createResidentSeed();
+    const findMany = vi.fn().mockResolvedValue([
+      toClinicalHistoryEventRecord({
+        id: 'resident-event-follow-up',
+        residentId: resident.id,
+        eventType: 'follow-up',
+        title: 'Seguimiento cognitivo',
+        description:
+          'Se registra seguimiento neurologico con refuerzo de rutina nocturna y acompanamiento.',
+        occurredAt: new Date('2026-03-12T18:00:00.000Z'),
+      }),
+      toClinicalHistoryEventRecord({
+        id: 'resident-event-admission',
+        residentId: resident.id,
+        eventType: 'admission-note',
+        title: 'Ingreso y evaluacion inicial',
+        description:
+          'Se registra ingreso con movilidad asistida y plan base de observacion diaria.',
+        occurredAt: new Date('2024-11-03T12:30:00.000Z'),
+      }),
+    ]);
+    const prisma = {
+      clinicalHistoryEvent: {
+        findMany,
+      },
+    };
+    const repository = new PrismaResidentRepository(prisma as never);
+
+    const events = await repository.listEventsByResidentId(
+      resident.id,
+      resident.organizationId,
+    );
+
+    expect(findMany).toHaveBeenCalledWith({
+      where: {
+        residentId: resident.id,
+        deletedAt: null,
+        organizationId: resident.organizationId,
+      },
+      orderBy: [{ occurredAt: 'desc' }, { createdAt: 'desc' }],
+    });
+    expect(events).toEqual<ResidentEvent[]>([
+      {
+        id: 'resident-event-follow-up',
+        residentId: resident.id,
+        eventType: 'follow-up',
+        title: 'Seguimiento cognitivo',
+        description:
+          'Se registra seguimiento neurologico con refuerzo de rutina nocturna y acompanamiento.',
+        occurredAt: '2026-03-12T18:00:00.000Z',
+        actor: 'seed-script',
+        audit: {
+          createdAt: '2026-03-12T18:00:00.000Z',
+          updatedAt: '2026-03-12T18:00:00.000Z',
+          createdBy: 'seed-script',
+          updatedBy: 'seed-script',
+        },
+      },
+      {
+        id: 'resident-event-admission',
+        residentId: resident.id,
+        eventType: 'admission-note',
+        title: 'Ingreso y evaluacion inicial',
+        description:
+          'Se registra ingreso con movilidad asistida y plan base de observacion diaria.',
+        occurredAt: '2024-11-03T12:30:00.000Z',
+        actor: 'seed-script',
+        audit: {
+          createdAt: '2026-03-12T18:00:00.000Z',
+          updatedAt: '2026-03-12T18:00:00.000Z',
+          createdBy: 'seed-script',
+          updatedBy: 'seed-script',
+        },
+      },
+    ]);
+  });
+});
+
+describe('PrismaResidentRepository.createEvent', () => {
+  it('persists a resident event on top of ClinicalHistoryEvent', async () => {
+    const resident = createResidentSeed();
+    const createEvent = vi.fn().mockResolvedValue(
+      toClinicalHistoryEventRecord({
+        id: 'resident-event-created',
+        residentId: resident.id,
+        organizationId: resident.organizationId,
+        facilityId: resident.facilityId,
+        eventType: 'follow-up',
+        title: 'Cambio de rutina nocturna',
+        description: 'Se observa mejor adherencia con acompanamiento.',
+        occurredAt: new Date('2026-03-25T21:00:00.000Z'),
+        createdAt: new Date('2026-03-26T10:00:00.000Z'),
+        updatedAt: new Date('2026-03-26T10:00:00.000Z'),
+        createdBy: 'coordinator-user',
+        updatedBy: 'coordinator-user',
+      }),
+    );
+    const prisma = {
+      clinicalHistoryEvent: {
+        create: createEvent,
+      },
+    };
+    const repository = new PrismaResidentRepository(prisma as never);
+
+    const created = await repository.createEvent({
+      residentId: resident.id,
+      organizationId: resident.organizationId,
+      facilityId: resident.facilityId,
+      eventType: 'follow-up',
+      title: 'Cambio de rutina nocturna',
+      description: 'Se observa mejor adherencia con acompanamiento.',
+      occurredAt: '2026-03-25T21:00:00.000Z',
+      actor: 'coordinator-user',
+      createdAt: '2026-03-26T10:00:00.000Z',
+    });
+
+    expect(createEvent).toHaveBeenCalledWith({
+      data: {
+        organizationId: resident.organizationId,
+        facilityId: resident.facilityId,
+        residentId: resident.id,
+        eventType: 'follow-up',
+        title: 'Cambio de rutina nocturna',
+        description: 'Se observa mejor adherencia con acompanamiento.',
+        occurredAt: new Date('2026-03-25T21:00:00.000Z'),
+        createdAt: new Date('2026-03-26T10:00:00.000Z'),
+        createdBy: 'coordinator-user',
+        updatedAt: new Date('2026-03-26T10:00:00.000Z'),
+        updatedBy: 'coordinator-user',
+      },
+    });
+    expect(created).toMatchObject({
+      id: 'resident-event-created',
+      residentId: resident.id,
+      eventType: 'follow-up',
+      title: 'Cambio de rutina nocturna',
+      description: 'Se observa mejor adherencia con acompanamiento.',
+      occurredAt: '2026-03-25T21:00:00.000Z',
+      actor: 'coordinator-user',
+    });
+  });
+});
+
 function toResidentRecord(resident: Resident) {
   return {
     id: resident.id,
@@ -156,5 +302,42 @@ function toResidentRecord(resident: Resident) {
       deletedAt: null,
       deletedBy: null,
     })),
+  };
+}
+
+function toClinicalHistoryEventRecord(
+  overrides: Partial<{
+    id: string;
+    organizationId: string;
+    facilityId: string | null;
+    residentId: string;
+    eventType: string;
+    title: string;
+    description: string;
+    occurredAt: Date;
+    createdAt: Date;
+    createdBy: string;
+    updatedAt: Date;
+    updatedBy: string;
+    deletedAt: Date | null;
+    deletedBy: string | null;
+  }> = {},
+) {
+  return {
+    id: 'resident-event-default',
+    organizationId: 'organization-gentrix-demo',
+    facilityId: 'facility-residencia-central',
+    residentId: 'resident-marta-diaz-a-101',
+    eventType: 'follow-up',
+    title: 'Seguimiento simple',
+    description: 'Se observa evolucion estable.',
+    occurredAt: new Date('2026-03-25T11:00:00.000Z'),
+    createdAt: new Date('2026-03-12T18:00:00.000Z'),
+    createdBy: 'seed-script',
+    updatedAt: new Date('2026-03-12T18:00:00.000Z'),
+    updatedBy: 'seed-script',
+    deletedAt: null,
+    deletedBy: null,
+    ...overrides,
   };
 }

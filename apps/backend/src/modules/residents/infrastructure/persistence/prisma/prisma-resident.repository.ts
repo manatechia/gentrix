@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, type ClinicalHistoryEvent } from '@prisma/client';
 
 import type {
   Address,
@@ -9,6 +9,7 @@ import type {
   ResidentBelongings,
   ResidentClinicalProfile,
   ResidentDischargeInfo,
+  ResidentEvent,
   ResidentFamilyContact,
   ResidentInsuranceInfo,
   ResidentPsychiatricCareInfo,
@@ -22,7 +23,10 @@ import {
 import { toIsoDateString } from '@gentrix/shared-utils';
 
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
-import type { ResidentRepository } from '../../../domain/repositories/resident.repository';
+import type {
+  ResidentEventRecordInput,
+  ResidentRepository,
+} from '../../../domain/repositories/resident.repository';
 
 type ResidentRecord = Prisma.ResidentGetPayload<{
   include: {
@@ -161,6 +165,42 @@ export class PrismaResidentRepository implements ResidentRepository {
 
     return mapResidentRecord(persistedResident);
   }
+
+  async listEventsByResidentId(
+    residentId: Resident['id'],
+    organizationId?: Resident['organizationId'],
+  ): Promise<ResidentEvent[]> {
+    const events = await this.prisma.clinicalHistoryEvent.findMany({
+      where: {
+        residentId,
+        deletedAt: null,
+        organizationId: organizationId ?? undefined,
+      },
+      orderBy: [{ occurredAt: 'desc' }, { createdAt: 'desc' }],
+    });
+
+    return events.map(mapResidentEventRecord);
+  }
+
+  async createEvent(event: ResidentEventRecordInput): Promise<ResidentEvent> {
+    const created = await this.prisma.clinicalHistoryEvent.create({
+      data: {
+        organizationId: event.organizationId,
+        facilityId: event.facilityId ?? null,
+        residentId: event.residentId,
+        eventType: event.eventType,
+        title: event.title,
+        description: event.description,
+        occurredAt: new Date(event.occurredAt),
+        createdAt: new Date(event.createdAt),
+        createdBy: event.actor,
+        updatedAt: new Date(event.createdAt),
+        updatedBy: event.actor,
+      },
+    });
+
+    return mapResidentEventRecord(created);
+  }
 }
 
 function mapResidentRecord(record: ResidentRecord): Resident {
@@ -233,6 +273,26 @@ function mapResidentRecord(record: ResidentRecord): Resident {
       room: address.room ?? record.room,
     },
     emergencyContact,
+    audit: {
+      createdAt: toIsoDateString(record.createdAt),
+      updatedAt: toIsoDateString(record.updatedAt),
+      createdBy: record.createdBy,
+      updatedBy: record.updatedBy,
+      deletedAt: record.deletedAt ? toIsoDateString(record.deletedAt) : undefined,
+      deletedBy: record.deletedBy ?? undefined,
+    },
+  };
+}
+
+function mapResidentEventRecord(record: ClinicalHistoryEvent): ResidentEvent {
+  return {
+    id: record.id as ResidentEvent['id'],
+    residentId: record.residentId as ResidentEvent['residentId'],
+    eventType: record.eventType as ResidentEvent['eventType'],
+    title: record.title,
+    description: record.description,
+    occurredAt: toIsoDateString(record.occurredAt),
+    actor: record.createdBy,
     audit: {
       createdAt: toIsoDateString(record.createdAt),
       updatedAt: toIsoDateString(record.updatedAt),

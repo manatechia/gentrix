@@ -274,6 +274,38 @@ export interface ResidentBaseUpdateInput
 
 export interface ResidentUpdateInput extends ResidentBaseUpdateInput {}
 
+/**
+ * ResidentEvent is the stable API/domain contract for the resident timeline.
+ * It currently sits on top of the persisted ClinicalHistoryEvent model.
+ */
+export type ResidentEventType =
+  | 'medical-history'
+  | 'admission-note'
+  | 'follow-up';
+
+export type ResidentEventCreatableType = Exclude<
+  ResidentEventType,
+  'medical-history'
+>;
+
+export interface ResidentEvent {
+  id: EntityId;
+  residentId: EntityId;
+  eventType: ResidentEventType;
+  title: string;
+  description: string;
+  occurredAt: IsoDateString;
+  actor: string;
+  audit: AuditTrail;
+}
+
+export interface ResidentEventCreateInput {
+  eventType: ResidentEventCreatableType;
+  title: string;
+  description: string;
+  occurredAt: IsoDateString;
+}
+
 export interface StaffOverview {
   id: EntityId;
   name: string;

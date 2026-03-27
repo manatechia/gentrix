@@ -260,6 +260,8 @@ model MedicationOrder {
   @@index([deletedAt])
 }
 
+/// Persistence model for the resident event timeline.
+/// API and service code expose the stable ResidentEvent contract on top of it.
 model ClinicalHistoryEvent {
   id             String       @id @default(uuid()) @db.Uuid
   organizationId String       @db.Uuid

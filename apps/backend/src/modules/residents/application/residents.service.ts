@@ -16,13 +16,17 @@ import type {
   ResidentCreateInput,
   ResidentDetail,
   ResidentDischargeInfo,
+  ResidentEvent,
+  ResidentEventCreateInput,
   ResidentOverview,
   ResidentSupportingRecordInput,
   ResidentUpdateInput,
 } from '@gentrix/shared-types';
+import { toIsoDateString } from '@gentrix/shared-utils';
 
 import {
   RESIDENT_REPOSITORY,
+  type ResidentEventRecordInput,
   type ResidentRepository,
 } from '../domain/repositories/resident.repository';
 
@@ -59,6 +63,19 @@ export class ResidentsService {
     return toResidentDetail(resident);
   }
 
+  async getResidentEvents(
+    residentId: string,
+    organizationId?: Resident['organizationId'],
+  ): Promise<ResidentEvent[]> {
+    const resident = await this.getResidentEntityById(residentId, organizationId);
+    const events = await this.residents.listEventsByResidentId(
+      resident.id,
+      resident.organizationId,
+    );
+
+    return sortResidentEventsDesc(events);
+  }
+
   async createResident(
     input: ResidentCreateInput,
     actor: string,
@@ -91,6 +108,32 @@ export class ResidentsService {
     return toResidentDetail(persistedResident);
   }
 
+  async createResidentEvent(
+    residentId: string,
+    input: ResidentEventCreateInput,
+    actor: string,
+    organizationId?: Resident['organizationId'],
+  ): Promise<ResidentEvent> {
+    const resident = await this.getResidentEntityById(residentId, organizationId);
+
+    this.validateResidentEventCreateInput(input);
+
+    const now = toIsoDateString(new Date());
+    const eventRecord: ResidentEventRecordInput = {
+      residentId: resident.id,
+      organizationId: resident.organizationId,
+      facilityId: resident.facilityId,
+      eventType: input.eventType,
+      title: input.title.trim(),
+      description: input.description.trim(),
+      occurredAt: toIsoDateString(input.occurredAt),
+      actor,
+      createdAt: now,
+    };
+
+    return this.residents.createEvent(eventRecord);
+  }
+
   private validateResidentCreateInput(input: ResidentCreateInput): void {
     this.validateResidentBaseProfile(input);
     this.validateResidentSupportingRecords(input);
@@ -99,6 +142,30 @@ export class ResidentsService {
 
   private validateResidentUpdateInput(input: ResidentUpdateInput): void {
     this.validateResidentBaseProfile(input);
+  }
+
+  private validateResidentEventCreateInput(input: ResidentEventCreateInput): void {
+    const occurredAt = new Date(input.occurredAt);
+
+    if (Number.isNaN(occurredAt.getTime())) {
+      throw new BadRequestException(
+        'La fecha del evento no tiene un formato valido.',
+      );
+    }
+
+    if (input.title.trim().length === 0) {
+      throw new BadRequestException('El evento debe tener un titulo.');
+    }
+
+    if (input.description.trim().length === 0) {
+      throw new BadRequestException('El evento debe tener una descripcion.');
+    }
+
+    if (occurredAt.getTime() > Date.now()) {
+      throw new BadRequestException(
+        'La fecha del evento no puede estar en el futuro.',
+      );
+    }
   }
 
   private validateResidentBaseProfile(
@@ -178,4 +245,11 @@ export class ResidentsService {
       }
     }
   }
+}
+
+function sortResidentEventsDesc(events: ResidentEvent[]): ResidentEvent[] {
+  return [...events].sort(
+    (left, right) =>
+      new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime(),
+  );
 }

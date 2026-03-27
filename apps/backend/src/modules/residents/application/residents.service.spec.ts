@@ -1,17 +1,27 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 
 import {
   createResidentSeed,
   type Resident,
 } from '@gentrix/domain-residents';
-import type { ResidentUpdateInput } from '@gentrix/shared-types';
+import type {
+  ResidentEvent,
+  ResidentEventCreateInput,
+  ResidentUpdateInput,
+} from '@gentrix/shared-types';
 
-import type { ResidentRepository } from '../domain/repositories/resident.repository';
+import type {
+  ResidentEventRecordInput,
+  ResidentRepository,
+} from '../domain/repositories/resident.repository';
 import { ResidentsService } from './residents.service';
 
 class ResidentRepositoryStub implements ResidentRepository {
   private resident: Resident;
+  private residentEvents: ResidentEvent[] = [];
   lastUpdatedResident: Resident | null = null;
+  lastCreatedEvent: ResidentEventRecordInput | null = null;
 
   constructor(resident: Resident) {
     this.resident = cloneResident(resident);
@@ -34,6 +44,37 @@ class ResidentRepositoryStub implements ResidentRepository {
     this.lastUpdatedResident = cloneResident(resident);
     this.resident = cloneResident(resident);
     return cloneResident(this.resident);
+  }
+
+  async listEventsByResidentId(residentId: string): Promise<ResidentEvent[]> {
+    return this.residentEvents
+      .filter((event) => event.residentId === residentId)
+      .map(cloneResidentEvent);
+  }
+
+  async createEvent(event: ResidentEventRecordInput): Promise<ResidentEvent> {
+    this.lastCreatedEvent = { ...event };
+    const createdEvent: ResidentEvent = {
+      id: 'resident-event-001',
+      residentId: event.residentId,
+      eventType: event.eventType,
+      title: event.title,
+      description: event.description,
+      occurredAt: event.occurredAt,
+      actor: event.actor,
+      audit: {
+        createdAt: event.createdAt,
+        updatedAt: event.createdAt,
+        createdBy: event.actor,
+        updatedBy: event.actor,
+      },
+    };
+    this.residentEvents = [createdEvent, ...this.residentEvents];
+    return cloneResidentEvent(createdEvent);
+  }
+
+  seedEvents(events: ResidentEvent[]): void {
+    this.residentEvents = events.map(cloneResidentEvent);
   }
 }
 
@@ -108,6 +149,118 @@ describe('ResidentsService.updateResident', () => {
   });
 });
 
+describe('ResidentsService.getResidentEvents', () => {
+  it('returns resident events sorted by occurredAt descending', async () => {
+    const resident = createResidentSeed();
+    const residents = new ResidentRepositoryStub(resident);
+    residents.seedEvents([
+      createResidentEventSeed({
+        id: 'resident-event-follow-up',
+        residentId: resident.id,
+        eventType: 'follow-up',
+        title: 'Seguimiento cognitivo',
+        occurredAt: '2026-03-12T18:00:00.000Z',
+      }),
+      createResidentEventSeed({
+        id: 'resident-event-admission',
+        residentId: resident.id,
+        eventType: 'admission-note',
+        title: 'Ingreso y evaluacion inicial',
+        occurredAt: '2024-11-03T12:30:00.000Z',
+      }),
+      createResidentEventSeed({
+        id: 'resident-event-history',
+        residentId: resident.id,
+        eventType: 'medical-history',
+        title: 'Hipertension arterial',
+        occurredAt: '2025-11-12T00:00:00.000Z',
+      }),
+    ]);
+    const service = new ResidentsService(residents);
+
+    const events = await service.getResidentEvents(
+      resident.id,
+      resident.organizationId,
+    );
+
+    expect(events.map((event) => event.id)).toEqual([
+      'resident-event-follow-up',
+      'resident-event-history',
+      'resident-event-admission',
+    ]);
+  });
+});
+
+describe('ResidentsService.createResidentEvent', () => {
+  it('creates a simple resident event without touching resident update contracts', async () => {
+    const resident = createResidentSeed();
+    const residents = new ResidentRepositoryStub(resident);
+    const service = new ResidentsService(residents);
+
+    const created = await service.createResidentEvent(
+      resident.id,
+      {
+        eventType: 'follow-up',
+        title: '  Cambio de rutina nocturna  ',
+        description: '  Se observa mejor adherencia con acompanamiento.  ',
+        occurredAt: '2026-03-25T21:00:00.000Z',
+      },
+      'coordinator-user',
+      resident.organizationId,
+    );
+
+    expect(created.eventType).toBe('follow-up');
+    expect(created.title).toBe('Cambio de rutina nocturna');
+    expect(created.description).toBe(
+      'Se observa mejor adherencia con acompanamiento.',
+    );
+    expect(created.actor).toBe('coordinator-user');
+    expect(residents.lastCreatedEvent).toMatchObject({
+      residentId: resident.id,
+      organizationId: resident.organizationId,
+      facilityId: resident.facilityId,
+      eventType: 'follow-up',
+      title: 'Cambio de rutina nocturna',
+      description: 'Se observa mejor adherencia con acompanamiento.',
+      occurredAt: '2026-03-25T21:00:00.000Z',
+      actor: 'coordinator-user',
+    });
+  });
+
+  it('rejects creating an event for a missing resident', async () => {
+    const resident = createResidentSeed();
+    const residents = new ResidentRepositoryStub(resident);
+    const service = new ResidentsService(residents);
+
+    await expect(
+      service.createResidentEvent(
+        'resident-missing',
+        buildResidentEventInput(),
+        'coordinator-user',
+        resident.organizationId,
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('rejects future event dates', async () => {
+    const resident = createResidentSeed();
+    const residents = new ResidentRepositoryStub(resident);
+    const service = new ResidentsService(residents);
+
+    await expect(
+      service.createResidentEvent(
+        resident.id,
+        {
+          ...buildResidentEventInput(),
+          occurredAt: '2099-01-01T00:00:00.000Z',
+        },
+        'coordinator-user',
+        resident.organizationId,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+});
+
 function buildResidentUpdateInput(
   resident: Resident,
   overrides: Partial<ResidentUpdateInput> = {},
@@ -149,5 +302,45 @@ function cloneResident(resident: Resident): Resident {
     address: { ...resident.address },
     emergencyContact: { ...resident.emergencyContact },
     audit: { ...resident.audit },
+  };
+}
+
+function buildResidentEventInput(
+  overrides: Partial<ResidentEventCreateInput> = {},
+): ResidentEventCreateInput {
+  return {
+    eventType: 'follow-up',
+    title: 'Seguimiento simple',
+    description: 'Se observa evolucion estable.',
+    occurredAt: '2026-03-25T11:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function createResidentEventSeed(
+  overrides: Partial<ResidentEvent> = {},
+): ResidentEvent {
+  return {
+    id: 'resident-event-seed',
+    residentId: createResidentSeed().id,
+    eventType: 'follow-up',
+    title: 'Seguimiento simple',
+    description: 'Se observa evolucion estable.',
+    occurredAt: '2026-03-25T11:00:00.000Z',
+    actor: 'seed-script',
+    audit: {
+      createdAt: '2026-03-25T11:00:00.000Z',
+      updatedAt: '2026-03-25T11:00:00.000Z',
+      createdBy: 'seed-script',
+      updatedBy: 'seed-script',
+    },
+    ...overrides,
+  };
+}
+
+function cloneResidentEvent(event: ResidentEvent): ResidentEvent {
+  return {
+    ...event,
+    audit: { ...event.audit },
   };
 }

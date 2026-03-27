@@ -13,6 +13,7 @@ import {
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { ResidentsService } from '../../application/residents.service';
 import { CreateResidentDto } from '../dto/create-resident.dto';
+import { CreateResidentEventDto } from '../dto/create-resident-event.dto';
 import { UpdateResidentDto } from '../dto/update-resident.dto';
 
 @Controller('api/residents')
@@ -35,6 +36,17 @@ export class ResidentsController {
     @Req() request: RequestWithSession,
   ) {
     return this.residentsService.getResidentById(
+      residentId,
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  @Get(':residentId/events')
+  getResidentEvents(
+    @Param('residentId') residentId: string,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.residentsService.getResidentEvents(
       residentId,
       request.authSession!.activeOrganization.id,
     );
@@ -68,6 +80,20 @@ export class ResidentsController {
     @Req() request: RequestWithSession,
   ) {
     return this.residentsService.updateResident(
+      residentId,
+      body,
+      request.authSession!.user.email,
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  @Post(':residentId/events')
+  createResidentEvent(
+    @Param('residentId') residentId: string,
+    @Body() body: CreateResidentEventDto,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.residentsService.createResidentEvent(
       residentId,
       body,
       request.authSession!.user.email,
