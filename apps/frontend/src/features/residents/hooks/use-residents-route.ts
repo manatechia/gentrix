@@ -8,7 +8,7 @@ import {
   unwrapEnvelope,
 } from '../../../shared/lib/api-envelope';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
-import { toResidentUpsertInput } from '../lib/resident-form-adapter';
+import { toResidentCreateInput } from '../lib/resident-form-adapter';
 import * as residentsService from '../services/residents-service';
 import type { ResidentFormValues } from '../types/resident-form-values';
 
@@ -99,7 +99,7 @@ export function useResidentsRoute() {
 
     try {
       const payload = await residentsService.createResident(
-        toResidentUpsertInput(values),
+        toResidentCreateInput(values),
       );
       const createdResident = unwrapEnvelope(payload);
 

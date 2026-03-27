@@ -133,7 +133,7 @@ const dischargeSchema = Yup.object({
   reason: Yup.string().trim(),
 });
 
-export const residentIntakeSchema = Yup.object({
+const residentBaseFormShape = {
   documentType: Yup.string().required('El tipo de documento es obligatorio.'),
   documentNumber: Yup.string()
     .trim()
@@ -185,6 +185,41 @@ export const residentIntakeSchema = Yup.object({
     .optional(),
   room: Yup.string().trim().required('La habitacion es obligatoria.'),
   careLevel: Yup.string().required('El nivel de cuidado es obligatorio.'),
+};
+
+export const residentBaseUpdateSchema = Yup.object({
+  ...residentBaseFormShape,
+}).test(
+  'cuit-complete',
+  'Completa el CUIT con 2 digitos iniciales y 1 digito final.',
+  (values, context) => {
+    const prefix = values?.cuitPrefix?.trim() ?? '';
+    const suffix = values?.cuitSuffix?.trim() ?? '';
+
+    if (!prefix && !suffix) {
+      return true;
+    }
+
+    if (prefix.length !== 2) {
+      return context.createError({
+        path: 'cuitPrefix',
+        message: 'Ingresa los 2 primeros digitos del CUIT.',
+      });
+    }
+
+    if (suffix.length !== 1) {
+      return context.createError({
+        path: 'cuitSuffix',
+        message: 'Ingresa el ultimo digito del CUIT.',
+      });
+    }
+
+    return true;
+  },
+);
+
+export const residentIntakeSchema = Yup.object({
+  ...residentBaseFormShape,
   insurance: insuranceSchema.required(),
   transfer: transferSchema.required(),
   psychiatry: psychiatrySchema.required(),

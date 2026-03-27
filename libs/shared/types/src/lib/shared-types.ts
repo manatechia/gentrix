@@ -264,10 +264,15 @@ export interface ResidentCreateInput
     ResidentSupportingRecordInput {}
 
 /**
- * Transitional legacy contract until TASK-001 splits resident base updates
- * from temporal/supporting records. Do not add resident events or derived data here.
+ * Resident updates are limited to the base profile and current state.
+ * Supporting intake records stay outside this contract until dedicated flows
+ * can preserve child identities without rewriting the full snapshot.
  */
-export interface ResidentUpdateInput extends ResidentCreateInput {}
+export interface ResidentBaseUpdateInput
+  extends ResidentBaseProfileInput,
+    ResidentCurrentStateInput {}
+
+export interface ResidentUpdateInput extends ResidentBaseUpdateInput {}
 
 export interface StaffOverview {
   id: EntityId;

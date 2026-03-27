@@ -295,7 +295,7 @@ export function createResidentFromIntake(
   referenceDate: Date = new Date(),
 ): Resident {
   const now = toIsoDateString(referenceDate);
-  const editableFields = mapResidentIntakeFields(input, now);
+  const editableFields = mapResidentCreateInput(input, now);
 
   return createResidentSeed({
     id: createRandomEntityId(),
@@ -321,14 +321,14 @@ export function createResidentFromIntake(
   });
 }
 
-export function updateResidentFromIntake(
+export function updateResidentBaseProfile(
   currentResident: Resident,
   input: ResidentUpdateInput,
   actor: string,
   referenceDate: Date = new Date(),
 ): Resident {
   const now = toIsoDateString(referenceDate);
-  const editableFields = mapResidentIntakeFields(input, now);
+  const editableFields = mapResidentUpdateInput(input);
 
   return {
     ...currentResident,
@@ -337,10 +337,6 @@ export function updateResidentFromIntake(
       ...currentResident.address,
       room: editableFields.room,
     },
-    emergencyContact: buildEmergencyContact(
-      editableFields.familyContacts,
-      currentResident.emergencyContact,
-    ),
     audit: {
       ...currentResident.audit,
       updatedAt: now,
@@ -437,12 +433,13 @@ type ResidentEditableIntakeFields = ResidentStableProfileFields &
   ResidentCurrentStateFields &
   ResidentSupportingIntakeFields;
 
-function mapResidentIntakeFields(
-  input: ResidentCreateInput | ResidentUpdateInput,
+type ResidentEditableBaseUpdateFields = ResidentStableProfileFields &
+  ResidentCurrentStateFields;
+
+function mapResidentCreateInput(
+  input: ResidentCreateInput,
   now: IsoDateString,
 ): ResidentEditableIntakeFields {
-  // This intake snapshot is still shared by create and legacy update flows.
-  // Resident events and derived signals must stay out of this mapping.
   const familyContacts = input.familyContacts.map((contact) =>
     ({
       id: createRandomEntityId(),
@@ -540,6 +537,30 @@ function mapResidentIntakeFields(
         : undefined,
       reason: input.discharge.reason?.trim() || undefined,
     },
+  };
+}
+
+function mapResidentUpdateInput(
+  input: ResidentUpdateInput,
+): ResidentEditableBaseUpdateFields {
+  return {
+    firstName: input.firstName.trim(),
+    middleNames: input.middleNames?.trim() || undefined,
+    lastName: input.lastName.trim(),
+    otherLastNames: input.otherLastNames?.trim() || undefined,
+    documentType: input.documentType,
+    documentNumber: input.documentNumber.trim(),
+    documentIssuingCountry: input.documentIssuingCountry.trim(),
+    procedureNumber: input.procedureNumber?.trim() || undefined,
+    cuil: input.cuil?.trim() || undefined,
+    birthDate: toIsoDateString(input.birthDate),
+    admissionDate: toIsoDateString(input.admissionDate),
+    sex: input.sex,
+    maritalStatus: input.maritalStatus?.trim() || undefined,
+    nationality: input.nationality?.trim() || undefined,
+    email: input.email?.trim() || undefined,
+    room: input.room.trim(),
+    careLevel: input.careLevel,
   };
 }
 

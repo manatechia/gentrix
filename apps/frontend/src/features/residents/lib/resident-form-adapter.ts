@@ -1,4 +1,5 @@
 import type {
+  ResidentCreateInput,
   ResidentDetail,
   ResidentDocumentType,
   ResidentSex,
@@ -190,7 +191,7 @@ export function toResidentFormValues(
   };
 }
 
-export function toResidentUpsertInput(
+function toResidentBaseUpdateInput(
   values: ResidentFormValues,
 ): ResidentUpdateInput {
   return {
@@ -215,6 +216,14 @@ export function toResidentUpsertInput(
     email: values.email.trim() || undefined,
     room: values.room.trim(),
     careLevel: values.careLevel,
+  };
+}
+
+export function toResidentCreateInput(
+  values: ResidentFormValues,
+): ResidentCreateInput {
+  return {
+    ...toResidentBaseUpdateInput(values),
     insurance: {
       provider: toOptionalString(values.insurance.provider),
       memberNumber: toOptionalString(values.insurance.memberNumber),
@@ -286,4 +295,10 @@ export function toResidentUpsertInput(
       dataUrl: attachment.dataUrl,
     })),
   };
+}
+
+export function toResidentUpdateInput(
+  values: ResidentFormValues,
+): ResidentUpdateInput {
+  return toResidentBaseUpdateInput(values);
 }

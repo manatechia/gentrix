@@ -9,13 +9,15 @@ import {
   createResidentFromIntake,
   toResidentCard,
   toResidentDetail,
-  updateResidentFromIntake,
+  updateResidentBaseProfile,
   type Resident,
 } from '@gentrix/domain-residents';
 import type {
   ResidentCreateInput,
   ResidentDetail,
+  ResidentDischargeInfo,
   ResidentOverview,
+  ResidentSupportingRecordInput,
   ResidentUpdateInput,
 } from '@gentrix/shared-types';
 
@@ -63,7 +65,7 @@ export class ResidentsService {
     organizationId: Resident['organizationId'],
     facilityId: Resident['facilityId'],
   ): Promise<ResidentOverview> {
-    this.validateResidentInput(input);
+    this.validateResidentCreateInput(input);
     const resident = createResidentFromIntake(input, organizationId, facilityId);
     resident.audit.createdBy = actor;
     resident.audit.updatedBy = actor;
@@ -83,18 +85,20 @@ export class ResidentsService {
       throw new NotFoundException('No encontre el residente solicitado.');
     }
 
-    this.validateResidentInput(input);
-    const updatedResident = updateResidentFromIntake(currentResident, input, actor);
+    this.validateResidentUpdateInput(input);
+    const updatedResident = updateResidentBaseProfile(currentResident, input, actor);
     const persistedResident = await this.residents.update(updatedResident);
     return toResidentDetail(persistedResident);
   }
 
-  private validateResidentInput(
-    input: ResidentCreateInput | ResidentUpdateInput,
-  ): void {
+  private validateResidentCreateInput(input: ResidentCreateInput): void {
     this.validateResidentBaseProfile(input);
     this.validateResidentSupportingRecords(input);
-    this.validateResidentDischarge(input);
+    this.validateResidentDischarge(input.admissionDate, input.discharge);
+  }
+
+  private validateResidentUpdateInput(input: ResidentUpdateInput): void {
+    this.validateResidentBaseProfile(input);
   }
 
   private validateResidentBaseProfile(
@@ -117,9 +121,7 @@ export class ResidentsService {
     }
   }
 
-  private validateResidentSupportingRecords(
-    input: ResidentCreateInput | ResidentUpdateInput,
-  ): void {
+  private validateResidentSupportingRecords(input: ResidentSupportingRecordInput): void {
     const today = new Date().toISOString().slice(0, 10);
 
     for (const entry of input.medicalHistory) {
@@ -152,13 +154,14 @@ export class ResidentsService {
   }
 
   private validateResidentDischarge(
-    input: ResidentCreateInput | ResidentUpdateInput,
+    admissionDate: string,
+    discharge: ResidentDischargeInfo,
   ): void {
     const today = new Date().toISOString().slice(0, 10);
-    const admissionDay = new Date(input.admissionDate).toISOString().slice(0, 10);
+    const admissionDay = new Date(admissionDate).toISOString().slice(0, 10);
 
-    if (input.discharge.date) {
-      const dischargeDay = new Date(input.discharge.date)
+    if (discharge.date) {
+      const dischargeDay = new Date(discharge.date)
         .toISOString()
         .slice(0, 10);
 

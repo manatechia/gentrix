@@ -30,7 +30,10 @@ import {
   maxResidentAttachmentCount,
   toResidentAttachmentFormValue,
 } from '../lib/resident-form-utils';
-import { residentIntakeSchema } from '../schemas/resident-intake.schema';
+import {
+  residentBaseUpdateSchema,
+  residentIntakeSchema,
+} from '../schemas/resident-intake.schema';
 import type {
   ResidentAttachmentFormValue,
   ResidentFamilyContactFormValue,
@@ -325,9 +328,12 @@ export function AdmissionsPanel({
     panelTitle ?? (mode === 'edit' ? 'Editar paciente' : 'Agregar paciente');
   const resolvedPanelDescription =
     panelDescription ??
-    'El alta ahora se completa por bloques desplegables para separar identificacion, contacto, cobertura, salud, pertenencias, familiares y adjuntos. La fecha de ingreso se precarga con hoy y la edad se calcula automaticamente desde la fecha de nacimiento.';
+    (mode === 'edit'
+      ? 'En esta etapa la edicion actualiza solo el perfil base y el estado actual del residente. Los antecedentes, contactos, adjuntos y otros registros de ingreso se conservan sin reescribirse desde este formulario.'
+      : 'El alta ahora se completa por bloques desplegables para separar identificacion, contacto, cobertura, salud, pertenencias, familiares y adjuntos. La fecha de ingreso se precarga con hoy y la edad se calcula automaticamente desde la fecha de nacimiento.');
   const resolvedSubmitLabel =
     submitLabel ?? (mode === 'edit' ? 'Guardar cambios' : 'Guardar paciente');
+  const isCreateMode = mode === 'create';
 
   useEffect(() => {
     setCuitDocumentSegment(getResidentDocumentDigits(formInitialValues.documentNumber));
@@ -370,12 +376,14 @@ export function AdmissionsPanel({
       <Formik<ResidentFormValues>
         enableReinitialize
         initialValues={formInitialValues}
-        validationSchema={residentIntakeSchema}
+        validationSchema={
+          isCreateMode ? residentIntakeSchema : residentBaseUpdateSchema
+        }
         onSubmit={async (values, helpers) => {
           await onSubmit(values);
           setCuitDocumentSegment(getResidentDocumentDigits(values.documentNumber));
 
-          if (mode === 'create') {
+          if (isCreateMode) {
             setCuitDocumentSegment('');
             helpers.resetForm({
               values: {
@@ -854,10 +862,12 @@ export function AdmissionsPanel({
                 </div>
               </CollapsibleSection>
 
-              <CollapsibleSection
-                title="Cobertura, traslados y psiquiatria"
-                description="Obra social, beneficios, datos del traslado y referencias de psiquiatria."
-              >
+              {isCreateMode && (
+                <>
+                  <CollapsibleSection
+                    title="Cobertura, traslados y psiquiatria"
+                    description="Obra social, beneficios, datos del traslado y referencias de psiquiatria."
+                  >
                 <div className="grid gap-[18px] min-[1120px]:grid-cols-3">
                   <article className={innerPanelClassName}>
                     <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
@@ -1670,7 +1680,9 @@ export function AdmissionsPanel({
                     )}
                   </div>
                 )}
-              </CollapsibleSection>
+                  </CollapsibleSection>
+                </>
+              )}
 
               <div className="flex flex-wrap items-center gap-3">
                 {secondaryAction && (

@@ -74,8 +74,9 @@ export function ResidentEditWorkspace({
             <strong className="text-brand-text">
               {resident?.fullName ?? 'este residente'}
             </strong>
-            . En esta version puedes editar el mismo alcance del alta. El
-            domicilio y el contacto de emergencia siguen visibles en la ficha.
+            . En esta version la edicion queda acotada al perfil base y al
+            estado actual. Los antecedentes, contactos, adjuntos y demas
+            registros de ingreso se preservan hasta tener flujos dedicados.
           </p>
         </div>
 
@@ -109,7 +110,7 @@ export function ResidentEditWorkspace({
           residentNotice={residentNotice}
           panelEyebrow="Edicion"
           panelTitle="Editar paciente"
-          panelDescription="Revisa los bloques y actualiza solo lo necesario. El formulario conserva la misma estructura del alta para evitar cambios de contexto."
+          panelDescription="Revisa identidad, ingreso, ubicacion y datos base del residente. Los registros temporales del intake quedan fuera de esta edicion para no reescribir snapshots completos."
           submitLabel="Guardar cambios"
           secondaryAction={{
             href: detailHref,

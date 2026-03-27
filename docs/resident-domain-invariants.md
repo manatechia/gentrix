@@ -44,9 +44,9 @@ profile, its current state and its event timeline.
 
 ## Current Gap We Are Keeping Visible
 
-- `ResidentUpdateInput extends ResidentCreateInput` still mixes stable data, current state
-  and intake/supporting records such as `medicalHistory`, `attachments` and `familyContacts`.
-- This is a known transitional shape and is the direct follow-up for `TASK-001` and
-  `TASK-002`.
-- Until that refactor lands, no new event type and no derived field should be added to the
-  resident create/update contract.
+- `ResidentUpdateInput` now covers only stable data and current state.
+- Intake/supporting records such as `medicalHistory`, `attachments` and
+  `familyContacts` still enter through the resident create contract and remain visible in
+  read models.
+- `TASK-002` is still required so those supporting records can evolve without losing
+  identity or forcing collection rewrites through resident profile edits.

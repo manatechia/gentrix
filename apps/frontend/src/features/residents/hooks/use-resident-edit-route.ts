@@ -7,7 +7,7 @@ import {
   getApiErrorMessage,
   unwrapEnvelope,
 } from '../../../shared/lib/api-envelope';
-import { toResidentUpsertInput } from '../lib/resident-form-adapter';
+import { toResidentUpdateInput } from '../lib/resident-form-adapter';
 import * as residentsService from '../services/residents-service';
 import type { ResidentFormValues } from '../types/resident-form-values';
 import { useResidentDetailRoute } from './use-resident-detail-route';
@@ -41,7 +41,7 @@ export function useResidentEditRoute(residentId: string | undefined) {
     try {
       const payload = await residentsService.updateResident(
         residentId,
-        toResidentUpsertInput(values),
+        toResidentUpdateInput(values),
       );
       const updatedResident = unwrapEnvelope(payload);
 
