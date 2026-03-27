@@ -332,6 +332,27 @@ export interface StaffOverview {
   status: EntityStatus;
 }
 
+export interface StaffSchedule {
+  id: EntityId;
+  staffId: EntityId;
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  exceptionDate?: IsoDateString;
+  coverageNote?: string;
+  audit: AuditTrail;
+}
+
+export interface StaffScheduleCreateInput {
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  exceptionDate?: IsoDateString;
+  coverageNote?: string;
+}
+
+export type StaffScheduleUpdateInput = StaffScheduleCreateInput;
+
 export type MedicationRoute =
   | 'oral'
   | 'intravenous'
@@ -408,6 +429,23 @@ export interface MedicationCreateInput {
  * to a concrete dose at a specific time.
  */
 export interface MedicationUpdateInput extends MedicationCreateInput {}
+
+export interface ClinicalHistoryEvent {
+  id: EntityId;
+  residentId: EntityId;
+  eventType: string;
+  title: string;
+  description: string;
+  occurredAt: IsoDateString;
+  audit: AuditTrail;
+}
+
+export interface ClinicalHistoryEventCreateInput {
+  eventType: string;
+  title: string;
+  description: string;
+  occurredAt: IsoDateString;
+}
 
 export type MedicationExecutionResult = 'administered' | 'omitted' | 'rejected';
 

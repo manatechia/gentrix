@@ -128,7 +128,11 @@ export function MedicationOrdersPanel({
           </h2>
         </div>
 
-        <Link className={primaryButtonClassName} to="/medicacion/nueva">
+        <Link
+          className={primaryButtonClassName}
+          data-testid="medication-orders-create-button"
+          to="/medicacion/nueva"
+        >
           Nueva orden
         </Link>
       </div>
@@ -140,6 +144,7 @@ export function MedicationOrdersPanel({
           </span>
           <MultiSelectField
             name="residentMedicationFilter"
+            testId="medication-resident-filter"
             values={selectedResidentIds}
             options={residentOptions}
             placeholder="Todos los pacientes"
@@ -197,6 +202,7 @@ export function MedicationOrdersPanel({
             return (
               <article
                 key={order.id}
+                data-testid={`medication-order-${order.id}`}
                 className="rounded-[24px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/70 p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
@@ -224,6 +230,7 @@ export function MedicationOrdersPanel({
                     </span>
 
                     <Link
+                      data-testid={`medication-edit-${order.id}`}
                       className={secondaryButtonClassName}
                       to={`/medicacion/${order.id}/editar`}
                     >

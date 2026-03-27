@@ -2,8 +2,9 @@ import { FieldArray, Formik, getIn } from 'formik';
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 
-import { createMedicationFormInitialValues, createMedicationScheduleTime } from '../constants/medication-intake';
 import {
+  createMedicationFormInitialValues,
+  createMedicationScheduleTime,
   medicationFrequencyOptions,
   medicationRouteOptions,
   medicationStatusOptions,
@@ -153,6 +154,7 @@ export function MedicationIntakePanel({
 
       {medicationNotice && (
         <div
+          data-testid="medication-form-notice"
           className={`mt-4 rounded-[18px] px-4 py-3.5 text-[0.95rem] leading-[1.55] ${
             medicationNoticeTone === 'error'
               ? 'border border-[rgba(168,43,17,0.16)] bg-[rgba(168,43,17,0.08)] text-[rgb(130,44,25)]'
@@ -191,6 +193,9 @@ export function MedicationIntakePanel({
 
           return (
             <form
+              data-testid={
+                isEditMode ? 'medication-edit-form' : 'medication-create-form'
+              }
               className="mt-[18px] grid gap-[18px]"
               noValidate
               onSubmit={(event: FormEvent<HTMLFormElement>) => {
@@ -207,6 +212,7 @@ export function MedicationIntakePanel({
                     </span>
                     <SelectField
                       name="residentId"
+                      testId="medication-resident-select"
                       value={values.residentId}
                       options={residentOptions}
                       placeholder="Seleccionar residente"
@@ -229,6 +235,7 @@ export function MedicationIntakePanel({
                     </span>
                     <SelectField
                       name="medicationCatalogId"
+                      testId="medication-catalog-select"
                       value={values.medicationCatalogId}
                       options={medicationCatalogOptions}
                       placeholder="Seleccionar medicamento"
@@ -254,6 +261,7 @@ export function MedicationIntakePanel({
                       Dosis
                     </span>
                     <input
+                      data-testid="medication-dose-input"
                       className={inputClassName}
                       type="text"
                       name="dose"
@@ -274,6 +282,7 @@ export function MedicationIntakePanel({
                     </span>
                     <SelectField
                       name="route"
+                      testId="medication-route-select"
                       value={values.route}
                       options={medicationRouteOptions}
                       onBlur={() => {
@@ -294,6 +303,7 @@ export function MedicationIntakePanel({
                     </span>
                     <SelectField
                       name="frequency"
+                      testId="medication-frequency-select"
                       value={values.frequency}
                       options={medicationFrequencyOptions}
                       onBlur={() => {
@@ -315,6 +325,7 @@ export function MedicationIntakePanel({
                       </span>
                       <SelectField
                         name="status"
+                        testId="medication-status-select"
                         value={values.status}
                         options={medicationStatusOptions}
                         onBlur={() => {
@@ -337,6 +348,7 @@ export function MedicationIntakePanel({
                       Prescripto por
                     </span>
                     <input
+                      data-testid="medication-prescribed-by-input"
                       className={inputClassName}
                       type="text"
                       name="prescribedBy"
@@ -358,6 +370,7 @@ export function MedicationIntakePanel({
                       Inicio
                     </span>
                     <input
+                      data-testid="medication-start-date-input"
                       className={inputClassName}
                       type="date"
                       name="startDate"
@@ -375,6 +388,7 @@ export function MedicationIntakePanel({
                       Fin
                     </span>
                     <input
+                      data-testid="medication-end-date-input"
                       className={inputClassName}
                       type="date"
                       name="endDate"
@@ -405,6 +419,7 @@ export function MedicationIntakePanel({
                       </div>
 
                       <button
+                        data-testid="medication-add-schedule-button"
                         className={secondaryButtonClassName}
                         type="button"
                         disabled={values.scheduleTimes.length >= 4}
@@ -427,6 +442,7 @@ export function MedicationIntakePanel({
                         {values.scheduleTimes.map((entry, index) => (
                           <article
                             key={entry.localId}
+                            data-testid={`medication-schedule-${index}`}
                             className="rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-white/80 px-4 py-4"
                           >
                             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -435,6 +451,7 @@ export function MedicationIntakePanel({
                               </span>
 
                               <button
+                                data-testid={`medication-schedule-remove-${index}`}
                                 className={secondaryButtonClassName}
                                 type="button"
                                 onClick={() => remove(index)}
@@ -448,6 +465,7 @@ export function MedicationIntakePanel({
                                 Hora
                               </span>
                               <input
+                                data-testid={`medication-schedule-time-${index}`}
                                 className={inputClassName}
                                 type="time"
                                 name={`scheduleTimes.${index}.value`}
@@ -479,6 +497,7 @@ export function MedicationIntakePanel({
                 ) : null}
 
                 <button
+                  data-testid="medication-submit-button"
                   className={primaryButtonClassName}
                   type="button"
                   disabled={isSavingMedication}

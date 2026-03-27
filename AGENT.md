@@ -12,19 +12,22 @@ Si cambia el estado real o cambia la prioridad de negocio, actualizarlo rapido.
 
 - Repo: monorepo Nx con `apps/frontend` y `apps/backend`.
 - Frontend: React + Vite + Tailwind.
-- Backend: hay codigo NestJS y Prisma versionado.
+- Backend: NestJS modular con Prisma versionado y persistencia activa.
 - Base local: hay `docker-compose.yml` y PostgreSQL local configurado.
 - Foco inmediato: que la UI funcione bien.
 - La direccion del producto puede cambiar rapido segun negocio.
 
 ## Confirmado
 
-- La unica funcionalidad confirmada hoy es la creacion de pacientes.
+- La unica funcionalidad confirmada hoy como prioridad de producto sigue siendo el flujo de pacientes/residentes.
 - Hoy el sistema se comporta como si hubiera un solo usuario.
 - En el codigo, el dominio aparece como `residents` / `residentes`. No asumir que esa terminologia ya este cerrada desde negocio.
-- Existen en el repo rutas de frontend para login, dashboard y residentes.
-- Existen en el repo modulos/backend/endpoints para `auth`, `residents`, `staff`, `medication` y `system`.
+- Existen en el repo rutas de frontend para login, dashboard, residentes, personal y medicacion.
+- Existen en el repo modulos/backend/endpoints para `auth`, `residents`, `clinical-history`, `staff`, `schedules`, `medication` y `system`.
 - Existen `schema.prisma`, migraciones y seeds.
+- Residentes, medicacion, staff y schedules ya persisten en PostgreSQL via Prisma.
+- La historia clinica ya se carga como timeline append-only desde la ficha del residente.
+- Auth y sesion siguen siendo demo/simple y viven en memoria.
 - Que algo exista en codigo no lo convierte en funcionalidad validada.
 - Norte confirmado para la siguiente etapa:
   - tenant por `Organization`
@@ -39,7 +42,7 @@ Si cambia el estado real o cambia la prioridad de negocio, actualizarlo rapido.
 - Login, sesion y logout como flujo confiable de producto.
 - Dashboard como pantalla estable.
 - Staff, medication y alerts como funcionalidades reales.
-- Persistencia y comportamiento del backend fuera del alta de pacientes.
+- Persistencia y comportamiento del backend fuera del flujo de residentes.
 - Que la arquitectura actual del backend este bien resuelta.
 - Que los contratos actuales de frontend y backend reflejen lo que negocio va a necesitar en poco tiempo.
 
@@ -73,7 +76,7 @@ Si cambia el estado real o cambia la prioridad de negocio, actualizarlo rapido.
 
 ## Trabajo inmediato
 
-- Prioridad: que la UI funcione bien en el flujo de creacion de pacientes.
+- Prioridad: que la UI funcione bien en el flujo de residentes (`listado -> alta -> ficha -> edicion`) y su historia clinica.
 - Si tocas backend, hacerlo como soporte del flujo validado, no como apuesta arquitectonica grande.
 - Si una decision no esta validada, tratarla como provisional.
 - Antes de expandir alcance, verificar si negocio realmente lo necesita ahora.
@@ -93,8 +96,19 @@ Si cambia el estado real o cambia la prioridad de negocio, actualizarlo rapido.
 
 - `pnpm serve:frontend`
 - `pnpm serve:backend`
+- `pnpm lint`
 - `pnpm check`
 - `pnpm prisma:generate`
 - `pnpm prisma:migrate:dev`
 - `pnpm prisma:seed`
 - `docker compose up --build`
+
+# E2E Testing Rules
+
+- Use Playwright for all browser E2E tests.
+- Prefer getByTestId() selectors.
+- Never use arbitrary waits like waitForTimeout unless explicitly justified.
+- Reuse authenticated storage state when possible.
+- Seed data through API/helpers, not manual UI setup.
+- For failures, inspect Playwright traces before editing tests.
+- Keep E2E focused on critical user flows only.

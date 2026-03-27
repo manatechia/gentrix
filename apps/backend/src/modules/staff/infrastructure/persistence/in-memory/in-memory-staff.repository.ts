@@ -22,4 +22,15 @@ export class InMemoryStaffRepository implements StaffRepository {
         audit: { ...member.audit },
       }));
   }
+
+  async findById(id: string): Promise<StaffMember | null> {
+    const member = this.staff.find((entry) => entry.id === id);
+
+    return member
+      ? {
+          ...member,
+          audit: { ...member.audit },
+        }
+      : null;
+  }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type {
   MedicationCatalogItem,
@@ -59,7 +59,7 @@ function toMedicationExecutionNoticeLabel(
 }
 
 export function useMedicationsRoute() {
-  const auth = useAuthSession();
+  const { logout, status, token } = useAuthSession();
   const [screenState, setScreenState] =
     useState<DashboardScreenState>('loading');
   const [medications, setMedications] = useState<MedicationOverview[]>([]);
@@ -88,39 +88,34 @@ export function useMedicationsRoute() {
     setScreenState(nextScreenState);
   }
 
-  async function buildMedicationExecutionsMap(
-    nextMedications: ReadonlyArray<MedicationOverview>,
-  ): Promise<Record<string, MedicationExecutionOverview[]>> {
-    if (nextMedications.length === 0) {
-      return {};
-    }
+  const buildMedicationExecutionsMap = useCallback(
+    async (
+      nextMedications: ReadonlyArray<MedicationOverview>,
+    ): Promise<Record<string, MedicationExecutionOverview[]>> => {
+      if (nextMedications.length === 0) {
+        return {};
+      }
 
-    const executionEntries = await Promise.all(
-      nextMedications.map(async (medication) => {
-        const payload =
-          await medicationsService.getMedicationExecutionsByMedicationId(
+      const executionEntries = await Promise.all(
+        nextMedications.map(async (medication) => {
+          const payload =
+            await medicationsService.getMedicationExecutionsByMedicationId(
+              medication.id,
+            );
+
+          return [
             medication.id,
-          );
+            sortExecutionsDesc(dedupeById(unwrapEnvelope(payload))),
+          ] as const;
+        }),
+      );
 
-        return [
-          medication.id,
-          sortExecutionsDesc(dedupeById(unwrapEnvelope(payload))),
-        ] as const;
-      }),
-    );
+      return Object.fromEntries(executionEntries);
+    },
+    [],
+  );
 
-    return Object.fromEntries(executionEntries);
-  }
-
-  async function fetchMedicationsContextSnapshot(): Promise<{
-    medications: MedicationOverview[];
-    medicationCatalogItems: MedicationCatalogItem[];
-    residents: ResidentOverview[];
-    medicationExecutionsByMedicationId: Record<
-      string,
-      MedicationExecutionOverview[]
-    >;
-  }> {
+  const fetchMedicationsContextSnapshot = useCallback(async () => {
     const [medicationsPayload, medicationCatalogPayload, residentsPayload] =
       await Promise.all([
         medicationsService.getMedications(),
@@ -141,10 +136,10 @@ export function useMedicationsRoute() {
       residents: nextResidents,
       medicationExecutionsByMedicationId: nextMedicationExecutionsByMedicationId,
     };
-  }
+  }, [buildMedicationExecutionsMap]);
 
-  async function loadMedicationsContext(): Promise<void> {
-    if (!auth.token) {
+  const loadMedicationsContext = useCallback(async (): Promise<void> => {
+    if (!token) {
       clearMedicationContext('loading');
       return;
     }
@@ -169,25 +164,25 @@ export function useMedicationsRoute() {
       );
 
       if (message === 'Unauthorized.') {
-        await auth.logout();
+        await logout();
         return;
       }
 
       setMedicationsError(message);
       setScreenState('error');
     }
-  }
+  }, [fetchMedicationsContextSnapshot, logout, token]);
 
   useEffect(() => {
-    if (auth.status !== 'authenticated' || !auth.token) {
+    if (status !== 'authenticated' || !token) {
       clearMedicationContext('loading');
       return;
     }
 
     void loadMedicationsContext();
-  }, [auth.status, auth.token]);
+  }, [loadMedicationsContext, status, token]);
 
-  async function refreshMedicationsInPlace(): Promise<void> {
+  const refreshMedicationsInPlace = useCallback(async (): Promise<void> => {
     const snapshot = await fetchMedicationsContextSnapshot();
 
     setMedications(snapshot.medications);
@@ -198,13 +193,13 @@ export function useMedicationsRoute() {
     );
     setMedicationsError(null);
     setScreenState('ready');
-  }
+  }, [fetchMedicationsContextSnapshot]);
 
   async function handleMedicationCreate(
     values: MedicationFormValues,
   ): Promise<MedicationOverview | null> {
-    if (!auth.token) {
-      await auth.logout();
+    if (!token) {
+      await logout();
       return null;
     }
 
@@ -235,7 +230,7 @@ export function useMedicationsRoute() {
       );
 
       if (message === 'Unauthorized.') {
-        await auth.logout();
+        await logout();
         return null;
       }
 
@@ -251,8 +246,8 @@ export function useMedicationsRoute() {
     medication: MedicationOverview,
     result: MedicationExecutionResult,
   ): Promise<MedicationExecutionOverview | null> {
-    if (!auth.token) {
-      await auth.logout();
+    if (!token) {
+      await logout();
       return null;
     }
 
@@ -292,7 +287,7 @@ export function useMedicationsRoute() {
       );
 
       if (message === 'Unauthorized.') {
-        await auth.logout();
+        await logout();
         return null;
       }
 

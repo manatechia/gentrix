@@ -13,7 +13,13 @@ export const sidebarSections = [
     path: '/residentes',
     end: false,
   },
-  { label: 'Personal', meta: 'cobertura del turno', badge: 'PE' },
+  {
+    label: 'Personal',
+    meta: 'cobertura del turno',
+    badge: 'PE',
+    path: '/personal',
+    end: false,
+  },
   {
     label: 'Pase',
     meta: 'turno y pendientes',

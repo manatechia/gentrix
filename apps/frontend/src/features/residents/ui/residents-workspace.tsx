@@ -51,7 +51,11 @@ export function ResidentsWorkspace({
           </p>
         </div>
 
-        <Link className={primaryButtonClassName} to="/residentes/nuevo">
+        <Link
+          className={primaryButtonClassName}
+          data-testid="residents-add-button"
+          to="/residentes/nuevo"
+        >
           Agregar paciente
         </Link>
       </section>

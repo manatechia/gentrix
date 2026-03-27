@@ -1,6 +1,9 @@
 import 'dotenv/config';
 
-import { defineConfig, env } from 'prisma/config';
+import { defineConfig } from 'prisma/config';
+
+const defaultDatabaseUrl =
+  'postgresql://gentrix:gentrix@localhost:55432/gentrix?schema=public';
 
 export default defineConfig({
   schema: 'apps/backend/prisma/schema.prisma',
@@ -9,6 +12,6 @@ export default defineConfig({
     seed: 'node apps/backend/prisma/seed.mjs',
   },
   datasource: {
-    url: env('DATABASE_URL'),
+    url: process.env.DATABASE_URL ?? defaultDatabaseUrl,
   },
 });

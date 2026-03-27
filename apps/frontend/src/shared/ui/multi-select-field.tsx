@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { inputClassName, secondaryButtonClassName } from './class-names';
+import { buildOptionTestId } from '../lib/test-id';
 import type { SelectFieldOption } from './select-field';
 
 interface MultiSelectFieldProps {
@@ -17,6 +18,7 @@ interface MultiSelectFieldProps {
   placeholder?: string;
   searchPlaceholder?: string;
   disabled?: boolean;
+  testId?: string;
   onChange: (nextValues: string[]) => void;
   onBlur?: () => void;
 }
@@ -97,6 +99,7 @@ export function MultiSelectField({
   placeholder = 'Seleccionar',
   searchPlaceholder = 'Buscar',
   disabled = false,
+  testId,
   onChange,
   onBlur,
 }: MultiSelectFieldProps) {
@@ -209,6 +212,7 @@ export function MultiSelectField({
         <div className={`${searchTriggerClassName} flex items-center gap-3 pr-3`}>
           <input
             ref={searchInputRef}
+            data-testid={testId ? `${testId}-search` : undefined}
             className="min-w-0 flex-1 bg-transparent text-brand-text outline-none placeholder:text-brand-text-secondary"
             type="search"
             placeholder={searchPlaceholder}
@@ -247,6 +251,7 @@ export function MultiSelectField({
           ref={triggerRef}
           type="button"
           name={name}
+          data-testid={testId}
           disabled={disabled}
           aria-controls={listboxId}
           aria-expanded={isOpen}
@@ -274,7 +279,10 @@ export function MultiSelectField({
       )}
 
       {isOpen ? (
-        <div className={dropdownClassName}>
+        <div
+          className={dropdownClassName}
+          data-testid={testId ? `${testId}-dropdown` : undefined}
+        >
           <div className="grid gap-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="text-[0.88rem] text-brand-text-secondary">
@@ -287,6 +295,7 @@ export function MultiSelectField({
                 <button
                   className={secondaryButtonClassName}
                   type="button"
+                  data-testid={testId ? `${testId}-clear` : undefined}
                   onClick={clearSelection}
                 >
                   Limpiar
@@ -316,6 +325,11 @@ export function MultiSelectField({
                     >
                       <button
                         type="button"
+                        data-testid={
+                          testId
+                            ? buildOptionTestId(testId, option.value)
+                            : undefined
+                        }
                         className={`${optionButtonClassName} ${
                           isSelected
                             ? 'bg-brand-primary text-white shadow-[0_8px_18px_rgba(0,102,132,0.18)]'

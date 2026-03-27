@@ -1,5 +1,7 @@
 import type {
   ApiEnvelope,
+  ClinicalHistoryEvent,
+  ClinicalHistoryEventCreateInput,
   ResidentCreateInput,
   ResidentDetail,
   ResidentLiveProfile,
@@ -54,6 +56,28 @@ export async function updateResident(
 ): Promise<ApiEnvelope<ResidentDetail>> {
   const response = await apiClient.put<ApiEnvelope<ResidentDetail>>(
     `/api/residents/${residentId}`,
+    input,
+  );
+
+  return response.data;
+}
+
+export async function getClinicalHistoryEvents(
+  residentId: string,
+): Promise<ApiEnvelope<ClinicalHistoryEvent[]>> {
+  const response = await apiClient.get<ApiEnvelope<ClinicalHistoryEvent[]>>(
+    `/api/residents/${residentId}/clinical-history`,
+  );
+
+  return response.data;
+}
+
+export async function createClinicalHistoryEvent(
+  residentId: string,
+  input: ClinicalHistoryEventCreateInput,
+): Promise<ApiEnvelope<ClinicalHistoryEvent>> {
+  const response = await apiClient.post<ApiEnvelope<ClinicalHistoryEvent>>(
+    `/api/residents/${residentId}/clinical-history`,
     input,
   );
 

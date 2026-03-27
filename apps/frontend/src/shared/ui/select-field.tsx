@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { inputClassName } from './class-names';
+import { buildOptionTestId } from '../lib/test-id';
 
 export interface SelectFieldOption {
   value: string;
@@ -21,6 +22,7 @@ interface SelectFieldProps {
   placeholder?: string;
   allowEmptyOption?: boolean;
   disabled?: boolean;
+  testId?: string;
   onChange: (nextValue: string) => void;
   onBlur?: () => void;
 }
@@ -90,6 +92,7 @@ export function SelectField({
   placeholder = 'Seleccionar',
   allowEmptyOption = false,
   disabled = false,
+  testId,
   onChange,
   onBlur,
 }: SelectFieldProps) {
@@ -155,11 +158,17 @@ export function SelectField({
     setIsOpen(true);
   }
 
-  function handleSelect(nextValue: string): void {
+  function handleSelect(
+    nextValue: string,
+    options?: { focusTrigger?: boolean },
+  ): void {
     onChange(nextValue);
     closeMenu();
     onBlur?.();
-    triggerRef.current?.focus();
+
+    if (options?.focusTrigger) {
+      triggerRef.current?.focus();
+    }
   }
 
   function handleTriggerBlur(
@@ -229,7 +238,7 @@ export function SelectField({
       const highlightedOption = resolvedOptions[highlightedIndex];
 
       if (highlightedOption) {
-        handleSelect(highlightedOption.value);
+        handleSelect(highlightedOption.value, { focusTrigger: true });
       }
       return;
     }
@@ -247,6 +256,7 @@ export function SelectField({
         ref={triggerRef}
         type="button"
         name={name}
+        data-testid={testId}
         disabled={disabled}
         aria-controls={listboxId}
         aria-expanded={isOpen}
@@ -274,7 +284,10 @@ export function SelectField({
       </button>
 
       {isOpen ? (
-        <div className={dropdownClassName}>
+        <div
+          className={dropdownClassName}
+          data-testid={testId ? `${testId}-dropdown` : undefined}
+        >
           <ul id={listboxId} role="listbox" className="grid gap-1">
             {resolvedOptions.map((option, index) => {
               const isSelected = option.value === value;
@@ -289,6 +302,11 @@ export function SelectField({
                   <button
                     type="button"
                     tabIndex={-1}
+                    data-testid={
+                      testId
+                        ? buildOptionTestId(testId, option.value || 'empty')
+                        : undefined
+                    }
                     className={`${optionClassName} ${
                       isSelected
                         ? 'bg-brand-primary text-white shadow-[0_8px_18px_rgba(0,102,132,0.18)]'
@@ -296,14 +314,12 @@ export function SelectField({
                           ? 'bg-[rgba(0,102,132,0.08)] text-brand-text'
                           : 'text-brand-text hover:bg-[rgba(0,102,132,0.06)]'
                     }`}
-                    onMouseDown={(event) => {
+                    onPointerDown={(event) => {
                       event.preventDefault();
+                      handleSelect(option.value);
                     }}
                     onMouseEnter={() => {
                       setHighlightedIndex(index);
-                    }}
-                    onClick={() => {
-                      handleSelect(option.value);
                     }}
                   >
                     <span>{option.label}</span>

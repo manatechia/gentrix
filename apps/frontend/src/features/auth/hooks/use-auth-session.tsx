@@ -1,4 +1,5 @@
 import {
+  useCallback,
   createContext,
   useContext,
   useEffect,
@@ -137,7 +138,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     })();
   }, [token]);
 
-  async function login(credentials: AuthLoginRequest): Promise<void> {
+  const login = useCallback(async (credentials: AuthLoginRequest): Promise<void> => {
     setIsSubmitting(true);
     setAuthError(null);
 
@@ -178,9 +179,9 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     } finally {
       setIsSubmitting(false);
     }
-  }
+  }, []);
 
-  async function logout(): Promise<void> {
+  const logout = useCallback(async (): Promise<void> => {
     if (import.meta.env.DEV) {
       console.debug('[gentrix] auth logout:start');
     }
@@ -194,7 +195,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     }
 
     resetSession();
-  }
+  }, [token]);
 
   const value = useMemo<AuthSessionContextValue>(
     () => ({
@@ -207,7 +208,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       logout,
       clearAuthError: () => setAuthError(null),
     }),
-    [authError, isSubmitting, session, status, token],
+    [authError, isSubmitting, login, logout, session, status, token],
   );
 
   return (

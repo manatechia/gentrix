@@ -191,13 +191,15 @@ export class ResidentsService {
   private validateResidentSupportingRecords(input: ResidentSupportingRecordInput): void {
     const today = new Date().toISOString().slice(0, 10);
 
-    for (const entry of input.medicalHistory) {
-      const recordedDay = new Date(entry.recordedAt).toISOString().slice(0, 10);
+    if ('medicalHistory' in input) {
+      for (const entry of input.medicalHistory) {
+        const recordedDay = new Date(entry.recordedAt).toISOString().slice(0, 10);
 
-      if (recordedDay > today) {
-        throw new BadRequestException(
-          'Los antecedentes medicos no pueden tener una fecha futura.',
-        );
+        if (recordedDay > today) {
+          throw new BadRequestException(
+            'Los antecedentes medicos no pueden tener una fecha futura.',
+          );
+        }
       }
     }
 

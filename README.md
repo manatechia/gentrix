@@ -25,11 +25,12 @@ Package manager oficial del repo: `pnpm`.
 
 ## Comandos
 
+- `pnpm lint`: valida el baseline de ESLint del workspace.
 - `pnpm serve:frontend`: levanta el frontend en `http://localhost:4200`.
 - `pnpm serve:backend`: levanta el backend en `http://localhost:3333`.
 - `pnpm build`: compila todos los proyectos Nx.
 - `pnpm typecheck`: ejecuta typecheck del frontend.
-- `pnpm check`: corre build y typecheck del workspace.
+- `pnpm check`: corre `lint` + `build` + `typecheck` del workspace.
 - `pnpm show:projects`: lista los proyectos del workspace.
 - `pnpm graph`: abre el grafo de dependencias.
 - `pnpm prisma:generate`: genera el cliente de Prisma.
@@ -46,9 +47,20 @@ Package manager oficial del repo: `pnpm`.
 - `POST /api/auth/logout`: cierra la sesion actual.
 - `GET /api/dashboard`: snapshot operativo para el frontend.
 - `GET /api/residents`: residentes resumidos.
+- `GET /api/residents/:residentId`: detalle del residente.
 - `POST /api/residents`: alta de residentes persistida en PostgreSQL via Prisma.
+- `PUT /api/residents/:residentId`: actualizacion del perfil vigente del residente.
+- `GET /api/residents/:residentId/clinical-history`: timeline clinico append-only.
+- `POST /api/residents/:residentId/clinical-history`: agrega un evento clinico.
 - `GET /api/staff`: personal resumido.
+- `GET /api/staff/:staffId/schedules`: horarios por miembro del equipo.
+- `POST /api/staff/:staffId/schedules`: agrega una guardia o cobertura.
+- `PUT /api/staff/schedules/:scheduleId`: actualiza un horario existente.
 - `GET /api/medications`: medicacion resumida.
+- `GET /api/medications/:medicationId`: detalle de una orden.
+- `GET /api/medications/catalog`: catalogo de medicacion disponible.
+- `POST /api/medications`: crea una orden persistida en PostgreSQL via Prisma.
+- `PUT /api/medications/:medicationId`: actualiza una orden existente.
 
 ## Credenciales Demo
 
@@ -57,7 +69,7 @@ Package manager oficial del repo: `pnpm`.
 
 ## Docker
 
-- `docker compose up --build` levanta `frontend`, `backend` y `postgres`.
+- `docker compose up -d --build` levanta `frontend`, `backend` y `postgres`.
 - Frontend: `http://localhost:4200`
 - Backend: `http://localhost:3333`
 - PostgreSQL: `localhost:55432`
@@ -70,17 +82,30 @@ Package manager oficial del repo: `pnpm`.
 - Para resetear todo el estado local: `docker compose down -v`
 - Para resembrar manualmente una base ya creada: `docker compose exec backend node apps/backend/prisma/seed.mjs`
 
+## Setup Local
+
+1. Copiar `.env.example` a `.env`.
+2. Instalar dependencias con `pnpm install`.
+3. Generar cliente de Prisma con `pnpm prisma:generate`.
+4. Aplicar migraciones con `pnpm prisma:migrate:dev`.
+5. Cargar datos demo con `pnpm prisma:seed`.
+6. Levantar backend con `pnpm serve:backend`.
+7. Levantar frontend con `pnpm serve:frontend`.
+
+Docker sigue siendo la baseline recomendada para levantar el stack completo, pero el flujo local queda documentado para reproducir `check`, Prisma y las apps por separado.
+
 ## Base De Datos
 
 - Copiar `.env.example` a `.env` y ajustar `DATABASE_URL` segun el entorno local.
 - La estructura PostgreSQL ya esta versionada en `prisma.config.ts`, `apps/backend/prisma/schema.prisma` y `apps/backend/prisma/migrations`.
 - Los seeds iniciales cargan usuarios, residentes, medicacion, eventos clinicos y horarios.
-- Residentes ya leen y escriben contra PostgreSQL via Prisma.
-- Staff, medicacion y autenticacion demo todavia usan repositorios in-memory.
-- Prisma ya se inicializa en el arranque del backend para el modulo de residentes.
+- Residentes, medicacion, staff y schedules ya leen/escriben contra PostgreSQL via Prisma.
+- Auth y sesion siguen en modo demo/simple; las sesiones actuales viven en memoria y se reinician al reiniciar el backend.
+- El flujo de resident edit ya no reescribe eventos historicos: la historia clinica se agrega desde la ficha por endpoints append-only.
+- El build del backend genera el cliente de Prisma antes de compilar.
 
 ## Nota De Desarrollo
 
 El frontend usa proxy de Vite para redirigir `/api/*` al backend local en desarrollo.
 El servicio `frontend` ya monta `apps/` y `libs/` dentro del contenedor y usa polling para reflejar cambios rapido en Docker Desktop.
-Las sesiones actuales viven en memoria del backend, asi que se reinician al reiniciar el servidor.
+El workspace de personal vive en `/personal` y usa los endpoints de schedules para gestionar turnos semanales y coberturas puntuales.

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import type { StaffOverview } from '@gentrix/shared-types';
 
 import {
@@ -6,6 +8,7 @@ import {
 } from '../../../shared/lib/display-labels';
 import {
   badgeBaseClassName,
+  secondaryButtonClassName,
   surfaceCardClassName,
 } from '../../../shared/ui/class-names';
 
@@ -16,13 +19,19 @@ interface StaffPanelProps {
 export function StaffPanel({ staff }: StaffPanelProps) {
   return (
     <article className={surfaceCardClassName}>
-      <div className="mb-[18px]">
-        <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-          Personal
-        </span>
-        <h2 className="mt-1 text-[1.35rem] font-bold tracking-[-0.04em] text-brand-text">
-          Cobertura del turno
-        </h2>
+      <div className="mb-[18px] flex items-start justify-between gap-3">
+        <div>
+          <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
+            Personal
+          </span>
+          <h2 className="mt-1 text-[1.35rem] font-bold tracking-[-0.04em] text-brand-text">
+            Cobertura del turno
+          </h2>
+        </div>
+
+        <Link className={secondaryButtonClassName} to="/personal">
+          Gestionar
+        </Link>
       </div>
 
       <div className="grid gap-3">

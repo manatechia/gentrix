@@ -118,6 +118,7 @@ export function WorkspaceShell({
           >
             <div className="flex items-center gap-3">
               <button
+                data-testid="workspace-sidebar-toggle"
                 aria-controls="workspace-sidebar"
                 aria-expanded={isSidebarOpen}
                 aria-label={

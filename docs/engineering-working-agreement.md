@@ -12,13 +12,17 @@ Si una decision de codigo entra en conflicto con este archivo, primero pedir con
 - Fuente de verdad para contexto de negocio: `AGENT.md`.
 - Fuente de verdad para criterios tecnicos y de infraestructura: este archivo.
 - Pendiente: cerrar boundaries de Nx, naming, ownership tecnico y algunos detalles de evolucion.
-- Implementado al 2026-03-20:
+- Implementado al 2026-03-26:
   - frontend reordenado por features dentro de `apps/frontend`
   - router activo
   - `axios` centralizado en cliente compartido
   - formularios nuevos con `Formik` + `Yup`
   - backend migrado a NestJS por modulos
   - Prisma versionado con schema, migracion base y seed
+  - baseline de `eslint` y script `pnpm lint`
+  - `pnpm check` como gate local (`lint` + `build` + `typecheck`)
+  - `clinical-history` expuesto como timeline append-only por residente
+  - staff y schedules conectados a PostgreSQL via Prisma
 
 ## Como Lo Vamos A Usar
 
@@ -41,6 +45,7 @@ Si una decision de codigo entra en conflicto con este archivo, primero pedir con
 - Auth y permisos: simples en MVP, dejando preparado el terreno para RBAC futuro.
 - Auditoria de cambios: requerida.
 - Calidad minima obligatoria para merge: `typecheck` y `lint`.
+- Calidad minima local obligatoria: `pnpm lint` y `pnpm check`.
 - Testing inicial: minimo, priorizando unit tests para logica.
 
 ### Decisiones Confirmadas
@@ -82,6 +87,7 @@ Si una decision de codigo entra en conflicto con este archivo, primero pedir con
 - La auditoria minima obligatoria sera `createdAt`, `createdBy`, `updatedAt`, `updatedBy`, `deletedAt` y `deletedBy`.
 - La historia clinica se modela como timeline append-only.
 - Los horarios del personal arrancan con turnos semanales y soporte para excepciones o coberturas.
+- El edit de residentes no debe borrar ni recrear eventos historicos.
 - Por ahora no se pide infraestructura de logging avanzada.
 - Por ahora no se exige una nota arquitectonica por cada feature.
 - Norte validado para la siguiente etapa:
@@ -195,12 +201,17 @@ Si una decision de codigo entra en conflicto con este archivo, primero pedir con
 - La historia clinica se modela como timeline de eventos append-only.
 - Los eventos historicos no se modifican.
 - Los horarios del personal arrancan como turnos semanales con excepciones o coberturas.
+- El timeline clinico se agrega desde endpoints dedicados y vive separado del snapshot editable del residente.
 
 ### Testing Y Calidad
 
 - Testing inicial muy basico.
 - Prioridad: unit tests para revisar logica.
 - Gating de merge: `typecheck` y `lint`.
+- Baseline local actual:
+  - `pnpm lint`
+  - `pnpm check`
+- El build backend debe generar el cliente de Prisma antes de compilar.
 - No se requiere por ahora logging estructurado ni nota arquitectonica por cada feature.
 
 ## Cuestionario
