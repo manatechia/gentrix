@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-import type { AuthSession, MedicationOverview } from '@gentrix/shared-types';
+import type {
+  AuthSession,
+  MedicationExecutionOverview,
+  MedicationExecutionResult,
+  MedicationOverview,
+} from '@gentrix/shared-types';
 
 import {
   primaryButtonClassName,
@@ -21,7 +26,18 @@ interface MedicationsWorkspaceProps {
   medicationCount: number;
   activeMedicationCount: number;
   medications: MedicationOverview[];
+  medicationExecutionsByMedicationId: Record<
+    string,
+    MedicationExecutionOverview[]
+  >;
+  recordingMedicationExecutionId: string | null;
+  medicationNotice: string | null;
+  medicationNoticeTone: 'success' | 'error';
   residentOptions: ReadonlyArray<SelectFieldOption>;
+  onCreateMedicationExecution: (
+    medication: MedicationOverview,
+    result: MedicationExecutionResult,
+  ) => void | Promise<void>;
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
 }
@@ -39,7 +55,12 @@ export function MedicationsWorkspace({
   medicationCount,
   activeMedicationCount,
   medications,
+  medicationExecutionsByMedicationId,
+  recordingMedicationExecutionId,
+  medicationNotice,
+  medicationNoticeTone,
   residentOptions,
+  onCreateMedicationExecution,
   onLogout,
   onRetry,
 }: MedicationsWorkspaceProps) {
@@ -50,6 +71,10 @@ export function MedicationsWorkspace({
   const routeMedicationNotice = medicationsLocationState?.medicationNotice ?? null;
   const routeMedicationNoticeTone =
     medicationsLocationState?.medicationNoticeTone ?? 'success';
+  const resolvedMedicationNotice = routeMedicationNotice ?? medicationNotice;
+  const resolvedMedicationNoticeTone = routeMedicationNotice
+    ? routeMedicationNoticeTone
+    : medicationNoticeTone;
   const [selectedResidentIds, setSelectedResidentIds] = useState<string[]>([]);
 
   const filteredMedications = useMemo(() => {
@@ -125,15 +150,15 @@ export function MedicationsWorkspace({
         </div>
       </section>
 
-      {routeMedicationNotice && (
+      {resolvedMedicationNotice && (
         <section
           className={`${shellCardClassName} px-6 py-[22px] ${
-            routeMedicationNoticeTone === 'error'
+            resolvedMedicationNoticeTone === 'error'
               ? 'border border-[rgba(168,43,17,0.16)] bg-[rgba(168,43,17,0.08)] text-[rgb(130,44,25)]'
               : 'border border-[rgba(0,102,132,0.14)] bg-[rgba(0,102,132,0.08)] text-brand-secondary'
           }`}
         >
-          <span className="leading-[1.55]">{routeMedicationNotice}</span>
+          <span className="leading-[1.55]">{resolvedMedicationNotice}</span>
         </section>
       )}
 
@@ -162,6 +187,8 @@ export function MedicationsWorkspace({
       {screenState === 'ready' && (
         <MedicationOrdersPanel
           medications={filteredMedications}
+          medicationExecutionsByMedicationId={medicationExecutionsByMedicationId}
+          recordingMedicationExecutionId={recordingMedicationExecutionId}
           activeMedicationCount={
             selectedResidentIds.length > 0
               ? filteredActiveMedicationCount
@@ -170,6 +197,7 @@ export function MedicationsWorkspace({
           residentOptions={residentOptions}
           selectedResidentIds={selectedResidentIds}
           onSelectedResidentIdsChange={setSelectedResidentIds}
+          onCreateMedicationExecution={onCreateMedicationExecution}
           filterSummary={filterSummary}
           isFiltered={selectedResidentIds.length > 0}
           emptyStateMessage={

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 import type {
   MedicationCatalogItem,
+  MedicationExecutionOverview,
+  MedicationExecutionResult,
   MedicationOverview,
   ResidentOverview,
 } from '@gentrix/shared-types';
@@ -12,6 +14,7 @@ import {
   getApiErrorMessage,
   unwrapEnvelope,
 } from '../../../shared/lib/api-envelope';
+import { formatMedicationExecutionResult } from '../../../shared/lib/display-labels';
 import { toMedicationUpsertInput } from '../lib/medication-form-adapter';
 import * as medicationsService from '../services/medications-service';
 import * as residentsService from '../../residents/services/residents-service';
@@ -30,6 +33,15 @@ function dedupeById<T extends { id: string }>(items: T[]): T[] {
   });
 }
 
+function sortExecutionsDesc(
+  executions: ReadonlyArray<MedicationExecutionOverview>,
+): MedicationExecutionOverview[] {
+  return [...executions].sort(
+    (left, right) =>
+      new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime(),
+  );
+}
+
 function toResidentLabel(resident: ResidentOverview): string {
   return `${resident.fullName} - ${resident.room}`;
 }
@@ -38,6 +50,12 @@ function toMedicationCatalogLabel(item: MedicationCatalogItem): string {
   return item.activeIngredient
     ? `${item.medicationName} (${item.activeIngredient})`
     : item.medicationName;
+}
+
+function toMedicationExecutionNoticeLabel(
+  result: MedicationExecutionResult,
+): string {
+  return formatMedicationExecutionResult(result).toLowerCase();
 }
 
 export function useMedicationsRoute() {
@@ -49,8 +67,12 @@ export function useMedicationsRoute() {
     MedicationCatalogItem[]
   >([]);
   const [residents, setResidents] = useState<ResidentOverview[]>([]);
+  const [medicationExecutionsByMedicationId, setMedicationExecutionsByMedicationId] =
+    useState<Record<string, MedicationExecutionOverview[]>>({});
   const [medicationsError, setMedicationsError] = useState<string | null>(null);
   const [isSavingMedication, setIsSavingMedication] = useState(false);
+  const [recordingMedicationExecutionId, setRecordingMedicationExecutionId] =
+    useState<string | null>(null);
   const [medicationNotice, setMedicationNotice] = useState<string | null>(null);
   const [medicationNoticeTone, setMedicationNoticeTone] = useState<
     'success' | 'error'
@@ -60,8 +82,65 @@ export function useMedicationsRoute() {
     setMedications([]);
     setMedicationCatalogItems([]);
     setResidents([]);
+    setMedicationExecutionsByMedicationId({});
     setMedicationsError(null);
+    setRecordingMedicationExecutionId(null);
     setScreenState(nextScreenState);
+  }
+
+  async function buildMedicationExecutionsMap(
+    nextMedications: ReadonlyArray<MedicationOverview>,
+  ): Promise<Record<string, MedicationExecutionOverview[]>> {
+    if (nextMedications.length === 0) {
+      return {};
+    }
+
+    const executionEntries = await Promise.all(
+      nextMedications.map(async (medication) => {
+        const payload =
+          await medicationsService.getMedicationExecutionsByMedicationId(
+            medication.id,
+          );
+
+        return [
+          medication.id,
+          sortExecutionsDesc(dedupeById(unwrapEnvelope(payload))),
+        ] as const;
+      }),
+    );
+
+    return Object.fromEntries(executionEntries);
+  }
+
+  async function fetchMedicationsContextSnapshot(): Promise<{
+    medications: MedicationOverview[];
+    medicationCatalogItems: MedicationCatalogItem[];
+    residents: ResidentOverview[];
+    medicationExecutionsByMedicationId: Record<
+      string,
+      MedicationExecutionOverview[]
+    >;
+  }> {
+    const [medicationsPayload, medicationCatalogPayload, residentsPayload] =
+      await Promise.all([
+        medicationsService.getMedications(),
+        medicationsService.getMedicationCatalog(),
+        residentsService.getResidents(),
+      ]);
+    const nextMedications = dedupeById(unwrapEnvelope(medicationsPayload));
+    const nextMedicationCatalogItems = dedupeById(
+      unwrapEnvelope(medicationCatalogPayload),
+    );
+    const nextResidents = dedupeById(unwrapEnvelope(residentsPayload));
+    const nextMedicationExecutionsByMedicationId =
+      await buildMedicationExecutionsMap(nextMedications);
+
+    return {
+      medications: nextMedications,
+      medicationCatalogItems: nextMedicationCatalogItems,
+      residents: nextResidents,
+      medicationExecutionsByMedicationId: nextMedicationExecutionsByMedicationId,
+    };
   }
 
   async function loadMedicationsContext(): Promise<void> {
@@ -74,18 +153,14 @@ export function useMedicationsRoute() {
     setMedicationsError(null);
 
     try {
-      const [medicationsPayload, medicationCatalogPayload, residentsPayload] =
-        await Promise.all([
-          medicationsService.getMedications(),
-          medicationsService.getMedicationCatalog(),
-          residentsService.getResidents(),
-        ]);
+      const snapshot = await fetchMedicationsContextSnapshot();
 
-      setMedications(dedupeById(unwrapEnvelope(medicationsPayload)));
-      setMedicationCatalogItems(
-        dedupeById(unwrapEnvelope(medicationCatalogPayload)),
+      setMedications(snapshot.medications);
+      setMedicationCatalogItems(snapshot.medicationCatalogItems);
+      setResidents(snapshot.residents);
+      setMedicationExecutionsByMedicationId(
+        snapshot.medicationExecutionsByMedicationId,
       );
-      setResidents(dedupeById(unwrapEnvelope(residentsPayload)));
       setScreenState('ready');
     } catch (error) {
       const message = getApiErrorMessage(
@@ -113,18 +188,14 @@ export function useMedicationsRoute() {
   }, [auth.status, auth.token]);
 
   async function refreshMedicationsInPlace(): Promise<void> {
-    const [medicationsPayload, medicationCatalogPayload, residentsPayload] =
-      await Promise.all([
-        medicationsService.getMedications(),
-        medicationsService.getMedicationCatalog(),
-        residentsService.getResidents(),
-      ]);
+    const snapshot = await fetchMedicationsContextSnapshot();
 
-    setMedications(dedupeById(unwrapEnvelope(medicationsPayload)));
-    setMedicationCatalogItems(
-      dedupeById(unwrapEnvelope(medicationCatalogPayload)),
+    setMedications(snapshot.medications);
+    setMedicationCatalogItems(snapshot.medicationCatalogItems);
+    setResidents(snapshot.residents);
+    setMedicationExecutionsByMedicationId(
+      snapshot.medicationExecutionsByMedicationId,
     );
-    setResidents(dedupeById(unwrapEnvelope(residentsPayload)));
     setMedicationsError(null);
     setScreenState('ready');
   }
@@ -176,6 +247,63 @@ export function useMedicationsRoute() {
     }
   }
 
+  async function handleMedicationExecutionCreate(
+    medication: MedicationOverview,
+    result: MedicationExecutionResult,
+  ): Promise<MedicationExecutionOverview | null> {
+    if (!auth.token) {
+      await auth.logout();
+      return null;
+    }
+
+    setRecordingMedicationExecutionId(medication.id);
+    setMedicationNotice(null);
+
+    try {
+      const payload = await medicationsService.createMedicationExecution(
+        medication.id,
+        {
+          occurredAt: new Date().toISOString(),
+          result,
+        },
+      );
+      const createdExecution = unwrapEnvelope(payload);
+
+      setMedicationExecutionsByMedicationId((current) => ({
+        ...current,
+        [medication.id]: sortExecutionsDesc(
+          dedupeById([createdExecution, ...(current[medication.id] ?? [])]),
+        ),
+      }));
+      setMedicationNoticeTone('success');
+      setMedicationNotice(
+        `Toma de ${createdExecution.medicationName} registrada como ${toMedicationExecutionNoticeLabel(createdExecution.result)}.`,
+      );
+
+      void refreshMedicationsInPlace().catch(() => {
+        // Preserve the optimistic execution update if the background refresh fails.
+      });
+
+      return createdExecution;
+    } catch (error) {
+      const message = getApiErrorMessage(
+        error,
+        'No pude registrar la ejecucion de medicacion.',
+      );
+
+      if (message === 'Unauthorized.') {
+        await auth.logout();
+        return null;
+      }
+
+      setMedicationNoticeTone('error');
+      setMedicationNotice(message);
+      throw error;
+    } finally {
+      setRecordingMedicationExecutionId(null);
+    }
+  }
+
   const residentOptions = useMemo(
     () =>
       residents.map((resident) => ({
@@ -204,10 +332,12 @@ export function useMedicationsRoute() {
     medications,
     medicationCatalogItems,
     residents,
+    medicationExecutionsByMedicationId,
     residentOptions,
     medicationCatalogOptions,
     medicationsError,
     isSavingMedication,
+    recordingMedicationExecutionId,
     medicationNotice,
     medicationNoticeTone,
     residentCount: residents.length,
@@ -215,5 +345,6 @@ export function useMedicationsRoute() {
     activeMedicationCount,
     handleRetry: loadMedicationsContext,
     handleMedicationCreate,
+    handleMedicationExecutionCreate,
   };
 }

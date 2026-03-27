@@ -226,7 +226,16 @@ function MedicationsRoute() {
       medicationCount={medications.medicationCount}
       activeMedicationCount={medications.activeMedicationCount}
       medications={medications.medications}
+      medicationExecutionsByMedicationId={
+        medications.medicationExecutionsByMedicationId
+      }
+      recordingMedicationExecutionId={
+        medications.recordingMedicationExecutionId
+      }
+      medicationNotice={medications.medicationNotice}
+      medicationNoticeTone={medications.medicationNoticeTone}
       residentOptions={medications.residentOptions}
+      onCreateMedicationExecution={medications.handleMedicationExecutionCreate}
       onLogout={auth.logout}
       onRetry={medications.handleRetry}
     />

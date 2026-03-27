@@ -132,6 +132,7 @@
 
 ### TASK-008 - Registrar ejecucion de medicacion desde UI operativa
 
+- Estado: `realizada`
 - Tipo: feature / frontend
 - Prioridad: media
 - Estimacion: M

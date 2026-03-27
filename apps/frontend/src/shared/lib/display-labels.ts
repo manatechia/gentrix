@@ -1,6 +1,7 @@
 import type {
   AuthRole,
   EntityStatus,
+  MedicationExecutionResult,
   MedicationFrequency,
   MedicationRoute,
   ResidentAttachmentKind,
@@ -60,6 +61,12 @@ const medicationFrequencyLabels: Record<MedicationFrequency, string> = {
   'as-needed': 'Segun necesidad',
 };
 
+const medicationExecutionResultLabels: Record<MedicationExecutionResult, string> = {
+  administered: 'Administrada',
+  omitted: 'Omitida',
+  rejected: 'Rechazada',
+};
+
 const staffRoleLabels: Record<string, string> = {
   nurse: 'Enfermeria',
   doctor: 'Medico',
@@ -109,6 +116,12 @@ export function formatMedicationFrequency(
   frequency: MedicationFrequency,
 ): string {
   return medicationFrequencyLabels[frequency] ?? frequency;
+}
+
+export function formatMedicationExecutionResult(
+  result: MedicationExecutionResult,
+): string {
+  return medicationExecutionResultLabels[result] ?? result;
 }
 
 export function formatStaffRole(role: string): string {

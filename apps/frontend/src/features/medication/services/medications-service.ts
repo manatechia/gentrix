@@ -3,6 +3,8 @@ import type {
   MedicationCatalogItem,
   MedicationCreateInput,
   MedicationDetail,
+  MedicationExecutionCreateInput,
+  MedicationExecutionOverview,
   MedicationOverview,
   MedicationUpdateInput,
 } from '@gentrix/shared-types';
@@ -54,6 +56,38 @@ export async function updateMedication(
 ): Promise<ApiEnvelope<MedicationDetail>> {
   const response = await apiClient.put<ApiEnvelope<MedicationDetail>>(
     `/api/medications/${medicationId}`,
+    input,
+  );
+
+  return response.data;
+}
+
+export async function getMedicationExecutionsByMedicationId(
+  medicationId: string,
+): Promise<ApiEnvelope<MedicationExecutionOverview[]>> {
+  const response = await apiClient.get<ApiEnvelope<MedicationExecutionOverview[]>>(
+    `/api/medications/${medicationId}/executions`,
+  );
+
+  return response.data;
+}
+
+export async function getMedicationExecutionsByResidentId(
+  residentId: string,
+): Promise<ApiEnvelope<MedicationExecutionOverview[]>> {
+  const response = await apiClient.get<ApiEnvelope<MedicationExecutionOverview[]>>(
+    `/api/medications/resident/${residentId}/executions`,
+  );
+
+  return response.data;
+}
+
+export async function createMedicationExecution(
+  medicationId: string,
+  input: MedicationExecutionCreateInput,
+): Promise<ApiEnvelope<MedicationExecutionOverview>> {
+  const response = await apiClient.post<ApiEnvelope<MedicationExecutionOverview>>(
+    `/api/medications/${medicationId}/executions`,
     input,
   );
 
