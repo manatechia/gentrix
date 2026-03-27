@@ -26,6 +26,7 @@ model Organization {
   memberships      OrganizationMembership[]
   residents        Resident[]
   sessions         AuthSession[]
+  staffMembers     StaffMember[]
 
   @@index([deletedAt])
 }
@@ -52,6 +53,7 @@ model Facility {
   organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   residents        Resident[]
   sessions         AuthSession[]
+  staffAssignments StaffFacilityAssignment[]
 
   @@unique([organizationId, code])
   @@index([organizationId, deletedAt])
@@ -192,22 +194,50 @@ model Resident {
 }
 
 model StaffMember {
-  id        String          @id @default(uuid()) @db.Uuid
-  firstName String
-  lastName  String
-  role      String
-  ward      String
-  shift     String
-  status    String
-  startDate DateTime
-  createdAt DateTime
-  createdBy String
-  updatedAt DateTime
-  updatedBy String
-  deletedAt DateTime?
-  deletedBy String?
-  schedules StaffSchedule[]
+  id            String                   @id @default(uuid()) @db.Uuid
+  organizationId String                  @db.Uuid
+  firstName     String
+  lastName      String
+  role          String
+  ward          String
+  shift         String
+  status        String
+  startDate     DateTime
+  createdAt     DateTime
+  createdBy     String
+  updatedAt     DateTime
+  updatedBy     String
+  deletedAt     DateTime?
+  deletedBy     String?
+  assignments   StaffFacilityAssignment[]
+  organization  Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  schedules     StaffSchedule[]
 
+  @@index([organizationId, deletedAt])
+  @@index([deletedAt])
+}
+
+model StaffFacilityAssignment {
+  id             String      @id @default(uuid()) @db.Uuid
+  staffId        String      @db.Uuid
+  facilityId     String      @db.Uuid
+  assignmentRole String?
+  ward           String?
+  shift          String?
+  startDate      DateTime
+  endDate        DateTime?
+  status         String
+  createdAt      DateTime
+  createdBy      String
+  updatedAt      DateTime
+  updatedBy      String
+  deletedAt      DateTime?
+  deletedBy      String?
+  facility       Facility    @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  staffMember    StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, status])
+  @@index([facilityId, status])
   @@index([deletedAt])
 }
 

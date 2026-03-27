@@ -48,11 +48,17 @@ const ids = {
     mauroWednesdayAfternoon: 'f7f6b3c7-a18f-4f75-8ff7-c24635fce4d1',
     luciaFridayCoverage: '095e2046-1ae0-4e67-b469-bef643970bd9',
   },
+  staffAssignments: {
+    anaCentral: '91000000-0000-4000-8000-000000000011',
+    mauroCentral: '91000000-0000-4000-8000-000000000012',
+    luciaCentral: '91000000-0000-4000-8000-000000000013',
+  },
 };
 
 export async function seedDatabase(prisma) {
   await prisma.authSession.deleteMany();
   await prisma.staffSchedule.deleteMany();
+  await prisma.staffFacilityAssignment.deleteMany();
   await prisma.clinicalHistoryEvent.deleteMany();
   await prisma.medicationOrder.deleteMany();
   await prisma.medicationCatalogItem.deleteMany();
@@ -417,6 +423,7 @@ export async function seedDatabase(prisma) {
     data: [
       {
         id: ids.staff.anaGomez,
+        organizationId: ids.organizations.gentrixDemo,
         firstName: 'Ana',
         lastName: 'Gomez',
         role: 'nurse',
@@ -431,6 +438,7 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.staff.mauroPaz,
+        organizationId: ids.organizations.gentrixDemo,
         firstName: 'Mauro',
         lastName: 'Paz',
         role: 'caregiver',
@@ -445,6 +453,7 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.staff.luciaMendez,
+        organizationId: ids.organizations.gentrixDemo,
         firstName: 'Lucia',
         lastName: 'Mendez',
         role: 'doctor',
@@ -452,6 +461,53 @@ export async function seedDatabase(prisma) {
         shift: 'morning',
         status: 'active',
         startDate: new Date('2025-02-01T08:00:00.000Z'),
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+    ],
+  });
+
+  await prisma.staffFacilityAssignment.createMany({
+    data: [
+      {
+        id: ids.staffAssignments.anaCentral,
+        staffId: ids.staff.anaGomez,
+        facilityId: ids.facilities.residenciaCentral,
+        assignmentRole: 'nurse',
+        ward: 'Unidad A',
+        shift: 'morning',
+        startDate: new Date('2025-02-01T08:00:00.000Z'),
+        status: 'active',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.staffAssignments.mauroCentral,
+        staffId: ids.staff.mauroPaz,
+        facilityId: ids.facilities.residenciaCentral,
+        assignmentRole: 'caregiver',
+        ward: 'Unidad B',
+        shift: 'afternoon',
+        startDate: new Date('2025-02-01T08:00:00.000Z'),
+        status: 'active',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.staffAssignments.luciaCentral,
+        staffId: ids.staff.luciaMendez,
+        facilityId: ids.facilities.residenciaCentral,
+        assignmentRole: 'doctor',
+        ward: 'Consultorio',
+        shift: 'morning',
+        startDate: new Date('2025-02-01T08:00:00.000Z'),
+        status: 'active',
         createdAt: new Date('2026-01-10T09:00:00.000Z'),
         createdBy: 'seed-script',
         updatedAt: new Date('2026-03-20T09:00:00.000Z'),
