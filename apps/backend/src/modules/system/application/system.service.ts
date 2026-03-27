@@ -1,16 +1,25 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import type {
+  AuthOrganization,
   DashboardSnapshot,
   HealthCheck,
   ServiceIndex,
 } from '@gentrix/shared-types';
 import { toIsoDateString } from '@gentrix/shared-utils';
 
-import { dashboardAlerts } from '../../../common/persistence/in-memory-seed';
 import { MedicationService } from '../../medication/application/medication.service';
+import {
+  MEDICATION_EXECUTION_REPOSITORY,
+  type MedicationExecutionRepository,
+} from '../../medication/domain/repositories/medication-execution.repository';
 import { ResidentsService } from '../../residents/application/residents.service';
+import {
+  RESIDENT_REPOSITORY,
+  type ResidentRepository,
+} from '../../residents/domain/repositories/resident.repository';
 import { StaffService } from '../../staff/application/staff.service';
+import { deriveDashboardAlerts } from './dashboard-alerts';
 
 const FACILITY_CAPACITY = 24;
 
@@ -19,10 +28,14 @@ export class SystemService {
   constructor(
     @Inject(ResidentsService)
     private readonly residentsService: ResidentsService,
+    @Inject(RESIDENT_REPOSITORY)
+    private readonly residentRepository: ResidentRepository,
     @Inject(StaffService)
     private readonly staffService: StaffService,
     @Inject(MedicationService)
     private readonly medicationService: MedicationService,
+    @Inject(MEDICATION_EXECUTION_REPOSITORY)
+    private readonly medicationExecutionRepository: MedicationExecutionRepository,
   ) {}
 
   getServiceIndex(): ServiceIndex {
@@ -62,19 +75,28 @@ export class SystemService {
   }
 
   async getDashboardSnapshot(
-    organizationId?: string,
+    organizationId?: AuthOrganization['id'],
   ): Promise<DashboardSnapshot> {
-    const [residents, staff, medications] = await Promise.all([
+    const [
+      residents,
+      staff,
+      medications,
+      residentEvents,
+      medicationExecutions,
+    ] = await Promise.all([
       this.residentsService.getResidents(organizationId),
       this.staffService.getStaff(organizationId),
       this.medicationService.getMedications(organizationId),
+      this.residentRepository.listEvents(organizationId),
+      this.medicationExecutionRepository.list(organizationId),
     ]);
 
     return {
       summary: {
         residentCount: residents.length,
         staffOnDuty: staff.length,
-        activeMedicationCount: medications.filter((order) => order.active).length,
+        activeMedicationCount: medications.filter((order) => order.active)
+          .length,
         occupancyRate: Math.round((residents.length / FACILITY_CAPACITY) * 100),
         memoryCareResidents: residents.filter(
           (resident) => resident.careLevel === 'memory-care',
@@ -83,7 +105,12 @@ export class SystemService {
       residents,
       staff,
       medications,
-      alerts: dashboardAlerts,
+      alerts: deriveDashboardAlerts({
+        residents,
+        medications,
+        residentEvents,
+        medicationExecutions,
+      }),
     };
   }
 }

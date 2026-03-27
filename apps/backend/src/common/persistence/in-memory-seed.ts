@@ -96,9 +96,3 @@ export const seedMedications = [
     scheduleTimes: ['08:00'],
   }),
 ];
-
-export const dashboardAlerts = [
-  '1 residente en cuidado de memoria requiere seguimiento nocturno.',
-  'Medicacion inyectable programada para las 08:00 en Unidad C.',
-  'Cobertura medica activa para el turno manana.',
-];

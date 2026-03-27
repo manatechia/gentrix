@@ -18,6 +18,9 @@ export interface ResidentRepository {
   findById(id: string, organizationId?: string): Promise<Resident | null>;
   create(resident: Resident): Promise<Resident>;
   update(resident: Resident): Promise<Resident>;
+  listEvents(
+    organizationId?: Resident['organizationId'],
+  ): Promise<ResidentEvent[]>;
   listEventsByResidentId(
     residentId: Resident['id'],
     organizationId?: Resident['organizationId'],

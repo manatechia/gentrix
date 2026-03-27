@@ -16,10 +16,7 @@ import type {
   ResidentSex,
   ResidentTransferInfo,
 } from '@gentrix/shared-types';
-import {
-  isResidentCareLevel,
-  type Resident,
-} from '@gentrix/domain-residents';
+import { isResidentCareLevel, type Resident } from '@gentrix/domain-residents';
 import { toIsoDateString } from '@gentrix/shared-utils';
 
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
@@ -44,7 +41,11 @@ const residentDocumentTypes = new Set([
 ]);
 
 const residentSexes = new Set<ResidentSex>(['femenino', 'masculino', 'x']);
-const residentStatuses = new Set<EntityStatus>(['active', 'inactive', 'archived']);
+const residentStatuses = new Set<EntityStatus>([
+  'active',
+  'inactive',
+  'archived',
+]);
 
 @Injectable()
 export class PrismaResidentRepository implements ResidentRepository {
@@ -77,7 +78,10 @@ export class PrismaResidentRepository implements ResidentRepository {
     return residents.map(mapResidentRecord);
   }
 
-  async findById(id: string, organizationId?: string): Promise<Resident | null> {
+  async findById(
+    id: string,
+    organizationId?: string,
+  ): Promise<Resident | null> {
     const resident = await this.prisma.resident.findFirst({
       where: {
         id,
@@ -164,6 +168,20 @@ export class PrismaResidentRepository implements ResidentRepository {
     });
 
     return mapResidentRecord(persistedResident);
+  }
+
+  async listEvents(
+    organizationId?: Resident['organizationId'],
+  ): Promise<ResidentEvent[]> {
+    const events = await this.prisma.clinicalHistoryEvent.findMany({
+      where: {
+        deletedAt: null,
+        organizationId: organizationId ?? undefined,
+      },
+      orderBy: [{ occurredAt: 'desc' }, { createdAt: 'desc' }],
+    });
+
+    return events.map(mapResidentEventRecord);
   }
 
   async listEventsByResidentId(
@@ -266,7 +284,10 @@ function mapResidentRecord(record: ResidentRecord): Resident {
       walker: false,
       orthopedicBed: false,
     }),
-    familyContacts: fromJson<ResidentFamilyContact[]>(record.familyContacts, []),
+    familyContacts: fromJson<ResidentFamilyContact[]>(
+      record.familyContacts,
+      [],
+    ),
     discharge: fromJson<ResidentDischargeInfo>(record.discharge, {}),
     address: {
       ...address,
@@ -278,7 +299,9 @@ function mapResidentRecord(record: ResidentRecord): Resident {
       updatedAt: toIsoDateString(record.updatedAt),
       createdBy: record.createdBy,
       updatedBy: record.updatedBy,
-      deletedAt: record.deletedAt ? toIsoDateString(record.deletedAt) : undefined,
+      deletedAt: record.deletedAt
+        ? toIsoDateString(record.deletedAt)
+        : undefined,
       deletedBy: record.deletedBy ?? undefined,
     },
   };
@@ -298,7 +321,9 @@ function mapResidentEventRecord(record: ClinicalHistoryEvent): ResidentEvent {
       updatedAt: toIsoDateString(record.updatedAt),
       createdBy: record.createdBy,
       updatedBy: record.updatedBy,
-      deletedAt: record.deletedAt ? toIsoDateString(record.deletedAt) : undefined,
+      deletedAt: record.deletedAt
+        ? toIsoDateString(record.deletedAt)
+        : undefined,
       deletedBy: record.deletedBy ?? undefined,
     },
   };
@@ -386,12 +411,18 @@ function toMedicalHistoryEventRecords(resident: Resident) {
   }));
 }
 
-function normalizeResidentDocumentType(value: string | null): Resident['documentType'] {
-  return residentDocumentTypes.has(value ?? '') ? (value as Resident['documentType']) : 'otro';
+function normalizeResidentDocumentType(
+  value: string | null,
+): Resident['documentType'] {
+  return residentDocumentTypes.has(value ?? '')
+    ? (value as Resident['documentType'])
+    : 'otro';
 }
 
 function normalizeResidentSex(value: string | null): ResidentSex {
-  return residentSexes.has((value ?? 'x') as ResidentSex) ? ((value ?? 'x') as ResidentSex) : 'x';
+  return residentSexes.has((value ?? 'x') as ResidentSex)
+    ? ((value ?? 'x') as ResidentSex)
+    : 'x';
 }
 
 function normalizeResidentStatus(value: string): EntityStatus {

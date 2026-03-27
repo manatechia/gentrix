@@ -1,5 +1,7 @@
 import type {
   AuthRole,
+  DashboardAlertSeverity,
+  DashboardAlertSource,
   EntityStatus,
   MedicationExecutionResult,
   MedicationFrequency,
@@ -61,7 +63,10 @@ const medicationFrequencyLabels: Record<MedicationFrequency, string> = {
   'as-needed': 'Segun necesidad',
 };
 
-const medicationExecutionResultLabels: Record<MedicationExecutionResult, string> = {
+const medicationExecutionResultLabels: Record<
+  MedicationExecutionResult,
+  string
+> = {
   administered: 'Administrada',
   omitted: 'Omitida',
   rejected: 'Rechazada',
@@ -78,6 +83,19 @@ const shiftLabels: Record<string, string> = {
   morning: 'Manana',
   afternoon: 'Tarde',
   night: 'Noche',
+};
+
+const dashboardAlertSeverityLabels: Record<DashboardAlertSeverity, string> = {
+  info: 'Info',
+  warning: 'Seguimiento',
+  critical: 'Critica',
+};
+
+const dashboardAlertSourceLabels: Record<DashboardAlertSource, string> = {
+  'resident-care-level': 'Cuidado',
+  'resident-event': 'Evento',
+  'medication-order': 'Medicacion',
+  'medication-execution': 'Ejecucion',
 };
 
 export function formatEntityStatus(status: EntityStatus): string {
@@ -130,4 +148,16 @@ export function formatStaffRole(role: string): string {
 
 export function formatShiftLabel(shift: string): string {
   return shiftLabels[shift] ?? shift;
+}
+
+export function formatDashboardAlertSeverity(
+  severity: DashboardAlertSeverity,
+): string {
+  return dashboardAlertSeverityLabels[severity] ?? severity;
+}
+
+export function formatDashboardAlertSource(
+  source: DashboardAlertSource,
+): string {
+  return dashboardAlertSourceLabels[source] ?? source;
 }

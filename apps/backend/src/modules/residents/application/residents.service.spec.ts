@@ -1,10 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 
-import {
-  createResidentSeed,
-  type Resident,
-} from '@gentrix/domain-residents';
+import { createResidentSeed, type Resident } from '@gentrix/domain-residents';
 import type {
   ResidentEvent,
   ResidentEventCreateInput,
@@ -44,6 +41,10 @@ class ResidentRepositoryStub implements ResidentRepository {
     this.lastUpdatedResident = cloneResident(resident);
     this.resident = cloneResident(resident);
     return cloneResident(this.resident);
+  }
+
+  async listEvents(): Promise<ResidentEvent[]> {
+    return this.residentEvents.map(cloneResidentEvent);
   }
 
   async listEventsByResidentId(residentId: string): Promise<ResidentEvent[]> {

@@ -5,16 +5,11 @@ import {
   createMedicationSeed,
   type MedicationOrder,
 } from '@gentrix/domain-medication';
-import {
-  createResidentSeed,
-  type Resident,
-} from '@gentrix/domain-residents';
+import { createResidentSeed, type Resident } from '@gentrix/domain-residents';
 import type { ResidentEvent } from '@gentrix/shared-types';
 
 import type { MedicationRepository } from '../../medication/domain/repositories/medication.repository';
-import type {
-  ResidentRepository,
-} from '../domain/repositories/resident.repository';
+import type { ResidentRepository } from '../domain/repositories/resident.repository';
 import { ResidentLiveProfileQueryService } from './resident-live-profile.query.service';
 
 class ResidentRepositoryStub implements ResidentRepository {
@@ -37,6 +32,10 @@ class ResidentRepositoryStub implements ResidentRepository {
 
   async update(resident: Resident): Promise<Resident> {
     return cloneResident(resident);
+  }
+
+  async listEvents(): Promise<ResidentEvent[]> {
+    return this.residentEvents.map(cloneResidentEvent);
   }
 
   async listEventsByResidentId(residentId: string): Promise<ResidentEvent[]> {
@@ -185,7 +184,10 @@ describe('ResidentLiveProfileQueryService', () => {
     const service = new ResidentLiveProfileQueryService(residents, medications);
 
     await expect(
-      service.getResidentLiveProfile('resident-missing', resident.organizationId),
+      service.getResidentLiveProfile(
+        'resident-missing',
+        resident.organizationId,
+      ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

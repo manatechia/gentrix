@@ -146,6 +146,7 @@
 
 ### TASK-009A - Reemplazar `dashboardAlerts` por alertas derivadas minimas tempranas
 
+- Estado: `realizada`
 - Tipo: feature / backend / frontend
 - Prioridad: media
 - Estimacion: M
@@ -157,6 +158,7 @@
 
 ### TASK-009B - Enriquecer alertas derivadas con ejecucion real de medicacion
 
+- Estado: `realizada`
 - Tipo: feature / backend / frontend
 - Prioridad: media
 - Estimacion: M

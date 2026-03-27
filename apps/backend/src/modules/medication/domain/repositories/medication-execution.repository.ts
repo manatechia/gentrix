@@ -1,6 +1,9 @@
 import type { MedicationExecution } from '@gentrix/domain-medication';
 
 export interface MedicationExecutionRepository {
+  list(
+    organizationId?: MedicationExecution['organizationId'],
+  ): Promise<MedicationExecution[]>;
   listByMedicationOrderId(
     medicationOrderId: MedicationExecution['medicationOrderId'],
     organizationId?: MedicationExecution['organizationId'],

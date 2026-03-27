@@ -37,7 +37,7 @@ interface MedicationsWorkspaceProps {
   onCreateMedicationExecution: (
     medication: MedicationOverview,
     result: MedicationExecutionResult,
-  ) => void | Promise<void>;
+  ) => void | Promise<MedicationExecutionOverview | null>;
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
 }
@@ -68,7 +68,8 @@ export function MedicationsWorkspace({
   const location = useLocation();
   const medicationsLocationState =
     (location.state as MedicationsLocationState | null) ?? null;
-  const routeMedicationNotice = medicationsLocationState?.medicationNotice ?? null;
+  const routeMedicationNotice =
+    medicationsLocationState?.medicationNotice ?? null;
   const routeMedicationNoticeTone =
     medicationsLocationState?.medicationNoticeTone ?? 'success';
   const resolvedMedicationNotice = routeMedicationNotice ?? medicationNotice;
@@ -82,8 +83,8 @@ export function MedicationsWorkspace({
       return medications;
     }
 
-    return medications.filter(
-      (medication) => selectedResidentIds.includes(medication.residentId),
+    return medications.filter((medication) =>
+      selectedResidentIds.includes(medication.residentId),
     );
   }, [medications, selectedResidentIds]);
 
@@ -187,7 +188,9 @@ export function MedicationsWorkspace({
       {screenState === 'ready' && (
         <MedicationOrdersPanel
           medications={filteredMedications}
-          medicationExecutionsByMedicationId={medicationExecutionsByMedicationId}
+          medicationExecutionsByMedicationId={
+            medicationExecutionsByMedicationId
+          }
           recordingMedicationExecutionId={recordingMedicationExecutionId}
           activeMedicationCount={
             selectedResidentIds.length > 0
@@ -205,7 +208,7 @@ export function MedicationsWorkspace({
               ? `No hay ordenes de medicacion para ${selectedResidentOptions[0].label}.`
               : selectedResidentOptions.length > 1
                 ? 'No hay ordenes de medicacion para los pacientes seleccionados.'
-              : 'Todavia no hay ordenes de medicacion cargadas.'
+                : 'Todavia no hay ordenes de medicacion cargadas.'
           }
         />
       )}

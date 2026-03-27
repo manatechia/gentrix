@@ -23,7 +23,10 @@ import type { SelectFieldOption } from '../../../shared/ui/select-field';
 
 interface MedicationOrdersPanelProps {
   medications: MedicationOverview[];
-  medicationExecutionsByMedicationId: Record<string, MedicationExecutionOverview[]>;
+  medicationExecutionsByMedicationId: Record<
+    string,
+    MedicationExecutionOverview[]
+  >;
   recordingMedicationExecutionId: string | null;
   activeMedicationCount: number;
   residentOptions: ReadonlyArray<SelectFieldOption>;
@@ -32,7 +35,7 @@ interface MedicationOrdersPanelProps {
   onCreateMedicationExecution: (
     medication: MedicationOverview,
     result: MedicationExecutionResult,
-  ) => void | Promise<void>;
+  ) => void | Promise<MedicationExecutionOverview | null>;
   filterSummary: string;
   isFiltered?: boolean;
   emptyStateMessage?: string;
@@ -186,8 +189,10 @@ export function MedicationOrdersPanel({
       ) : (
         <div className="mt-4 grid gap-3">
           {medications.map((order) => {
-            const executions = medicationExecutionsByMedicationId[order.id] ?? [];
-            const isRecordingExecution = recordingMedicationExecutionId === order.id;
+            const executions =
+              medicationExecutionsByMedicationId[order.id] ?? [];
+            const isRecordingExecution =
+              recordingMedicationExecutionId === order.id;
 
             return (
               <article
@@ -213,7 +218,9 @@ export function MedicationOrdersPanel({
                           : 'bg-brand-tertiary/14 text-brand-tertiary',
                       ].join(' ')}
                     >
-                      {order.active ? 'Activa hoy' : formatEntityStatus(order.status)}
+                      {order.active
+                        ? 'Activa hoy'
+                        : formatEntityStatus(order.status)}
                     </span>
 
                     <Link
@@ -257,7 +264,9 @@ export function MedicationOrdersPanel({
                     </span>
                     <span className="text-brand-text">
                       {order.startDate.slice(0, 10)}
-                      {order.endDate ? ` al ${order.endDate.slice(0, 10)}` : ' sin fin'}
+                      {order.endDate
+                        ? ` al ${order.endDate.slice(0, 10)}`
+                        : ' sin fin'}
                     </span>
                   </div>
                 </div>
@@ -279,8 +288,8 @@ export function MedicationOrdersPanel({
                         Registro operativo
                       </span>
                       <p className="max-w-[58ch] leading-[1.55] text-brand-text-secondary">
-                        Marca una toma sin editar la orden base. Cada accion queda
-                        registrada como ejecucion independiente.
+                        Marca una toma sin editar la orden base. Cada accion
+                        queda registrada como ejecucion independiente.
                       </p>
                     </div>
 
@@ -293,10 +302,15 @@ export function MedicationOrdersPanel({
                             type="button"
                             disabled={isRecordingExecution}
                             onClick={() => {
-                              void onCreateMedicationExecution(order, action.result);
+                              void onCreateMedicationExecution(
+                                order,
+                                action.result,
+                              );
                             }}
                           >
-                            {isRecordingExecution ? 'Guardando...' : action.label}
+                            {isRecordingExecution
+                              ? 'Guardando...'
+                              : action.label}
                           </button>
                         ))}
                       </div>
@@ -352,7 +366,9 @@ export function MedicationOrdersPanel({
                                 </div>
                                 <span className="leading-[1.55] text-brand-text-secondary">
                                   Registrada el{' '}
-                                  {formatExecutionDateTime(execution.occurredAt)}
+                                  {formatExecutionDateTime(
+                                    execution.occurredAt,
+                                  )}
                                 </span>
                               </div>
 

@@ -21,6 +21,20 @@ export class PrismaMedicationExecutionRepository
     private readonly prisma: PrismaService,
   ) {}
 
+  async list(
+    organizationId?: MedicationExecution['organizationId'],
+  ): Promise<MedicationExecution[]> {
+    const executions = await this.prisma.medicationExecution.findMany({
+      where: {
+        deletedAt: null,
+        organizationId: organizationId ?? undefined,
+      },
+      orderBy: [{ occurredAt: 'desc' }, { createdAt: 'desc' }],
+    });
+
+    return executions.map(mapMedicationExecutionRecord);
+  }
+
   async listByMedicationOrderId(
     medicationOrderId: MedicationExecution['medicationOrderId'],
     organizationId?: MedicationExecution['organizationId'],
@@ -100,7 +114,9 @@ function mapMedicationExecutionRecord(
       updatedAt: toIsoDateString(record.updatedAt),
       createdBy: record.createdBy,
       updatedBy: record.updatedBy,
-      deletedAt: record.deletedAt ? toIsoDateString(record.deletedAt) : undefined,
+      deletedAt: record.deletedAt
+        ? toIsoDateString(record.deletedAt)
+        : undefined,
       deletedBy: record.deletedBy ?? undefined,
     },
   };

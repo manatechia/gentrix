@@ -409,10 +409,7 @@ export interface MedicationCreateInput {
  */
 export interface MedicationUpdateInput extends MedicationCreateInput {}
 
-export type MedicationExecutionResult =
-  | 'administered'
-  | 'omitted'
-  | 'rejected';
+export type MedicationExecutionResult = 'administered' | 'omitted' | 'rejected';
 
 export interface MedicationExecutionCreateInput {
   occurredAt: IsoDateString;
@@ -431,6 +428,25 @@ export interface MedicationExecutionOverview {
   audit: AuditTrail;
 }
 
+export type DashboardAlertSeverity = 'info' | 'warning' | 'critical';
+
+export type DashboardAlertSource =
+  | 'resident-care-level'
+  | 'resident-event'
+  | 'medication-order'
+  | 'medication-execution';
+
+export interface DashboardAlert {
+  id: EntityId;
+  severity: DashboardAlertSeverity;
+  source: DashboardAlertSource;
+  title: string;
+  message: string;
+  residentId?: EntityId;
+  residentName?: string;
+  occurredAt?: IsoDateString;
+}
+
 export interface DashboardSummary {
   residentCount: number;
   staffOnDuty: number;
@@ -444,7 +460,7 @@ export interface DashboardSnapshot {
   residents: ResidentOverview[];
   staff: StaffOverview[];
   medications: MedicationOverview[];
-  alerts: string[];
+  alerts: DashboardAlert[];
 }
 
 export interface ServiceIndex {

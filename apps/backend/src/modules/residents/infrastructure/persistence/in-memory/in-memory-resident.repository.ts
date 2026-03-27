@@ -25,7 +25,10 @@ export class InMemoryResidentRepository implements ResidentRepository {
       .map(cloneResident);
   }
 
-  async findById(id: string, organizationId?: string): Promise<Resident | null> {
+  async findById(
+    id: string,
+    organizationId?: string,
+  ): Promise<Resident | null> {
     const resident = this.residents.find(
       (candidate) =>
         candidate.id === id &&
@@ -60,6 +63,29 @@ export class InMemoryResidentRepository implements ResidentRepository {
     return cloneResident(persistedResident);
   }
 
+  async listEvents(
+    organizationId?: Resident['organizationId'],
+  ): Promise<ResidentEvent[]> {
+    return this.residentEvents
+      .filter((event) => {
+        if (!organizationId) {
+          return true;
+        }
+
+        return this.residents.some(
+          (resident) =>
+            resident.id === event.residentId &&
+            resident.organizationId === organizationId,
+        );
+      })
+      .sort(
+        (left, right) =>
+          new Date(right.occurredAt).getTime() -
+          new Date(left.occurredAt).getTime(),
+      )
+      .map(cloneResidentEvent);
+  }
+
   async listEventsByResidentId(
     residentId: Resident['id'],
     organizationId?: Resident['organizationId'],
@@ -77,7 +103,8 @@ export class InMemoryResidentRepository implements ResidentRepository {
       )
       .sort(
         (left, right) =>
-          new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime(),
+          new Date(right.occurredAt).getTime() -
+          new Date(left.occurredAt).getTime(),
       )
       .map(cloneResidentEvent);
   }
