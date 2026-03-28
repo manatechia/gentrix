@@ -33,9 +33,10 @@ export function Sidebar({
       data-testid="workspace-sidebar"
       aria-hidden={isMobileViewport ? !isMobileOpen : undefined}
       className={[
-        'flex min-h-0 flex-col gap-3.5 overflow-hidden bg-[linear-gradient(180deg,rgba(47,79,79,0.98),rgba(37,63,63,0.98))] px-[18px] py-[22px] text-white shadow-sidebar',
-        'min-[1181px]:sticky min-[1181px]:top-0 min-[1181px]:z-10 min-[1181px]:h-screen min-[1181px]:max-h-screen min-[1181px]:rounded-r-[28px]',
+        'flex min-h-0 flex-col gap-3.5 overflow-x-hidden bg-[linear-gradient(180deg,rgba(47,79,79,0.98),rgba(37,63,63,0.98))] px-[18px] py-[22px] text-white shadow-sidebar',
+        'min-[1181px]:sticky min-[1181px]:top-0 min-[1181px]:z-10 min-[1181px]:h-screen min-[1181px]:max-h-screen min-[1181px]:overflow-hidden min-[1181px]:rounded-r-[28px]',
         'max-[1180px]:fixed max-[1180px]:inset-y-0 max-[1180px]:left-0 max-[1180px]:z-50 max-[1180px]:h-screen max-[1180px]:w-[min(86vw,320px)] max-[1180px]:max-h-screen max-[1180px]:rounded-r-[28px] max-[1180px]:transition-[transform,opacity] max-[1180px]:duration-200 max-[1180px]:ease-out',
+        'max-[1180px]:overflow-y-auto',
         mobileVisibilityClassName,
       ].join(' ')}
     >

@@ -57,6 +57,7 @@ services:
       GENTRIX_FRONTEND_PORT: 4200
       GENTRIX_BACKEND_PROXY_TARGET: http://backend:3333
       GENTRIX_FRONTEND_WATCH_POLLING: 'true'
+      PLAYWRIGHT_API_URL: http://backend:3333
     ports:
       - '${FRONTEND_PORT:-4200}:4200'
     depends_on:
@@ -71,6 +72,7 @@ services:
       - ./nx.json:/app/nx.json:ro
       - ./tsconfig.base.json:/app/tsconfig.base.json:ro
       - ./prisma.config.ts:/app/prisma.config.ts:ro
+      - ./eslint.config.mjs:/app/eslint.config.mjs:ro
 
   frontend-preview:
     profiles: ['preview']

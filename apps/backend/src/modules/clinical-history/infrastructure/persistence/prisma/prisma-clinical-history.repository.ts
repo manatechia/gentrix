@@ -51,10 +51,22 @@ export class PrismaClinicalHistoryRepository
     input: ClinicalHistoryEventCreateInput,
     actor: string,
   ): Promise<ClinicalHistoryEvent> {
+    const resident = await this.prisma.resident.findFirstOrThrow({
+      where: {
+        id: residentId,
+        deletedAt: null,
+      },
+      select: {
+        organizationId: true,
+        facilityId: true,
+      },
+    });
     const now = new Date();
     const created = await this.prisma.clinicalHistoryEvent.create({
       data: {
         id: createRandomEntityId(),
+        organizationId: resident.organizationId,
+        facilityId: resident.facilityId,
         residentId,
         eventType: input.eventType.trim(),
         title: input.title.trim(),

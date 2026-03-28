@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { HandoffSnapshot } from '@gentrix/shared-types';
 
@@ -17,7 +17,7 @@ export function useHandoffRoute() {
   const [handoff, setHandoff] = useState<HandoffSnapshot | null>(null);
   const [handoffError, setHandoffError] = useState<string | null>(null);
 
-  async function loadHandoff(): Promise<void> {
+  const loadHandoff = useCallback(async (): Promise<void> => {
     if (!auth.token) {
       setHandoff(null);
       setHandoffError(null);
@@ -46,7 +46,7 @@ export function useHandoffRoute() {
       setHandoffError(message);
       setScreenState('error');
     }
-  }
+  }, [auth]);
 
   useEffect(() => {
     if (auth.status !== 'authenticated' || !auth.token) {
@@ -57,7 +57,7 @@ export function useHandoffRoute() {
     }
 
     void loadHandoff();
-  }, [auth.status, auth.token]);
+  }, [auth.status, auth.token, loadHandoff]);
 
   async function refreshHandoffInPlace(): Promise<void> {
     const payload = await handoffService.getHandoffSnapshot();

@@ -272,7 +272,7 @@ export interface ResidentBaseUpdateInput
   extends ResidentBaseProfileInput,
     ResidentCurrentStateInput {}
 
-export interface ResidentUpdateInput extends ResidentBaseUpdateInput {}
+export type ResidentUpdateInput = ResidentBaseUpdateInput;
 
 /**
  * ResidentEvent is the stable API/domain contract for the resident timeline.
@@ -428,7 +428,7 @@ export interface MedicationCreateInput {
  * Updating a medication order changes the active prescription, not what happened
  * to a concrete dose at a specific time.
  */
-export interface MedicationUpdateInput extends MedicationCreateInput {}
+export type MedicationUpdateInput = MedicationCreateInput;
 
 export interface ClinicalHistoryEvent {
   id: EntityId;

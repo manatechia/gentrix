@@ -6,7 +6,6 @@ import type {
   EntityStatus,
   IsoDateString,
   ResidentAttachment,
-  ResidentAttachmentInput,
   ResidentAttachmentKind,
   ResidentBaseProfile,
   ResidentBelongings,
@@ -15,14 +14,11 @@ import type {
   ResidentCreateInput,
   ResidentCurrentState,
   ResidentDetail,
-  ResidentDischargeInfo,
-  ResidentDocumentType,
   ResidentFamilyContact,
   ResidentInsuranceInfo,
   ResidentMedicalHistoryEntry,
   ResidentMedicalHistoryEntryInput,
   ResidentPsychiatricCareInfo,
-  ResidentSex,
   ResidentSupportingRecordSnapshot,
   ResidentTransferInfo,
   ResidentUpdateInput,
@@ -179,22 +175,6 @@ function createMedicalHistoryEntry(
     title: input.title.trim(),
     notes: input.notes.trim(),
     createdAt,
-  };
-}
-
-function createResidentAttachment(
-  input: ResidentAttachmentInput,
-  uploadedAt: IsoDateString,
-  idSeed: string,
-): ResidentAttachment {
-  return {
-    id: createEntityId('resident-attachment', idSeed),
-    fileName: input.fileName.trim(),
-    mimeType: input.mimeType.trim(),
-    sizeBytes: input.sizeBytes,
-    dataUrl: input.dataUrl,
-    kind: resolveResidentAttachmentKind(input.mimeType),
-    uploadedAt,
   };
 }
 
