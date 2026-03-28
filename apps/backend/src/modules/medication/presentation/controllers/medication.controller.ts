@@ -9,6 +9,7 @@ import {
   Req,
 } from '@nestjs/common';
 
+import { assertCanManageMedicationOrders } from '../../../../common/auth/role-access';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { MedicationService } from '../../application/medication.service';
 import { CreateMedicationExecutionDto } from '../dto/create-medication-execution.dto';
@@ -72,6 +73,7 @@ export class MedicationController {
     @Body() body: CreateMedicationDto,
     @Req() request: RequestWithSession,
   ) {
+    assertCanManageMedicationOrders(request.authSession!.user.role);
     return this.medicationService.createMedication(
       body,
       request.authSession!.user.email,
@@ -99,6 +101,7 @@ export class MedicationController {
     @Body() body: UpdateMedicationDto,
     @Req() request: RequestWithSession,
   ) {
+    assertCanManageMedicationOrders(request.authSession!.user.role);
     return this.medicationService.updateMedication(
       medicationId,
       body,

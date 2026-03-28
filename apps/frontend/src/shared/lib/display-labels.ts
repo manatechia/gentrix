@@ -48,6 +48,7 @@ const residentAttachmentKindLabels: Record<ResidentAttachmentKind, string> = {
 const authRoleLabels: Record<AuthRole, string> = {
   admin: 'Administrador',
   coordinator: 'Coordinacion',
+  staff: 'Personal',
 };
 
 const medicationRouteLabels: Record<MedicationRoute, string> = {

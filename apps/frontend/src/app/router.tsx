@@ -26,6 +26,10 @@ import { ResidentCreateWorkspace } from '../features/residents/ui/resident-creat
 import { ResidentDetailWorkspace } from '../features/residents/ui/resident-detail-workspace';
 import { ResidentEditWorkspace } from '../features/residents/ui/resident-edit-workspace';
 import { ResidentsWorkspace } from '../features/residents/ui/residents-workspace';
+import {
+  canManageMedicationOrders,
+  canManageResidents,
+} from '../shared/lib/authz';
 
 function LoginRoute() {
   const auth = useAuthSession();
@@ -114,6 +118,10 @@ function ResidentCreateRoute() {
     return <Navigate to="/login" replace />;
   }
 
+  if (!canManageResidents(auth.session.user.role)) {
+    return <Navigate to="/residentes" replace />;
+  }
+
   return (
     <ResidentCreateWorkspace
       screenState={residents.screenState}
@@ -176,6 +184,15 @@ function ResidentEditRoute() {
 
   if (!auth.session) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!canManageResidents(auth.session.user.role)) {
+    return (
+      <Navigate
+        to={residentId ? `/residentes/${residentId}` : '/residentes'}
+        replace
+      />
+    );
   }
 
   return (
@@ -281,6 +298,10 @@ function MedicationCreateRoute() {
     return <Navigate to="/login" replace />;
   }
 
+  if (!canManageMedicationOrders(auth.session.user.role)) {
+    return <Navigate to="/medicacion" replace />;
+  }
+
   return (
     <MedicationCreateWorkspace
       screenState={medications.screenState}
@@ -314,6 +335,10 @@ function MedicationEditRoute() {
 
   if (!auth.session) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!canManageMedicationOrders(auth.session.user.role)) {
+    return <Navigate to="/medicacion" replace />;
   }
 
   if (redirectState) {

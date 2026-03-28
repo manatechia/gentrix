@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.13-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: gentrix
@@ -20,18 +20,30 @@ services:
     build:
       context: .
       dockerfile: docker/app.Dockerfile
-      target: backend-runtime
+      target: backend-dev
     restart: unless-stopped
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
+      NX_DAEMON: 'false'
       PORT: 3333
       DATABASE_URL: postgresql://gentrix:gentrix@postgres:5432/gentrix?schema=public
       AUTO_SEED_DEMO: 'true'
+      GENTRIX_BACKEND_WATCH_POLLING: 'true'
+      GENTRIX_BACKEND_WATCH_INTERVAL: '300'
     ports:
       - '${BACKEND_PORT:-3333}:3333'
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./apps:/app/apps
+      - ./libs:/app/libs
+      - ./package.json:/app/package.json:ro
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
+      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
+      - ./nx.json:/app/nx.json:ro
+      - ./tsconfig.base.json:/app/tsconfig.base.json:ro
+      - ./prisma.config.ts:/app/prisma.config.ts:ro
     healthcheck:
       test:
         [

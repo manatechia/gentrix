@@ -1,6 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import type { AuthFacility, AuthOrganization, AuthRole } from '@gentrix/shared-types';
+import type {
+  AuthFacility,
+  AuthOrganization,
+  AuthRole,
+} from '@gentrix/shared-types';
 
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
 import type {
@@ -8,7 +12,7 @@ import type {
   StoredAuthUser,
 } from '../../../domain/repositories/auth-user.repository';
 
-const authRoles = new Set<AuthRole>(['admin', 'coordinator']);
+const authRoles = new Set<AuthRole>(['admin', 'coordinator', 'staff']);
 
 @Injectable()
 export class PrismaAuthUserRepository implements AuthUserRepository {
@@ -64,7 +68,10 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
       (membership) => membership.organization.deletedAt === null,
     );
 
-    if (!activeMembership || !authRoles.has(activeMembership.roleCode as AuthRole)) {
+    if (
+      !activeMembership ||
+      !authRoles.has(activeMembership.roleCode as AuthRole)
+    ) {
       return null;
     }
 

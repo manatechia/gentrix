@@ -36,6 +36,7 @@ interface MedicationOrdersPanelProps {
     medication: MedicationOverview,
     result: MedicationExecutionResult,
   ) => void | Promise<MedicationExecutionOverview | null>;
+  canManageMedicationOrders: boolean;
   filterSummary: string;
   isFiltered?: boolean;
   emptyStateMessage?: string;
@@ -107,6 +108,7 @@ export function MedicationOrdersPanel({
   selectedResidentIds,
   onSelectedResidentIdsChange,
   onCreateMedicationExecution,
+  canManageMedicationOrders,
   filterSummary,
   isFiltered = false,
   emptyStateMessage = 'Todavia no hay ordenes de medicacion cargadas.',
@@ -128,9 +130,13 @@ export function MedicationOrdersPanel({
           </h2>
         </div>
 
-        <Link className={primaryButtonClassName} to="/medicacion/nueva">
-          Nueva orden
-        </Link>
+        {canManageMedicationOrders ? (
+          <Link className={primaryButtonClassName} to="/medicacion/nueva">
+            Nueva orden
+          </Link>
+        ) : (
+          <span className={primaryButtonClassName}>Solo ejecuciones</span>
+        )}
       </div>
 
       <div className="mb-4 grid gap-4 rounded-[24px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/45 p-4 min-[1080px]:grid-cols-[minmax(0,340px)_auto] min-[1080px]:items-end">
@@ -223,12 +229,14 @@ export function MedicationOrdersPanel({
                         : formatEntityStatus(order.status)}
                     </span>
 
-                    <Link
-                      className={secondaryButtonClassName}
-                      to={`/medicacion/${order.id}/editar`}
-                    >
-                      Editar
-                    </Link>
+                    {canManageMedicationOrders ? (
+                      <Link
+                        className={secondaryButtonClassName}
+                        to={`/medicacion/${order.id}/editar`}
+                      >
+                        Editar
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
 

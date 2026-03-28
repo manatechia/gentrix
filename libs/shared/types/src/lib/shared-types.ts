@@ -36,7 +36,7 @@ export interface ApiEnvelope<T> {
   };
 }
 
-export type AuthRole = 'admin' | 'coordinator';
+export type AuthRole = 'admin' | 'coordinator' | 'staff';
 
 export type ResidentCareLevel =
   | 'independent'

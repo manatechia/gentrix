@@ -1,4 +1,7 @@
-FROM node:22-bookworm-slim AS workspace-deps
+ARG NODE_IMAGE=node:22.22.2-bookworm-slim
+ARG NGINX_IMAGE=nginx:1.28.3-alpine
+
+FROM ${NODE_IMAGE} AS workspace-deps
 
 WORKDIR /app
 
@@ -9,7 +12,7 @@ ENV PATH=$PNPM_HOME:$PATH
 ENV DATABASE_URL=$DATABASE_URL
 
 RUN corepack enable
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y openssl procps && rm -rf /var/lib/apt/lists/*
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json prisma.config.ts ./
 
@@ -36,7 +39,22 @@ EXPOSE 4200
 
 CMD ["pnpm", "nx", "serve", "frontend", "--host", "0.0.0.0"]
 
-FROM node:22-bookworm-slim AS backend-runtime
+FROM workspace AS backend-dev
+
+WORKDIR /app
+
+ENV NODE_ENV=development
+ENV PORT=3333
+
+COPY docker/backend-dev-entrypoint.sh ./docker/backend-dev-entrypoint.sh
+
+RUN chmod +x ./docker/backend-dev-entrypoint.sh
+
+EXPOSE 3333
+
+CMD ["./docker/backend-dev-entrypoint.sh"]
+
+FROM ${NODE_IMAGE} AS backend-runtime
 
 WORKDIR /app
 
@@ -57,7 +75,7 @@ EXPOSE 3333
 
 CMD ["./docker/backend-entrypoint.sh"]
 
-FROM nginx:1.27-alpine AS frontend-runtime
+FROM ${NGINX_IMAGE} AS frontend-runtime
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=frontend-build /app/dist/apps/frontend /usr/share/nginx/html

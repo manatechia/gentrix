@@ -2,7 +2,11 @@ import { Link } from 'react-router-dom';
 
 import type { AuthSession, ResidentOverview } from '@gentrix/shared-types';
 
-import { primaryButtonClassName, shellCardClassName } from '../../../shared/ui/class-names';
+import { canManageResidents, isStaffRole } from '../../../shared/lib/authz';
+import {
+  primaryButtonClassName,
+  shellCardClassName,
+} from '../../../shared/ui/class-names';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
@@ -29,6 +33,9 @@ export function ResidentsWorkspace({
   onLogout,
   onRetry,
 }: ResidentsWorkspaceProps) {
+  const canManageRecords = canManageResidents(session.user.role);
+  const isStaffSession = isStaffRole(session.user.role);
+
   return (
     <WorkspaceShell
       residentCount={residentCount}
@@ -46,14 +53,19 @@ export function ResidentsWorkspace({
             Padron de residentes
           </h1>
           <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
-            Consulta todos los pacientes actuales, entra a cada ficha y deriva
-            las nuevas altas a una subpagina propia del modulo.
+            {isStaffSession
+              ? 'Consulta el padron operativo y abre cada ficha sin editar datos administrativos.'
+              : 'Consulta todos los pacientes actuales, entra a cada ficha y deriva las nuevas altas a una subpagina propia del modulo.'}
           </p>
         </div>
 
-        <Link className={primaryButtonClassName} to="/residentes/nuevo">
-          Agregar paciente
-        </Link>
+        {canManageRecords ? (
+          <Link className={primaryButtonClassName} to="/residentes/nuevo">
+            Agregar paciente
+          </Link>
+        ) : (
+          <span className={primaryButtonClassName}>Vista personal</span>
+        )}
       </section>
 
       {screenState === 'loading' && (

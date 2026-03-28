@@ -9,7 +9,7 @@ import type {
   AuthSessionWithToken,
 } from '../../../domain/repositories/auth-session.repository';
 
-const authRoles = new Set<AuthRole>(['admin', 'coordinator']);
+const authRoles = new Set<AuthRole>(['admin', 'coordinator', 'staff']);
 
 @Injectable()
 export class PrismaAuthSessionRepository implements AuthSessionRepository {
@@ -88,7 +88,8 @@ export class PrismaAuthSessionRepository implements AuthSessionRepository {
         role: membership.roleCode as AuthRole,
       },
       activeOrganization: {
-        id: session.activeOrganization.id as AuthSessionWithToken['activeOrganization']['id'],
+        id: session.activeOrganization
+          .id as AuthSessionWithToken['activeOrganization']['id'],
         slug: session.activeOrganization.slug,
         displayName: session.activeOrganization.displayName,
       },

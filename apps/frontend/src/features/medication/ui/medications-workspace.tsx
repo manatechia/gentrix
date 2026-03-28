@@ -9,6 +9,10 @@ import type {
 } from '@gentrix/shared-types';
 
 import {
+  canManageMedicationOrders,
+  isStaffRole,
+} from '../../../shared/lib/authz';
+import {
   primaryButtonClassName,
   shellCardClassName,
 } from '../../../shared/ui/class-names';
@@ -76,6 +80,8 @@ export function MedicationsWorkspace({
   const resolvedMedicationNoticeTone = routeMedicationNotice
     ? routeMedicationNoticeTone
     : medicationNoticeTone;
+  const canManageOrders = canManageMedicationOrders(session.user.role);
+  const isStaffSession = isStaffRole(session.user.role);
   const [selectedResidentIds, setSelectedResidentIds] = useState<string[]>([]);
 
   const filteredMedications = useMemo(() => {
@@ -137,16 +143,21 @@ export function MedicationsWorkspace({
               Agenda clinica de medicamentos
             </h1>
             <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
-              Gestiona ordenes por residente, revisa horarios, cambia estados y
-              abre una subpagina dedicada para cargar o editar cada indicacion.
+              {isStaffSession
+                ? 'Revisa ordenes por residente y registra administraciones, omisiones o rechazos sin modificar la prescripcion.'
+                : 'Gestiona ordenes por residente, revisa horarios, cambia estados y abre una subpagina dedicada para cargar o editar cada indicacion.'}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <span className={primaryButtonClassName}>{heroBadgeText}</span>
-            <Link className={primaryButtonClassName} to="/medicacion/nueva">
-              Nueva orden
-            </Link>
+            {canManageOrders ? (
+              <Link className={primaryButtonClassName} to="/medicacion/nueva">
+                Nueva orden
+              </Link>
+            ) : (
+              <span className={primaryButtonClassName}>Registro operativo</span>
+            )}
           </div>
         </div>
       </section>
@@ -201,6 +212,7 @@ export function MedicationsWorkspace({
           selectedResidentIds={selectedResidentIds}
           onSelectedResidentIdsChange={setSelectedResidentIds}
           onCreateMedicationExecution={onCreateMedicationExecution}
+          canManageMedicationOrders={canManageOrders}
           filterSummary={filterSummary}
           isFiltered={selectedResidentIds.length > 0}
           emptyStateMessage={

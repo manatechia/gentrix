@@ -61,7 +61,10 @@ Package manager oficial del repo: `pnpm`.
 - Frontend: `http://localhost:4200`
 - Backend: `http://localhost:3333`
 - PostgreSQL: `localhost:55432`
+- Las imagenes base quedaron pinneadas a versiones actuales y compatibles del 27 de marzo de 2026:
+  `node:22.22.2-bookworm-slim`, `postgres:16.13-alpine`, `nginx:1.28.3-alpine`.
 - `frontend` ahora corre con Vite dentro de Docker y refleja cambios del repo por bind mounts + polling, sin rebuild por cada ajuste de UI.
+- `backend` ahora tambien corre en modo desarrollo dentro de Docker con `nx serve backend`, bind mounts del workspace, Prisma al arranque y watch por polling para Docker Desktop.
 - Para una vista estatica tipo produccion:
   `docker compose --profile preview up --build frontend-preview`
 - El backend aplica `prisma migrate deploy` al arrancar.

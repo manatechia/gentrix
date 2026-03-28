@@ -2,7 +2,10 @@ import { Formik } from 'formik';
 
 import type { AuthLoginRequest } from '@gentrix/shared-types';
 
-import { demoCredentials } from '../constants/demo-credentials';
+import {
+  demoAccessOptions,
+  demoCredentials,
+} from '../constants/demo-credentials';
 import { loginFormSchema } from '../schemas/login-form.schema';
 import {
   inputClassName,
@@ -121,103 +124,162 @@ export function LoginScreen({
                 setValues,
                 touched,
                 values,
-              }) => (
-                <form className="grid gap-[18px]" onSubmit={handleSubmit}>
-                  <label className="grid gap-2.5">
-                    <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                      Correo electronico
-                    </span>
-                    <input
-                      className={inputClassName}
-                      type="email"
-                      autoComplete="username"
-                      name="email"
-                      placeholder="admin@residencia.com.ar"
-                      value={values.email}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    />
-                    {touched.email && errors.email && (
-                      <span className="text-[0.85rem] text-[#972f2f]">
-                        {errors.email}
-                      </span>
-                    )}
-                  </label>
+              }) => {
+                const selectedAccessId =
+                  demoAccessOptions.find(
+                    (option) =>
+                      option.credentials.email === values.email &&
+                      option.credentials.password === values.password,
+                  )?.id ?? null;
 
-                  <label className="grid gap-2.5">
-                    <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                      Contrasena
-                    </span>
-                    <input
-                      className={inputClassName}
-                      type="password"
-                      autoComplete="current-password"
-                      name="password"
-                      placeholder="Ingresa tu contrasena"
-                      value={values.password}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    />
-                    {touched.password && errors.password && (
-                      <span className="text-[0.85rem] text-[#972f2f]">
-                        {errors.password}
+                return (
+                  <form className="grid gap-[18px]" onSubmit={handleSubmit}>
+                    <div className="grid gap-3">
+                      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                        Accesos demo
                       </span>
-                    )}
-                  </label>
+                      <div className="grid gap-3">
+                        {demoAccessOptions.map((option) => {
+                          const isSelected = option.id === selectedAccessId;
 
-                  <div className="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
-                    <label className="inline-flex items-center gap-2.5 text-[0.94rem] text-brand-text-secondary">
+                          return (
+                            <button
+                              key={option.id}
+                              className={`grid gap-2 rounded-[22px] border px-4 py-4 text-left transition ${
+                                isSelected
+                                  ? 'border-[rgba(0,102,132,0.22)] bg-[rgba(0,102,132,0.08)] shadow-[0_18px_36px_rgba(0,102,132,0.08)]'
+                                  : 'border-[rgba(0,102,132,0.08)] bg-brand-neutral/45 hover:border-[rgba(0,102,132,0.16)] hover:bg-white'
+                              }`}
+                              type="button"
+                              onClick={() => {
+                                onClearError();
+                                setValues(option.credentials);
+                              }}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="grid gap-1">
+                                  <strong className="text-brand-text">
+                                    {option.label}
+                                  </strong>
+                                  <span className="leading-[1.55] text-brand-text-secondary">
+                                    {option.description}
+                                  </span>
+                                </div>
+                                <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-brand-primary">
+                                  {isSelected ? 'Activo' : 'Demo'}
+                                </span>
+                              </div>
+                              <span className="text-[0.9rem] leading-[1.55] text-brand-text-secondary">
+                                {option.capabilities}
+                              </span>
+                              <div className="grid gap-1 text-[0.9rem] text-brand-secondary">
+                                <code>{option.credentials.email}</code>
+                                <code>{option.credentials.password}</code>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <label className="grid gap-2.5">
+                      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                        Correo electronico
+                      </span>
                       <input
-                        className="h-4 w-4 accent-brand-primary"
-                        type="checkbox"
+                        className={inputClassName}
+                        type="email"
+                        autoComplete="username"
+                        name="email"
+                        placeholder="admin@residencia.com.ar"
+                        value={values.email}
+                        onBlur={handleBlur}
+                        onChange={handleChange}
                       />
-                      <span>Recordarme</span>
+                      {touched.email && errors.email && (
+                        <span className="text-[0.85rem] text-[#972f2f]">
+                          {errors.email}
+                        </span>
+                      )}
                     </label>
+
+                    <label className="grid gap-2.5">
+                      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                        Contrasena
+                      </span>
+                      <input
+                        className={inputClassName}
+                        type="password"
+                        autoComplete="current-password"
+                        name="password"
+                        placeholder="Ingresa tu contrasena"
+                        value={values.password}
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                      />
+                      {touched.password && errors.password && (
+                        <span className="text-[0.85rem] text-[#972f2f]">
+                          {errors.password}
+                        </span>
+                      )}
+                    </label>
+
+                    <div className="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
+                      <label className="inline-flex items-center gap-2.5 text-[0.94rem] text-brand-text-secondary">
+                        <input
+                          className="h-4 w-4 accent-brand-primary"
+                          type="checkbox"
+                        />
+                        <span>Recordarme</span>
+                      </label>
+                      <button
+                        className="border-0 bg-transparent p-0 font-semibold text-brand-primary"
+                        type="button"
+                      >
+                        Olvide mi contrasena
+                      </button>
+                    </div>
+
                     <button
-                      className="border-0 bg-transparent p-0 font-semibold text-brand-primary"
-                      type="button"
+                      className="inline-flex min-h-[54px] items-center justify-center rounded-2xl bg-brand-primary px-4 text-white font-semibold shadow-brand transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+                      type="submit"
+                      disabled={isSubmitting || isCheckingSession}
                     >
-                      Olvide mi contrasena
+                      {isSubmitting ? 'Ingresando...' : 'Ingresar'}
                     </button>
-                  </div>
 
-                  <button
-                    className="inline-flex min-h-[54px] items-center justify-center rounded-2xl bg-brand-primary px-4 text-white font-semibold shadow-brand transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
-                    type="submit"
-                    disabled={isSubmitting || isCheckingSession}
-                  >
-                    {isSubmitting ? 'Ingresando...' : 'Ingresar'}
-                  </button>
-
-                  <button
-                    className={`${secondaryButtonClassName} mt-2`}
-                    type="button"
-                    onClick={() => {
-                      onClearError();
-                      setValues(demoCredentials);
-                    }}
-                  >
-                    Usar credenciales demo
-                  </button>
-                </form>
-              )}
+                    <button
+                      className={`${secondaryButtonClassName} mt-2`}
+                      type="button"
+                      onClick={() => {
+                        onClearError();
+                        setValues(demoAccessOptions[0].credentials);
+                      }}
+                    >
+                      Cargar acceso administrador
+                    </button>
+                  </form>
+                );
+              }}
             </Formik>
 
             <div className="grid gap-3.5 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-[linear-gradient(180deg,rgba(245,247,247,0.88),#fff)] p-[18px] shadow-panel">
               <div>
                 <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-                  Correo demo
+                  Diferencias por rol
                 </span>
-                <code className="mt-1 block font-mono text-brand-secondary">
-                  {demoCredentials.email}
-                </code>
+                <p className="mt-2 leading-[1.6] text-brand-text-secondary">
+                  Administracion conserva altas y ediciones maestras. Personal
+                  entra a la vista operativa y solo registra ejecuciones de
+                  medicacion.
+                </p>
               </div>
               <div>
                 <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-                  Contrasena demo
+                  Acceso por defecto
                 </span>
                 <code className="mt-1 block font-mono text-brand-secondary">
-                  {demoCredentials.password}
+                  {demoCredentials.email}
                 </code>
               </div>
             </div>

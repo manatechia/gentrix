@@ -10,9 +10,11 @@ const ids = {
   },
   users: {
     sofiaQuiroga: '8f4e8eb5-f02f-49f3-8c1e-e8fba2264ec6',
+    anaGomez: 'ba9c797a-3129-4d80-a2c6-16d846a84e56',
   },
   memberships: {
     sofiaQuirogaDemo: '91000000-0000-4000-8000-000000000003',
+    anaGomezDemo: '91000000-0000-4000-8000-000000000004',
   },
   residents: {
     martaDiaz: 'f3bf3160-6a6e-492f-a632-e7485915a54d',
@@ -130,6 +132,21 @@ export async function seedDatabase(prisma) {
     },
   });
 
+  await prisma.userAccount.create({
+    data: {
+      id: ids.users.anaGomez,
+      fullName: 'Ana Gomez',
+      email: 'ana.gomez@gentrix.local',
+      password: 'gentrix123',
+      role: 'staff',
+      status: 'active',
+      createdAt: new Date('2026-01-10T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
   await prisma.organizationMembership.create({
     data: {
       id: ids.memberships.sofiaQuirogaDemo,
@@ -148,6 +165,32 @@ export async function seedDatabase(prisma) {
           facilityId: ids.facilities.residenciaCentral,
           scopeType: 'assigned',
           createdAt: new Date('2026-01-10T09:00:00.000Z'),
+          createdBy: 'seed-script',
+          updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+          updatedBy: 'seed-script',
+        },
+      },
+    },
+  });
+
+  await prisma.organizationMembership.create({
+    data: {
+      id: ids.memberships.anaGomezDemo,
+      organizationId: ids.organizations.gentrixDemo,
+      userId: ids.users.anaGomez,
+      roleCode: 'staff',
+      status: 'active',
+      isDefault: true,
+      joinedAt: new Date('2026-02-01T08:00:00.000Z'),
+      createdAt: new Date('2026-02-01T08:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+      facilityScopes: {
+        create: {
+          facilityId: ids.facilities.residenciaCentral,
+          scopeType: 'assigned',
+          createdAt: new Date('2026-02-01T08:00:00.000Z'),
           createdBy: 'seed-script',
           updatedAt: new Date('2026-03-20T09:00:00.000Z'),
           updatedBy: 'seed-script',

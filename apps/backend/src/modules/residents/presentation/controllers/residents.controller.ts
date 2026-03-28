@@ -10,6 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 
+import { assertCanManageResidentRecords } from '../../../../common/auth/role-access';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { ResidentLiveProfileQueryService } from '../../application/resident-live-profile.query.service';
 import { ResidentsService } from '../../application/residents.service';
@@ -71,6 +72,7 @@ export class ResidentsController {
     @Body() body: CreateResidentDto,
     @Req() request: RequestWithSession,
   ) {
+    assertCanManageResidentRecords(request.authSession!.user.role);
     const activeFacility = request.authSession!.activeFacility;
 
     if (!activeFacility) {
@@ -93,6 +95,7 @@ export class ResidentsController {
     @Body() body: UpdateResidentDto,
     @Req() request: RequestWithSession,
   ) {
+    assertCanManageResidentRecords(request.authSession!.user.role);
     return this.residentsService.updateResident(
       residentId,
       body,

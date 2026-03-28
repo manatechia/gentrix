@@ -37,6 +37,15 @@ export const seedUsers: SeedUser[] = [
     activeOrganization: seedDefaultOrganization,
     activeFacility: seedDefaultFacility,
   },
+  {
+    id: createEntityId('user', 'ana gomez'),
+    fullName: 'Ana Gomez',
+    email: 'ana.gomez@gentrix.local',
+    password: 'gentrix123',
+    role: 'staff' satisfies AuthRole,
+    activeOrganization: seedDefaultOrganization,
+    activeFacility: seedDefaultFacility,
+  },
 ];
 
 export const seedResidents = [
