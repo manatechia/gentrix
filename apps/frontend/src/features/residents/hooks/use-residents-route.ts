@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { ResidentOverview } from '@gentrix/shared-types';
 
@@ -26,7 +26,7 @@ function dedupeById<T extends { id: string }>(items: T[]): T[] {
 }
 
 export function useResidentsRoute() {
-  const auth = useAuthSession();
+  const { logout, status, token } = useAuthSession();
   const [screenState, setScreenState] =
     useState<DashboardScreenState>('loading');
   const [residents, setResidents] = useState<ResidentOverview[]>([]);
@@ -37,8 +37,8 @@ export function useResidentsRoute() {
     'success' | 'error'
   >('success');
 
-  async function loadResidents(): Promise<void> {
-    if (!auth.token) {
+  const loadResidents = useCallback(async (): Promise<void> => {
+    if (!token) {
       setResidents([]);
       setResidentsError(null);
       setScreenState('loading');
@@ -59,17 +59,17 @@ export function useResidentsRoute() {
       );
 
       if (message === 'Unauthorized.') {
-        await auth.logout();
+        await logout();
         return;
       }
 
       setResidentsError(message);
       setScreenState('error');
     }
-  }
+  }, [logout, token]);
 
   useEffect(() => {
-    if (auth.status !== 'authenticated' || !auth.token) {
+    if (status !== 'authenticated' || !token) {
       setResidents([]);
       setResidentsError(null);
       setScreenState('loading');
@@ -77,20 +77,20 @@ export function useResidentsRoute() {
     }
 
     void loadResidents();
-  }, [auth.status, auth.token]);
+  }, [loadResidents, status, token]);
 
-  async function refreshResidentsInPlace(): Promise<void> {
+  const refreshResidentsInPlace = useCallback(async (): Promise<void> => {
     const payload = await residentsService.getResidents();
     setResidents(dedupeById(unwrapEnvelope(payload)));
     setResidentsError(null);
     setScreenState('ready');
-  }
+  }, []);
 
   async function handleResidentCreate(
     values: ResidentFormValues,
   ): Promise<ResidentOverview | null> {
-    if (!auth.token) {
-      await auth.logout();
+    if (!token) {
+      await logout();
       return null;
     }
 
@@ -119,7 +119,7 @@ export function useResidentsRoute() {
       );
 
       if (message === 'Unauthorized.') {
-        await auth.logout();
+        await logout();
         return null;
       }
 

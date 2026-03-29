@@ -30,11 +30,13 @@ export function Sidebar({
   return (
     <aside
       id="workspace-sidebar"
+      data-testid="workspace-sidebar"
       aria-hidden={isMobileViewport ? !isMobileOpen : undefined}
       className={[
-        'flex min-h-0 flex-col gap-3.5 overflow-y-auto bg-[linear-gradient(180deg,rgba(47,79,79,0.98),rgba(37,63,63,0.98))] px-[18px] py-[22px] text-white shadow-sidebar',
-        'min-[1181px]:sticky min-[1181px]:top-0 min-[1181px]:z-10 min-[1181px]:h-screen min-[1181px]:max-h-screen min-[1181px]:rounded-r-[28px]',
+        'flex min-h-0 flex-col gap-3.5 overflow-x-hidden bg-[linear-gradient(180deg,rgba(47,79,79,0.98),rgba(37,63,63,0.98))] px-[18px] py-[22px] text-white shadow-sidebar',
+        'min-[1181px]:sticky min-[1181px]:top-0 min-[1181px]:z-10 min-[1181px]:h-screen min-[1181px]:max-h-screen min-[1181px]:overflow-hidden min-[1181px]:rounded-r-[28px]',
         'max-[1180px]:fixed max-[1180px]:inset-y-0 max-[1180px]:left-0 max-[1180px]:z-50 max-[1180px]:h-screen max-[1180px]:w-[min(86vw,320px)] max-[1180px]:max-h-screen max-[1180px]:rounded-r-[28px] max-[1180px]:transition-[transform,opacity] max-[1180px]:duration-200 max-[1180px]:ease-out',
+        'max-[1180px]:overflow-y-auto',
         mobileVisibilityClassName,
       ].join(' ')}
     >
@@ -75,80 +77,61 @@ export function Sidebar({
         </strong>
       </div>
 
-      <nav className="shrink-0 grid min-h-0 gap-2">
+      <nav className="grid min-h-0 flex-1 gap-2 overflow-y-auto pr-1">
         {sidebarSections.map((section) => (
-          'path' in section ? (
-            <NavLink
-              key={section.label}
-              to={section.path}
-              end={section.end}
-              onClick={onClose}
-            >
-              {({ isActive }) => (
+          <NavLink
+            key={section.label}
+            to={section.path}
+            end={section.end}
+            onClick={onClose}
+          >
+            {({ isActive }) => (
+              <span
+                className={[
+                  sidebarButtonClassName,
+                  'relative overflow-hidden transition',
+                  isActive
+                    ? 'border-[rgba(171,230,240,0.28)] bg-brand-primary/28 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_30px_rgba(0,102,132,0.18)]'
+                    : 'bg-white/4 hover:bg-white/8',
+                ].join(' ')}
+              >
                 <span
                   className={[
-                    sidebarButtonClassName,
-                    'relative overflow-hidden transition',
+                    'absolute bottom-0 left-0 top-0 w-1 rounded-r-full transition',
+                    isActive ? 'bg-[#d8f5fb]' : 'bg-transparent',
+                  ].join(' ')}
+                />
+                <span
+                  className={[
+                    'grid h-[38px] w-[38px] place-items-center rounded-xl text-[0.78rem] font-bold transition',
                     isActive
-                      ? 'border-[rgba(171,230,240,0.28)] bg-brand-primary/28 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_14px_30px_rgba(0,102,132,0.18)]'
-                      : 'bg-white/4 hover:bg-white/8',
+                      ? 'bg-[rgba(216,245,251,0.18)] text-[#f1fcff]'
+                      : 'bg-white/12 text-white',
                   ].join(' ')}
                 >
-                  <span
+                  {section.badge}
+                </span>
+                <span className="grid gap-1">
+                  <strong
                     className={[
-                      'absolute bottom-0 left-0 top-0 w-1 rounded-r-full transition',
-                      isActive ? 'bg-[#d8f5fb]' : 'bg-transparent',
-                    ].join(' ')}
-                  />
-                  <span
-                    className={[
-                      'grid h-[38px] w-[38px] place-items-center rounded-xl text-[0.78rem] font-bold transition',
-                      isActive
-                        ? 'bg-[rgba(216,245,251,0.18)] text-[#f1fcff]'
-                        : 'bg-white/12 text-white',
+                      'text-[0.9rem] font-semibold transition',
+                      isActive ? 'text-[#f4fdff]' : 'text-white',
                     ].join(' ')}
                   >
-                    {section.badge}
-                  </span>
-                  <span className="grid gap-1">
-                    <strong
-                      className={[
-                        'text-[0.9rem] font-semibold transition',
-                        isActive ? 'text-[#f4fdff]' : 'text-white',
-                      ].join(' ')}
-                    >
-                      {section.label}
-                    </strong>
-                    <span
-                      className={[
-                        'text-[0.84rem] leading-[1.45] transition',
-                        isActive ? 'text-white/88' : 'text-white/72',
-                      ].join(' ')}
-                    >
-                      {section.meta}
-                    </span>
+                    {section.label}
+                  </strong>
+                  <span
+                    className={[
+                      'text-[0.84rem] leading-[1.45] transition',
+                      isActive ? 'text-white/88' : 'text-white/72',
+                    ].join(' ')}
+                  >
+                    {section.meta}
                   </span>
                 </span>
-              )}
-            </NavLink>
-          ) : (
-            <div
-              key={section.label}
-              className={[sidebarButtonClassName, 'bg-white/4'].join(' ')}
-            >
-              <span className="grid h-[38px] w-[38px] place-items-center rounded-xl bg-white/12 text-[0.78rem] font-bold text-white">
-                {section.badge}
               </span>
-              <span className="grid gap-1">
-                <strong className="text-[0.9rem] font-semibold">
-                  {section.label}
-                </strong>
-                <span className="text-[0.84rem] leading-[1.45] text-white/72">
-                  {section.meta}
-                </span>
-              </span>
-            </div>
-          )
+            )}
+          </NavLink>
         ))}
       </nav>
 
@@ -165,6 +148,7 @@ export function Sidebar({
           </span>
         </div>
         <button
+          data-testid="workspace-logout-button"
           className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/14 bg-white/8 px-4 text-white font-semibold transition hover:-translate-y-px hover:border-white/18 hover:bg-white/12"
           type="button"
           onClick={() => {

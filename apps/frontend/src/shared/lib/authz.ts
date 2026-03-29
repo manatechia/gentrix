@@ -14,6 +14,10 @@ export function canManageMedicationOrders(role: AuthRole): boolean {
   return managementRoles.has(role);
 }
 
+export function canManageStaffSchedules(role: AuthRole): boolean {
+  return managementRoles.has(role);
+}
+
 export function canViewResidentAdministrativeData(role: AuthRole): boolean {
   return role !== 'staff';
 }

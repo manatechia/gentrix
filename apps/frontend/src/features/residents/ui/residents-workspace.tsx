@@ -60,7 +60,11 @@ export function ResidentsWorkspace({
         </div>
 
         {canManageRecords ? (
-          <Link className={primaryButtonClassName} to="/residentes/nuevo">
+          <Link
+            className={primaryButtonClassName}
+            data-testid="residents-add-button"
+            to="/residentes/nuevo"
+          >
             Agregar paciente
           </Link>
         ) : (

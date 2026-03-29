@@ -4,8 +4,16 @@
   "sourceRoot": "apps/backend/src",
   "projectType": "application",
   "targets": {
+    "prisma-generate": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node ./node_modules/prisma/build/index.js generate"
+      }
+    },
     "build": {
       "executor": "@nx/esbuild:esbuild",
+      "dependsOn": ["prisma-generate"],
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {

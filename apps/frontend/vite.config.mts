@@ -12,6 +12,7 @@ export default defineConfig(() => {
     process.env.GENTRIX_BACKEND_PROXY_TARGET ?? 'http://localhost:3333';
   const usePolling =
     process.env.GENTRIX_FRONTEND_WATCH_POLLING === 'true';
+  const allowedHosts = ['host.docker.internal'];
 
   return {
     root: import.meta.dirname,
@@ -19,6 +20,7 @@ export default defineConfig(() => {
     server: {
       port: frontendPort,
       host: frontendHost,
+      allowedHosts,
       watch: usePolling
         ? {
             usePolling: true,
@@ -43,6 +45,7 @@ export default defineConfig(() => {
     preview: {
       port: frontendPort,
       host: frontendHost,
+      allowedHosts,
     },
     plugins: [
       tailwindcss(),

@@ -152,7 +152,11 @@ export function MedicationsWorkspace({
           <div className="flex flex-wrap items-center gap-3">
             <span className={primaryButtonClassName}>{heroBadgeText}</span>
             {canManageOrders ? (
-              <Link className={primaryButtonClassName} to="/medicacion/nueva">
+              <Link
+                className={primaryButtonClassName}
+                data-testid="medication-create-button"
+                to="/medicacion/nueva"
+              >
                 Nueva orden
               </Link>
             ) : (

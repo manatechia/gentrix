@@ -1,0 +1,53 @@
+{
+  "name": "frontend-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/frontend-e2e",
+  "projectType": "application",
+  "implicitDependencies": ["frontend", "backend"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --project apps/frontend-e2e/tsconfig.json --noEmit"
+      }
+    },
+    "install-browsers": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "playwright install chromium"
+      }
+    },
+    "stack-up": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "docker compose up -d --build"
+      }
+    },
+    "stack-down": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "docker compose down --remove-orphans"
+      }
+    },
+    "e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["typecheck"],
+      "options": {
+        "command": "playwright test --config apps/frontend-e2e/playwright.config.ts"
+      }
+    },
+    "e2e-headed": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["typecheck"],
+      "options": {
+        "command": "playwright test --headed --config apps/frontend-e2e/playwright.config.ts"
+      }
+    }
+  },
+  "tags": ["scope:app", "type:e2e"]
+}

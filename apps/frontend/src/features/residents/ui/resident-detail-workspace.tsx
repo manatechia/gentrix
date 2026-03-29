@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import type {
   AuthSession,
+  ClinicalHistoryEvent,
+  ClinicalHistoryEventCreateInput,
   ResidentDetail,
   ResidentLiveProfile,
 } from '@gentrix/shared-types';
@@ -29,6 +31,7 @@ import { BackChevronButton } from '../../../shared/ui/back-chevron-button';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
+import { ClinicalHistoryPanel } from './clinical-history-panel';
 import { ResidentLiveProfilePanel } from './resident-live-profile-panel';
 
 interface ResidentDetailWorkspaceProps {
@@ -37,9 +40,16 @@ interface ResidentDetailWorkspaceProps {
   residentCount: number;
   resident: ResidentDetail | null;
   residentLiveProfile: ResidentLiveProfile | null;
+  clinicalHistory: ClinicalHistoryEvent[];
   residentError: string | null;
+  isSavingClinicalHistoryEvent: boolean;
+  clinicalHistoryNoticeTone: 'success' | 'error';
+  clinicalHistoryNotice: string | null;
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
+  onClinicalHistoryCreate: (
+    input: ClinicalHistoryEventCreateInput,
+  ) => Promise<ClinicalHistoryEvent | null>;
 }
 
 interface DetailFieldProps {
@@ -107,9 +117,14 @@ export function ResidentDetailWorkspace({
   residentCount,
   resident,
   residentLiveProfile,
+  clinicalHistory,
   residentError,
+  isSavingClinicalHistoryEvent,
+  clinicalHistoryNoticeTone,
+  clinicalHistoryNotice,
   onLogout,
   onRetry,
+  onClinicalHistoryCreate,
 }: ResidentDetailWorkspaceProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -134,7 +149,7 @@ export function ResidentDetailWorkspace({
         },
         {
           label: 'Edad',
-          value: `${resident.age} años`,
+          value: `${resident.age} anios`,
         },
       ]
     : [];
@@ -214,6 +229,7 @@ export function ResidentDetailWorkspace({
         <div className="flex flex-wrap gap-3">
           {resident && canManageRecords ? (
             <Link
+              data-testid="resident-edit-button"
               className={primaryButtonClassName}
               to={`/residentes/${resident.id}/editar`}
             >
@@ -621,38 +637,13 @@ export function ResidentDetailWorkspace({
           )}
 
           <section className="grid gap-[18px] min-[980px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <article className={surfaceCardClassName}>
-              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                Historial medico
-              </span>
-
-              {resident.medicalHistory.length === 0 ? (
-                <p className="mt-4 leading-[1.65] text-brand-text-secondary">
-                  No hay antecedentes medicos cargados todavia.
-                </p>
-              ) : (
-                <div className="mt-4 grid gap-3">
-                  {resident.medicalHistory.map((entry) => (
-                    <article
-                      key={entry.id}
-                      className="rounded-[22px] bg-brand-neutral px-4 py-4"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <strong className="text-brand-text">
-                          {entry.title}
-                        </strong>
-                        <span className="text-[0.9rem] text-brand-text-secondary">
-                          {formatDate(entry.recordedAt)}
-                        </span>
-                      </div>
-                      <p className="mt-2 leading-[1.6] text-brand-text-secondary">
-                        {entry.notes}
-                      </p>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </article>
+            <ClinicalHistoryPanel
+              events={clinicalHistory}
+              isSavingEvent={isSavingClinicalHistoryEvent}
+              notice={clinicalHistoryNotice}
+              noticeTone={clinicalHistoryNoticeTone}
+              onCreate={onClinicalHistoryCreate}
+            />
 
             {canViewAdministrativeData && (
               <article className={surfaceCardClassName}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { DashboardSnapshot } from '@gentrix/shared-types';
 
@@ -24,14 +24,14 @@ function dedupeById<T extends { id: string }>(items: T[]): T[] {
 }
 
 export function useDashboardRoute() {
-  const auth = useAuthSession();
+  const { logout, status, token } = useAuthSession();
   const [screenState, setScreenState] =
     useState<DashboardScreenState>('loading');
   const [dashboard, setDashboard] = useState<DashboardSnapshot | null>(null);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
-  async function loadDashboard(): Promise<void> {
-    if (!auth.token) {
+  const loadDashboard = useCallback(async (): Promise<void> => {
+    if (!token) {
       setDashboard(null);
       setDashboardError(null);
       setScreenState('loading');
@@ -52,17 +52,17 @@ export function useDashboardRoute() {
       );
 
       if (message === 'Unauthorized.') {
-        await auth.logout();
+        await logout();
         return;
       }
 
       setDashboardError(message);
       setScreenState('error');
     }
-  }
+  }, [logout, token]);
 
   useEffect(() => {
-    if (auth.status !== 'authenticated' || !auth.token) {
+    if (status !== 'authenticated' || !token) {
       setDashboard(null);
       setDashboardError(null);
       setScreenState('loading');
@@ -70,14 +70,7 @@ export function useDashboardRoute() {
     }
 
     void loadDashboard();
-  }, [auth.status, auth.token]);
-
-  async function refreshDashboardInPlace(): Promise<void> {
-    const payload = await dashboardService.getDashboardSnapshot();
-    setDashboard(unwrapEnvelope(payload));
-    setDashboardError(null);
-    setScreenState('ready');
-  }
+  }, [loadDashboard, status, token]);
 
   const medications = useMemo(
     () => dedupeById(dashboard?.medications ?? []),
@@ -90,6 +83,6 @@ export function useDashboardRoute() {
     dashboardError,
     medications,
     residentCount: dashboard?.summary.residentCount ?? 0,
-    handleRetry: refreshDashboardInPlace,
+    handleRetry: loadDashboard,
   };
 }

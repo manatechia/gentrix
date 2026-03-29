@@ -272,7 +272,7 @@ export interface ResidentBaseUpdateInput
   extends ResidentBaseProfileInput,
     ResidentCurrentStateInput {}
 
-export interface ResidentUpdateInput extends ResidentBaseUpdateInput {}
+export type ResidentUpdateInput = ResidentBaseUpdateInput;
 
 /**
  * ResidentEvent is the stable API/domain contract for the resident timeline.
@@ -331,6 +331,27 @@ export interface StaffOverview {
   assignment: string;
   status: EntityStatus;
 }
+
+export interface StaffSchedule {
+  id: EntityId;
+  staffId: EntityId;
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  exceptionDate?: IsoDateString;
+  coverageNote?: string;
+  audit: AuditTrail;
+}
+
+export interface StaffScheduleCreateInput {
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  exceptionDate?: IsoDateString;
+  coverageNote?: string;
+}
+
+export type StaffScheduleUpdateInput = StaffScheduleCreateInput;
 
 export type MedicationRoute =
   | 'oral'
@@ -407,7 +428,24 @@ export interface MedicationCreateInput {
  * Updating a medication order changes the active prescription, not what happened
  * to a concrete dose at a specific time.
  */
-export interface MedicationUpdateInput extends MedicationCreateInput {}
+export type MedicationUpdateInput = MedicationCreateInput;
+
+export interface ClinicalHistoryEvent {
+  id: EntityId;
+  residentId: EntityId;
+  eventType: string;
+  title: string;
+  description: string;
+  occurredAt: IsoDateString;
+  audit: AuditTrail;
+}
+
+export interface ClinicalHistoryEventCreateInput {
+  eventType: string;
+  title: string;
+  description: string;
+  occurredAt: IsoDateString;
+}
 
 export type MedicationExecutionResult = 'administered' | 'omitted' | 'rejected';
 

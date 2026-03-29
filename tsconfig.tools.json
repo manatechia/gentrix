@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "types": ["node", "vitest"]
+  },
+  "include": [
+    "prisma.config.ts",
+    "apps/frontend/vite.config.mts",
+    "apps/frontend-e2e/playwright.config.ts"
+  ]
+}

@@ -35,6 +35,9 @@ RUN pnpm nx run frontend:build
 FROM workspace AS frontend-dev
 
 ENV NODE_ENV=development
+
+RUN pnpm exec playwright install-deps chromium && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 4200
 
 CMD ["pnpm", "nx", "serve", "frontend", "--host", "0.0.0.0"]

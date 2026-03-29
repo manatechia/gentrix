@@ -1,4 +1,4 @@
-import { FieldArray, Formik, getIn } from 'formik';
+import { FieldArray, Formik, getIn, type FormikProps } from 'formik';
 import {
   useMemo,
   useEffect,
@@ -53,6 +53,7 @@ import { SelectField } from '../../../shared/ui/select-field';
 interface AdmissionsPanelProps {
   mode?: 'create' | 'edit';
   initialValues?: ResidentFormValues;
+  showMedicalHistorySection?: boolean;
   isSavingResident: boolean;
   residentCount: number;
   residentNoticeTone: 'success' | 'error';
@@ -290,6 +291,26 @@ function getAttachmentsError(errors: unknown): string | null {
     : null;
 }
 
+type ResidentFormSectionState = Pick<
+  FormikProps<ResidentFormValues>,
+  | 'errors'
+  | 'handleBlur'
+  | 'handleChange'
+  | 'setFieldTouched'
+  | 'setFieldValue'
+  | 'touched'
+  | 'values'
+>;
+
+interface HealthAndMedicalSectionProps {
+  form: ResidentFormSectionState;
+  showMedicalHistorySection: boolean;
+}
+
+interface FamilyContactsSectionProps {
+  form: ResidentFormSectionState;
+}
+
 function getCuitMessage(errors: unknown, touched: unknown): string | undefined {
   return (
     getFieldMessage(errors, touched, 'cuitPrefix') ??
@@ -297,9 +318,552 @@ function getCuitMessage(errors: unknown, touched: unknown): string | undefined {
   );
 }
 
+function HealthAndMedicalSection({
+  form,
+  showMedicalHistorySection,
+}: HealthAndMedicalSectionProps) {
+  const {
+    errors,
+    handleBlur,
+    handleChange,
+    setFieldTouched,
+    setFieldValue,
+    touched,
+    values,
+  } = form;
+
+  return (
+    <FieldArray name="medicalHistory">
+      {({ push, remove }) => (
+        <CollapsibleSection
+          title="Salud y seguimiento medico"
+          description="Alergias, medico de cabecera, patologias, habitos y antecedentes del paciente."
+          defaultOpen
+        >
+          <article className={innerPanelClassName}>
+            <div className="grid gap-[14px] min-[980px]:grid-cols-3">
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Alergias
+                </span>
+                <textarea
+                  className={`${textareaClassName} min-h-[110px]`}
+                  name="clinicalProfile.allergies"
+                  value={values.clinicalProfile.allergies}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ValidationMessage />
+              </label>
+
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Lugar atencion emergencia
+                </span>
+                <input
+                  className={inputClassName}
+                  type="text"
+                  name="clinicalProfile.emergencyCareLocation"
+                  value={values.clinicalProfile.emergencyCareLocation}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ValidationMessage />
+              </label>
+
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Hist clinica
+                </span>
+                <input
+                  className={inputClassName}
+                  type="text"
+                  name="clinicalProfile.clinicalRecordNumber"
+                  value={values.clinicalProfile.clinicalRecordNumber}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ValidationMessage />
+              </label>
+            </div>
+
+            <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-3">
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Medico cabecera
+                </span>
+                <input
+                  className={inputClassName}
+                  type="text"
+                  name="clinicalProfile.primaryDoctorName"
+                  value={values.clinicalProfile.primaryDoctorName}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ValidationMessage />
+              </label>
+
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Domicilio consultorio
+                </span>
+                <input
+                  className={inputClassName}
+                  type="text"
+                  name="clinicalProfile.primaryDoctorOfficeAddress"
+                  value={values.clinicalProfile.primaryDoctorOfficeAddress}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ValidationMessage />
+              </label>
+
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Telefono consultorio
+                </span>
+                <input
+                  className={inputClassName}
+                  type="text"
+                  name="clinicalProfile.primaryDoctorOfficePhone"
+                  value={values.clinicalProfile.primaryDoctorOfficePhone}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ValidationMessage />
+              </label>
+            </div>
+
+            <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-2">
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Patologias
+                </span>
+                <textarea
+                  className={textareaClassName}
+                  name="clinicalProfile.pathologies"
+                  value={values.clinicalProfile.pathologies}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ValidationMessage />
+              </label>
+
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Operaciones, cirugias y otros antecedentes
+                </span>
+                <textarea
+                  className={textareaClassName}
+                  name="clinicalProfile.surgeries"
+                  value={values.clinicalProfile.surgeries}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ValidationMessage />
+              </label>
+            </div>
+
+            <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-3">
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Fuma
+                </span>
+                <SelectField
+                  name="clinicalProfile.smokes"
+                  value={values.clinicalProfile.smokes}
+                  options={residentBooleanAnswerOptions}
+                  allowEmptyOption
+                  onBlur={() => {
+                    void setFieldTouched('clinicalProfile.smokes', true);
+                  }}
+                  onChange={(nextValue) => {
+                    void setFieldValue('clinicalProfile.smokes', nextValue);
+                  }}
+                />
+                <ValidationMessage />
+              </label>
+
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Bebe alcohol
+                </span>
+                <SelectField
+                  name="clinicalProfile.drinksAlcohol"
+                  value={values.clinicalProfile.drinksAlcohol}
+                  options={residentBooleanAnswerOptions}
+                  allowEmptyOption
+                  onBlur={() => {
+                    void setFieldTouched(
+                      'clinicalProfile.drinksAlcohol',
+                      true,
+                    );
+                  }}
+                  onChange={(nextValue) => {
+                    void setFieldValue(
+                      'clinicalProfile.drinksAlcohol',
+                      nextValue,
+                    );
+                  }}
+                />
+                <ValidationMessage />
+              </label>
+
+              <label className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  Peso del corriente mes
+                </span>
+                <input
+                  className={inputClassName}
+                  type="text"
+                  name="clinicalProfile.currentWeightKg"
+                  value={values.clinicalProfile.currentWeightKg}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  placeholder="Ej. 62.5"
+                />
+                <ValidationMessage
+                  message={getFieldMessage(
+                    errors,
+                    touched,
+                    'clinicalProfile.currentWeightKg',
+                  )}
+                />
+              </label>
+            </div>
+          </article>
+
+          {showMedicalHistorySection ? (
+            <article className={innerPanelClassName}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                  Historial medico
+                </span>
+                <button
+                  className={secondaryButtonClassName}
+                  type="button"
+                  onClick={() => push(createEmptyMedicalHistoryEntry())}
+                >
+                  Agregar antecedente
+                </button>
+              </div>
+
+              <ValidationMessage
+                message={getArrayError(errors, 'medicalHistory')}
+              />
+
+              {values.medicalHistory.length === 0 ? (
+                <div className="rounded-[24px] border border-dashed border-[rgba(0,102,132,0.22)] bg-white/70 px-5 py-5 text-brand-text-secondary">
+                  Todavia no cargaste antecedentes. Puedes sumar diagnosticos,
+                  cirugias, internaciones o notas clinicas relevantes para el
+                  ingreso.
+                </div>
+              ) : (
+                <div className="grid gap-[14px]">
+                  {values.medicalHistory.map((entry, index) => {
+                    const entryErrors = getEntryErrors(errors, index);
+                    const entryTouched = getEntryTouched(touched, index);
+
+                    return (
+                      <article
+                        key={entry.localId}
+                        className="rounded-[24px] border border-[rgba(0,102,132,0.08)] bg-white/70 p-5"
+                      >
+                        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                            Antecedente {index + 1}
+                          </span>
+                          <button
+                            className={secondaryButtonClassName}
+                            type="button"
+                            onClick={() => remove(index)}
+                          >
+                            Quitar
+                          </button>
+                        </div>
+
+                        <div className="grid gap-[14px] min-[980px]:grid-cols-[220px_minmax(0,1fr)]">
+                          <label className="grid gap-2.5">
+                            <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                              Fecha del antecedente
+                            </span>
+                            <input
+                              className={inputClassName}
+                              type="text"
+                              name={`medicalHistory.${index}.recordedAt`}
+                              inputMode="numeric"
+                              maxLength={10}
+                              placeholder="DD/MM/YYYY"
+                              value={entry.recordedAt}
+                              onBlur={handleBlur}
+                              onChange={(event) => {
+                                void setFieldValue(
+                                  `medicalHistory.${index}.recordedAt`,
+                                  formatResidentDateInput(event.target.value),
+                                );
+                              }}
+                            />
+                            <ValidationMessage
+                              message={
+                                entryTouched.recordedAt
+                                  ? entryErrors.recordedAt
+                                  : undefined
+                              }
+                            />
+                          </label>
+
+                          <label className="grid gap-2.5">
+                            <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                              Titulo
+                            </span>
+                            <input
+                              className={inputClassName}
+                              type="text"
+                              name={`medicalHistory.${index}.title`}
+                              value={entry.title}
+                              onBlur={handleBlur}
+                              onChange={handleChange}
+                            />
+                            <ValidationMessage
+                              message={
+                                entryTouched.title
+                                  ? entryErrors.title
+                                  : undefined
+                              }
+                            />
+                          </label>
+                        </div>
+
+                        <label className="mt-[14px] grid gap-2.5">
+                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                            Detalle
+                          </span>
+                          <textarea
+                            className={textareaClassName}
+                            name={`medicalHistory.${index}.notes`}
+                            value={entry.notes}
+                            onBlur={handleBlur}
+                            onChange={handleChange}
+                          />
+                          <ValidationMessage
+                            message={
+                              entryTouched.notes
+                                ? entryErrors.notes
+                                : undefined
+                            }
+                          />
+                        </label>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </article>
+          ) : (
+            <article className={innerPanelClassName}>
+              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                Historial medico
+              </span>
+              <p className="mt-3 leading-[1.65] text-brand-text-secondary">
+                El historial cronologico ya no se edita desde este formulario.
+                Puedes agregar nuevos eventos desde la ficha del residente para
+                conservar el registro append-only.
+              </p>
+            </article>
+          )}
+        </CollapsibleSection>
+      )}
+    </FieldArray>
+  );
+}
+
+function FamilyContactsSection({ form }: FamilyContactsSectionProps) {
+  const { errors, handleBlur, handleChange, touched, values } = form;
+
+  return (
+    <FieldArray name="familyContacts">
+      {({ push, remove }) => (
+        <CollapsibleSection
+          title="Familiares y contactos"
+          description="Permite cargar uno o varios contactos de referencia con parentesco, telefono, direccion y notas."
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+              Contactos familiares
+            </span>
+            <button
+              className={secondaryButtonClassName}
+              type="button"
+              onClick={() => push(createEmptyFamilyContact())}
+            >
+              Agregar familiar
+            </button>
+          </div>
+
+          <ValidationMessage
+            message={getArrayError(errors, 'familyContacts')}
+          />
+
+          {values.familyContacts.length === 0 ? (
+            <div className="rounded-[24px] border border-dashed border-[rgba(0,102,132,0.22)] bg-brand-neutral/60 px-5 py-5 text-brand-text-secondary">
+              Aun no cargaste familiares. Puedes agregar hijos, apoderados,
+              referentes o cualquier contacto relevante.
+            </div>
+          ) : (
+            <div className="grid gap-[14px]">
+              {values.familyContacts.map((contact, index) => {
+                const contactErrors = getFamilyContactErrors(errors, index);
+                const contactTouched = getFamilyContactTouched(touched, index);
+
+                return (
+                  <article
+                    key={contact.localId}
+                    className={innerPanelClassName}
+                  >
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                        Familiar {index + 1}
+                      </span>
+                      <button
+                        className={secondaryButtonClassName}
+                        type="button"
+                        onClick={() => remove(index)}
+                      >
+                        Quitar
+                      </button>
+                    </div>
+
+                    <div className="grid gap-[14px] min-[980px]:grid-cols-3">
+                      <label className="grid gap-2.5">
+                        <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                          Nombre y apellido
+                        </span>
+                        <input
+                          className={inputClassName}
+                          type="text"
+                          name={`familyContacts.${index}.fullName`}
+                          value={contact.fullName}
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                        />
+                        <ValidationMessage
+                          message={
+                            contactTouched.fullName
+                              ? contactErrors.fullName
+                              : undefined
+                          }
+                        />
+                      </label>
+
+                      <label className="grid gap-2.5">
+                        <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                          Relacion
+                        </span>
+                        <input
+                          className={inputClassName}
+                          type="text"
+                          name={`familyContacts.${index}.relationship`}
+                          value={contact.relationship}
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                        />
+                        <ValidationMessage
+                          message={
+                            contactTouched.relationship
+                              ? contactErrors.relationship
+                              : undefined
+                          }
+                        />
+                      </label>
+
+                      <label className="grid gap-2.5">
+                        <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                          Telefono
+                        </span>
+                        <input
+                          className={inputClassName}
+                          type="text"
+                          name={`familyContacts.${index}.phone`}
+                          value={contact.phone}
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                        />
+                        <ValidationMessage
+                          message={
+                            contactTouched.phone
+                              ? contactErrors.phone
+                              : undefined
+                          }
+                        />
+                      </label>
+                    </div>
+
+                    <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-2">
+                      <label className="grid gap-2.5">
+                        <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                          Correo electronico
+                        </span>
+                        <input
+                          className={inputClassName}
+                          type="email"
+                          name={`familyContacts.${index}.email`}
+                          value={contact.email}
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                        />
+                        <ValidationMessage
+                          message={
+                            contactTouched.email
+                              ? contactErrors.email
+                              : undefined
+                          }
+                        />
+                      </label>
+
+                      <label className="grid gap-2.5">
+                        <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                          Direccion
+                        </span>
+                        <input
+                          className={inputClassName}
+                          type="text"
+                          name={`familyContacts.${index}.address`}
+                          value={contact.address}
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                        />
+                        <ValidationMessage />
+                      </label>
+                    </div>
+
+                    <label className="mt-[14px] grid gap-2.5">
+                      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                        Notas
+                      </span>
+                      <textarea
+                        className={`${textareaClassName} min-h-[110px]`}
+                        name={`familyContacts.${index}.notes`}
+                        value={contact.notes}
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                      />
+                      <ValidationMessage />
+                    </label>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </CollapsibleSection>
+      )}
+    </FieldArray>
+  );
+}
+
 export function AdmissionsPanel({
   mode = 'create',
   initialValues,
+  showMedicalHistorySection = true,
   isSavingResident,
   residentCount,
   residentNoticeTone,
@@ -455,6 +1019,9 @@ export function AdmissionsPanel({
 
           return (
             <form
+              data-testid={
+                mode === 'edit' ? 'resident-edit-form' : 'resident-create-form'
+              }
               className="mt-[18px] grid gap-[18px]"
               noValidate
               onSubmit={(event: FormEvent<HTMLFormElement>) => {
@@ -474,6 +1041,7 @@ export function AdmissionsPanel({
                       Fecha ingreso
                     </span>
                     <input
+                      data-testid="resident-admission-date-input"
                       className={inputClassName}
                       type="text"
                       name="admissionDate"
@@ -503,6 +1071,7 @@ export function AdmissionsPanel({
                       Habitacion / cama
                     </span>
                     <input
+                      data-testid="resident-room-input"
                       className={inputClassName}
                       type="text"
                       name="room"
@@ -521,6 +1090,7 @@ export function AdmissionsPanel({
                     </span>
                     <SelectField
                       name="careLevel"
+                      testId="resident-care-level-select"
                       value={values.careLevel}
                       options={residentCareLevelOptions}
                       onBlur={() => {
@@ -543,6 +1113,7 @@ export function AdmissionsPanel({
                     </span>
                     <SelectField
                       name="documentType"
+                      testId="resident-document-type-select"
                       value={values.documentType}
                       options={residentDocumentTypeOptions}
                       allowEmptyOption
@@ -563,6 +1134,7 @@ export function AdmissionsPanel({
                       DNI / documento
                     </span>
                     <input
+                      data-testid="resident-document-number-input"
                       className={inputClassName}
                       type="text"
                       name="documentNumber"
@@ -685,6 +1257,7 @@ export function AdmissionsPanel({
                       Nombre
                     </span>
                     <input
+                      data-testid="resident-first-name-input"
                       className={inputClassName}
                       type="text"
                       name="firstName"
@@ -720,6 +1293,7 @@ export function AdmissionsPanel({
                       Apellido
                     </span>
                     <input
+                      data-testid="resident-last-name-input"
                       className={inputClassName}
                       type="text"
                       name="lastName"
@@ -754,6 +1328,7 @@ export function AdmissionsPanel({
                       Fecha nacimiento
                     </span>
                     <input
+                      data-testid="resident-birth-date-input"
                       className={inputClassName}
                       type="text"
                       name="birthDate"
@@ -794,6 +1369,7 @@ export function AdmissionsPanel({
                     </span>
                     <SelectField
                       name="sex"
+                      testId="resident-sex-select"
                       value={values.sex}
                       options={residentSexOptions}
                       allowEmptyOption
@@ -1027,522 +1603,30 @@ export function AdmissionsPanel({
                 </div>
               </CollapsibleSection>
 
-              <FieldArray name="medicalHistory">
-                {({ push, remove }) => (
-                  <CollapsibleSection
-                    title="Salud y seguimiento medico"
-                    description="Alergias, medico de cabecera, patologias, habitos y antecedentes del paciente."
-                    defaultOpen
-                  >
-                    <article className={innerPanelClassName}>
-                      <div className="grid gap-[14px] min-[980px]:grid-cols-3">
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Alergias
-                          </span>
-                          <textarea
-                            className={`${textareaClassName} min-h-[110px]`}
-                            name="clinicalProfile.allergies"
-                            value={values.clinicalProfile.allergies}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                          />
-                          <ValidationMessage />
-                        </label>
+              <HealthAndMedicalSection
+                form={{
+                  values,
+                  errors,
+                  touched,
+                  handleBlur,
+                  handleChange,
+                  setFieldTouched,
+                  setFieldValue,
+                }}
+                showMedicalHistorySection={showMedicalHistorySection}
+              />
 
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Lugar atencion emergencia
-                          </span>
-                          <input
-                            className={inputClassName}
-                            type="text"
-                            name="clinicalProfile.emergencyCareLocation"
-                            value={values.clinicalProfile.emergencyCareLocation}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                          />
-                          <ValidationMessage />
-                        </label>
-
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Hist clinica
-                          </span>
-                          <input
-                            className={inputClassName}
-                            type="text"
-                            name="clinicalProfile.clinicalRecordNumber"
-                            value={values.clinicalProfile.clinicalRecordNumber}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                          />
-                          <ValidationMessage />
-                        </label>
-                      </div>
-
-                      <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-3">
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Medico cabecera
-                          </span>
-                          <input
-                            className={inputClassName}
-                            type="text"
-                            name="clinicalProfile.primaryDoctorName"
-                            value={values.clinicalProfile.primaryDoctorName}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                          />
-                          <ValidationMessage />
-                        </label>
-
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Domicilio consultorio
-                          </span>
-                          <input
-                            className={inputClassName}
-                            type="text"
-                            name="clinicalProfile.primaryDoctorOfficeAddress"
-                            value={values.clinicalProfile.primaryDoctorOfficeAddress}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                          />
-                          <ValidationMessage />
-                        </label>
-
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Telefono consultorio
-                          </span>
-                          <input
-                            className={inputClassName}
-                            type="text"
-                            name="clinicalProfile.primaryDoctorOfficePhone"
-                            value={values.clinicalProfile.primaryDoctorOfficePhone}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                          />
-                          <ValidationMessage />
-                        </label>
-                      </div>
-
-                      <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-2">
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Patologias
-                          </span>
-                          <textarea
-                            className={textareaClassName}
-                            name="clinicalProfile.pathologies"
-                            value={values.clinicalProfile.pathologies}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                          />
-                          <ValidationMessage />
-                        </label>
-
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Operaciones, cirugias y otros antecedentes
-                          </span>
-                          <textarea
-                            className={textareaClassName}
-                            name="clinicalProfile.surgeries"
-                            value={values.clinicalProfile.surgeries}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                          />
-                          <ValidationMessage />
-                        </label>
-                      </div>
-
-                      <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-3">
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Fuma
-                          </span>
-                          <SelectField
-                            name="clinicalProfile.smokes"
-                            value={values.clinicalProfile.smokes}
-                            options={residentBooleanAnswerOptions}
-                            allowEmptyOption
-                            onBlur={() => {
-                              void setFieldTouched('clinicalProfile.smokes', true);
-                            }}
-                            onChange={(nextValue) => {
-                              void setFieldValue(
-                                'clinicalProfile.smokes',
-                                nextValue,
-                              );
-                            }}
-                          />
-                          <ValidationMessage />
-                        </label>
-
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Bebe alcohol
-                          </span>
-                          <SelectField
-                            name="clinicalProfile.drinksAlcohol"
-                            value={values.clinicalProfile.drinksAlcohol}
-                            options={residentBooleanAnswerOptions}
-                            allowEmptyOption
-                            onBlur={() => {
-                              void setFieldTouched(
-                                'clinicalProfile.drinksAlcohol',
-                                true,
-                              );
-                            }}
-                            onChange={(nextValue) => {
-                              void setFieldValue(
-                                'clinicalProfile.drinksAlcohol',
-                                nextValue,
-                              );
-                            }}
-                          />
-                          <ValidationMessage />
-                        </label>
-
-                        <label className="grid gap-2.5">
-                          <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                            Peso del corriente mes
-                          </span>
-                          <input
-                            className={inputClassName}
-                            type="text"
-                            name="clinicalProfile.currentWeightKg"
-                            value={values.clinicalProfile.currentWeightKg}
-                            onBlur={handleBlur}
-                            onChange={handleChange}
-                            placeholder="Ej. 62.5"
-                          />
-                          <ValidationMessage
-                            message={getFieldMessage(
-                              errors,
-                              touched,
-                              'clinicalProfile.currentWeightKg',
-                            )}
-                          />
-                        </label>
-                      </div>
-                    </article>
-
-                    <article className={innerPanelClassName}>
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                          Historial medico
-                        </span>
-                        <button
-                          className={secondaryButtonClassName}
-                          type="button"
-                          onClick={() => push(createEmptyMedicalHistoryEntry())}
-                        >
-                          Agregar antecedente
-                        </button>
-                      </div>
-
-                      <ValidationMessage
-                        message={getArrayError(errors, 'medicalHistory')}
-                      />
-
-                      {values.medicalHistory.length === 0 ? (
-                        <div className="rounded-[24px] border border-dashed border-[rgba(0,102,132,0.22)] bg-white/70 px-5 py-5 text-brand-text-secondary">
-                          Todavia no cargaste antecedentes. Puedes sumar
-                          diagnosticos, cirugias, internaciones o notas
-                          clinicas relevantes para el ingreso.
-                        </div>
-                      ) : (
-                        <div className="grid gap-[14px]">
-                          {values.medicalHistory.map((entry, index) => {
-                            const entryErrors = getEntryErrors(errors, index);
-                            const entryTouched = getEntryTouched(touched, index);
-
-                            return (
-                              <article
-                                key={entry.localId}
-                                className="rounded-[24px] border border-[rgba(0,102,132,0.08)] bg-white/70 p-5"
-                              >
-                                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                                  <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                    Antecedente {index + 1}
-                                  </span>
-                                  <button
-                                    className={secondaryButtonClassName}
-                                    type="button"
-                                    onClick={() => remove(index)}
-                                  >
-                                    Quitar
-                                  </button>
-                                </div>
-
-                                <div className="grid gap-[14px] min-[980px]:grid-cols-[220px_minmax(0,1fr)]">
-                                  <label className="grid gap-2.5">
-                                    <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                      Fecha del antecedente
-                                    </span>
-                                    <input
-                                      className={inputClassName}
-                                      type="text"
-                                      name={`medicalHistory.${index}.recordedAt`}
-                                      inputMode="numeric"
-                                      maxLength={10}
-                                      placeholder="DD/MM/YYYY"
-                                      value={entry.recordedAt}
-                                      onBlur={handleBlur}
-                                      onChange={(event) => {
-                                        void setFieldValue(
-                                          `medicalHistory.${index}.recordedAt`,
-                                          formatResidentDateInput(
-                                            event.target.value,
-                                          ),
-                                        );
-                                      }}
-                                    />
-                                    <ValidationMessage
-                                      message={
-                                        entryTouched.recordedAt
-                                          ? entryErrors.recordedAt
-                                          : undefined
-                                      }
-                                    />
-                                  </label>
-
-                                  <label className="grid gap-2.5">
-                                    <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                      Titulo
-                                    </span>
-                                    <input
-                                      className={inputClassName}
-                                      type="text"
-                                      name={`medicalHistory.${index}.title`}
-                                      value={entry.title}
-                                      onBlur={handleBlur}
-                                      onChange={handleChange}
-                                    />
-                                    <ValidationMessage
-                                      message={
-                                        entryTouched.title
-                                          ? entryErrors.title
-                                          : undefined
-                                      }
-                                    />
-                                  </label>
-                                </div>
-
-                                <label className="mt-[14px] grid gap-2.5">
-                                  <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                    Detalle
-                                  </span>
-                                  <textarea
-                                    className={textareaClassName}
-                                    name={`medicalHistory.${index}.notes`}
-                                    value={entry.notes}
-                                    onBlur={handleBlur}
-                                    onChange={handleChange}
-                                  />
-                                  <ValidationMessage
-                                    message={
-                                      entryTouched.notes
-                                        ? entryErrors.notes
-                                        : undefined
-                                    }
-                                  />
-                                </label>
-                              </article>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </article>
-                  </CollapsibleSection>
-                )}
-              </FieldArray>
-
-              <FieldArray name="familyContacts">
-                {({ push, remove }) => (
-                  <CollapsibleSection
-                    title="Familiares y contactos"
-                    description="Permite cargar uno o varios contactos de referencia con parentesco, telefono, direccion y notas."
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                        Contactos familiares
-                      </span>
-                      <button
-                        className={secondaryButtonClassName}
-                        type="button"
-                        onClick={() => push(createEmptyFamilyContact())}
-                      >
-                        Agregar familiar
-                      </button>
-                    </div>
-
-                    <ValidationMessage
-                      message={getArrayError(errors, 'familyContacts')}
-                    />
-
-                    {values.familyContacts.length === 0 ? (
-                      <div className="rounded-[24px] border border-dashed border-[rgba(0,102,132,0.22)] bg-brand-neutral/60 px-5 py-5 text-brand-text-secondary">
-                        Aun no cargaste familiares. Puedes agregar hijos,
-                        apoderados, referentes o cualquier contacto relevante.
-                      </div>
-                    ) : (
-                      <div className="grid gap-[14px]">
-                        {values.familyContacts.map((contact, index) => {
-                          const contactErrors = getFamilyContactErrors(
-                            errors,
-                            index,
-                          );
-                          const contactTouched = getFamilyContactTouched(
-                            touched,
-                            index,
-                          );
-
-                          return (
-                            <article
-                              key={contact.localId}
-                              className={innerPanelClassName}
-                            >
-                              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                  Familiar {index + 1}
-                                </span>
-                                <button
-                                  className={secondaryButtonClassName}
-                                  type="button"
-                                  onClick={() => remove(index)}
-                                >
-                                  Quitar
-                                </button>
-                              </div>
-
-                              <div className="grid gap-[14px] min-[980px]:grid-cols-3">
-                                <label className="grid gap-2.5">
-                                  <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                    Nombre y apellido
-                                  </span>
-                                  <input
-                                    className={inputClassName}
-                                    type="text"
-                                    name={`familyContacts.${index}.fullName`}
-                                    value={contact.fullName}
-                                    onBlur={handleBlur}
-                                    onChange={handleChange}
-                                  />
-                                  <ValidationMessage
-                                    message={
-                                      contactTouched.fullName
-                                        ? contactErrors.fullName
-                                        : undefined
-                                    }
-                                  />
-                                </label>
-
-                                <label className="grid gap-2.5">
-                                  <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                    Relacion
-                                  </span>
-                                  <input
-                                    className={inputClassName}
-                                    type="text"
-                                    name={`familyContacts.${index}.relationship`}
-                                    value={contact.relationship}
-                                    onBlur={handleBlur}
-                                    onChange={handleChange}
-                                  />
-                                  <ValidationMessage
-                                    message={
-                                      contactTouched.relationship
-                                        ? contactErrors.relationship
-                                        : undefined
-                                    }
-                                  />
-                                </label>
-
-                                <label className="grid gap-2.5">
-                                  <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                    Telefono
-                                  </span>
-                                  <input
-                                    className={inputClassName}
-                                    type="text"
-                                    name={`familyContacts.${index}.phone`}
-                                    value={contact.phone}
-                                    onBlur={handleBlur}
-                                    onChange={handleChange}
-                                  />
-                                  <ValidationMessage
-                                    message={
-                                      contactTouched.phone
-                                        ? contactErrors.phone
-                                        : undefined
-                                    }
-                                  />
-                                </label>
-                              </div>
-
-                              <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-2">
-                                <label className="grid gap-2.5">
-                                  <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                    Correo electronico
-                                  </span>
-                                  <input
-                                    className={inputClassName}
-                                    type="email"
-                                    name={`familyContacts.${index}.email`}
-                                    value={contact.email}
-                                    onBlur={handleBlur}
-                                    onChange={handleChange}
-                                  />
-                                  <ValidationMessage
-                                    message={
-                                      contactTouched.email
-                                        ? contactErrors.email
-                                        : undefined
-                                    }
-                                  />
-                                </label>
-
-                                <label className="grid gap-2.5">
-                                  <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                    Direccion
-                                  </span>
-                                  <input
-                                    className={inputClassName}
-                                    type="text"
-                                    name={`familyContacts.${index}.address`}
-                                    value={contact.address}
-                                    onBlur={handleBlur}
-                                    onChange={handleChange}
-                                  />
-                                  <ValidationMessage />
-                                </label>
-                              </div>
-
-                              <label className="mt-[14px] grid gap-2.5">
-                                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                                  Notas
-                                </span>
-                                <textarea
-                                  className={`${textareaClassName} min-h-[110px]`}
-                                  name={`familyContacts.${index}.notes`}
-                                  value={contact.notes}
-                                  onBlur={handleBlur}
-                                  onChange={handleChange}
-                                />
-                                <ValidationMessage />
-                              </label>
-                            </article>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </CollapsibleSection>
-                )}
-              </FieldArray>
+              <FamilyContactsSection
+                form={{
+                  values,
+                  errors,
+                  touched,
+                  handleBlur,
+                  handleChange,
+                  setFieldTouched,
+                  setFieldValue,
+                }}
+              />
 
               <CollapsibleSection
                 title="Pertenencias"
@@ -1691,6 +1775,7 @@ export function AdmissionsPanel({
                   </Link>
                 )}
                 <button
+                  data-testid="resident-submit-button"
                   className={primaryButtonClassName}
                   type="button"
                   disabled={isSavingResident}

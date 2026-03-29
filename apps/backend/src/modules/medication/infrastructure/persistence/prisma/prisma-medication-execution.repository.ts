@@ -10,7 +10,8 @@ import { toIsoDateString } from '@gentrix/shared-utils';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
 import type { MedicationExecutionRepository } from '../../../domain/repositories/medication-execution.repository';
 
-type MedicationExecutionRecord = Prisma.MedicationExecutionGetPayload<{}>;
+type MedicationExecutionRecord =
+  Prisma.MedicationExecutionGetPayload<Record<string, never>>;
 
 @Injectable()
 export class PrismaMedicationExecutionRepository

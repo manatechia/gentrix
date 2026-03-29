@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import type {
+  MedicationOrder as PrismaMedicationOrderRecord,
+  Prisma,
+} from '@prisma/client';
 
 import {
   isMedicationFrequency,
@@ -12,7 +15,7 @@ import { toIsoDateString } from '@gentrix/shared-utils';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
 import type { MedicationRepository } from '../../../domain/repositories/medication.repository';
 
-type MedicationRecord = Prisma.MedicationOrderGetPayload<{}>;
+type MedicationRecord = PrismaMedicationOrderRecord;
 
 const medicationStatuses = new Set<EntityStatus>([
   'active',

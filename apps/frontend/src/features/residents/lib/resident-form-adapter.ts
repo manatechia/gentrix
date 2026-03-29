@@ -191,7 +191,7 @@ export function toResidentFormValues(
   };
 }
 
-function toResidentBaseUpdateInput(
+function toResidentBaseInput(
   values: ResidentFormValues,
 ): ResidentUpdateInput {
   return {
@@ -223,7 +223,7 @@ export function toResidentCreateInput(
   values: ResidentFormValues,
 ): ResidentCreateInput {
   return {
-    ...toResidentBaseUpdateInput(values),
+    ...toResidentBaseInput(values),
     insurance: {
       provider: toOptionalString(values.insurance.provider),
       memberNumber: toOptionalString(values.insurance.memberNumber),
@@ -300,5 +300,5 @@ export function toResidentCreateInput(
 export function toResidentUpdateInput(
   values: ResidentFormValues,
 ): ResidentUpdateInput {
-  return toResidentBaseUpdateInput(values);
+  return toResidentBaseInput(values);
 }

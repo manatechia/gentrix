@@ -58,10 +58,7 @@ export function ResidentEditWorkspace({
       >
         <div className="grid gap-2.5">
           <div className="flex items-center gap-3">
-            <BackChevronButton
-              title="Volver a ficha"
-              fallbackTo={detailHref}
-            />
+            <BackChevronButton title="Volver a ficha" fallbackTo={detailHref} />
             <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
               Residentes
             </span>
@@ -74,9 +71,9 @@ export function ResidentEditWorkspace({
             <strong className="text-brand-text">
               {resident?.fullName ?? 'este residente'}
             </strong>
-            . En esta version la edicion queda acotada al perfil base y al
-            estado actual. Los antecedentes, contactos, adjuntos y demas
-            registros de ingreso se preservan hasta tener flujos dedicados.
+            . Aqui editas el perfil vigente del paciente. El historial clinico
+            cronologico se mantiene append-only y ahora se agrega desde la
+            ficha del residente.
           </p>
         </div>
 
@@ -104,13 +101,14 @@ export function ResidentEditWorkspace({
         <AdmissionsPanel
           mode="edit"
           initialValues={initialValues ?? undefined}
+          showMedicalHistorySection={false}
           isSavingResident={isSavingResident}
           residentCount={residentCount}
           residentNoticeTone={residentNoticeTone}
           residentNotice={residentNotice}
           panelEyebrow="Edicion"
           panelTitle="Editar paciente"
-          panelDescription="Revisa identidad, ingreso, ubicacion y datos base del residente. Los registros temporales del intake quedan fuera de esta edicion para no reescribir snapshots completos."
+          panelDescription="Revisa los bloques y actualiza solo lo necesario. El formulario conserva la estructura principal del alta, pero deja el historial clinico en la ficha para no reescribir eventos previos."
           submitLabel="Guardar cambios"
           secondaryAction={{
             href: detailHref,

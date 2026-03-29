@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type {
   MedicationCatalogItem,
@@ -26,7 +26,7 @@ function toMedicationCatalogLabel(item: MedicationCatalogItem): string {
 }
 
 export function useMedicationDetailRoute(medicationId: string | undefined) {
-  const auth = useAuthSession();
+  const { logout, status, token } = useAuthSession();
   const [screenState, setScreenState] =
     useState<DashboardScreenState>('loading');
   const [medication, setMedication] = useState<MedicationDetail | null>(null);
@@ -44,7 +44,7 @@ export function useMedicationDetailRoute(medicationId: string | undefined) {
     setScreenState(nextScreenState);
   }
 
-  async function loadMedicationDetail(): Promise<void> {
+  const loadMedicationDetail = useCallback(async (): Promise<void> => {
     if (!medicationId) {
       setMedication(null);
       setMedicationCatalogItems([]);
@@ -54,7 +54,7 @@ export function useMedicationDetailRoute(medicationId: string | undefined) {
       return;
     }
 
-    if (!auth.token) {
+    if (!token) {
       clearMedicationDetail('loading');
       return;
     }
@@ -81,7 +81,7 @@ export function useMedicationDetailRoute(medicationId: string | undefined) {
       );
 
       if (message === 'Unauthorized.') {
-        await auth.logout();
+        await logout();
         return;
       }
 
@@ -91,16 +91,16 @@ export function useMedicationDetailRoute(medicationId: string | undefined) {
       setMedicationError(message);
       setScreenState('error');
     }
-  }
+  }, [logout, medicationId, token]);
 
   useEffect(() => {
-    if (auth.status !== 'authenticated' || !auth.token) {
+    if (status !== 'authenticated' || !token) {
       clearMedicationDetail('loading');
       return;
     }
 
     void loadMedicationDetail();
-  }, [auth.status, auth.token, medicationId]);
+  }, [loadMedicationDetail, status, token]);
 
   const residentOptions = useMemo(
     () =>

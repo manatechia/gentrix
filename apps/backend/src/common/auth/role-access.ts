@@ -12,6 +12,10 @@ export function canManageMedicationOrders(role: AuthRole): boolean {
   return managementRoles.has(role);
 }
 
+export function canManageStaffSchedules(role: AuthRole): boolean {
+  return managementRoles.has(role);
+}
+
 export function assertCanManageResidentRecords(role: AuthRole): void {
   if (!canManageResidentRecords(role)) {
     throw new ForbiddenException(
@@ -24,6 +28,14 @@ export function assertCanManageMedicationOrders(role: AuthRole): void {
   if (!canManageMedicationOrders(role)) {
     throw new ForbiddenException(
       'El personal no puede crear ni editar ordenes de medicacion.',
+    );
+  }
+}
+
+export function assertCanManageStaffSchedules(role: AuthRole): void {
+  if (!canManageStaffSchedules(role)) {
+    throw new ForbiddenException(
+      'El personal no puede crear ni editar horarios del equipo.',
     );
   }
 }

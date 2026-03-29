@@ -45,6 +45,7 @@ export function ResidentsPanel({
           residents.map((resident) => (
             <Link
               key={resident.id}
+              data-testid={`resident-card-${resident.id}`}
               className="block rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral p-[18px] no-underline transition hover:-translate-y-px hover:border-[rgba(0,102,132,0.16)] hover:shadow-panel"
               to={
                 residentBasePath

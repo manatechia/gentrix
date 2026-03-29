@@ -28,7 +28,10 @@ export function LoginScreen({
   onClearError,
 }: LoginScreenProps) {
   return (
-    <main className="flex min-h-screen items-center justify-center p-7 text-brand-text">
+    <main
+      className="flex min-h-screen items-center justify-center p-7 text-brand-text"
+      data-testid="login-screen"
+    >
       <section className="grid min-h-[calc(100vh-56px)] w-full max-w-[1360px] overflow-hidden rounded-[32px] border border-[rgba(0,102,132,0.08)] bg-white/92 shadow-[0_28px_70px_rgba(24,52,61,0.18)] lg:grid-cols-[minmax(0,0.96fr)_minmax(460px,0.84fr)]">
         <article className="relative isolate flex flex-col justify-between overflow-hidden bg-[linear-gradient(180deg,rgba(0,102,132,0.72),rgba(47,79,79,0.82)),radial-gradient(circle_at_top_left,rgba(160,220,233,0.3),transparent_28%),linear-gradient(140deg,#3b7a8c_0%,#2f6b76_42%,#294f52_100%)] p-9 text-white max-lg:min-h-[420px] max-sm:p-6">
           <div className="relative z-10 flex items-center gap-3.5">
@@ -187,6 +190,7 @@ export function LoginScreen({
                         Correo electronico
                       </span>
                       <input
+                        data-testid="login-email-input"
                         className={inputClassName}
                         type="email"
                         autoComplete="username"
@@ -208,6 +212,7 @@ export function LoginScreen({
                         Contrasena
                       </span>
                       <input
+                        data-testid="login-password-input"
                         className={inputClassName}
                         type="password"
                         autoComplete="current-password"
@@ -241,6 +246,7 @@ export function LoginScreen({
                     </div>
 
                     <button
+                      data-testid="login-submit-button"
                       className="inline-flex min-h-[54px] items-center justify-center rounded-2xl bg-brand-primary px-4 text-white font-semibold shadow-brand transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
                       type="submit"
                       disabled={isSubmitting || isCheckingSession}
@@ -249,6 +255,7 @@ export function LoginScreen({
                     </button>
 
                     <button
+                      data-testid="login-demo-button"
                       className={`${secondaryButtonClassName} mt-2`}
                       type="button"
                       onClick={() => {

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import type { StaffMember as DomainStaffMember } from '@gentrix/domain-staff';
-import { Prisma } from '@prisma/client';
 import { toIsoDateString } from '@gentrix/shared-utils';
 
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
@@ -65,6 +65,37 @@ export class PrismaStaffRepository implements StaffRepository {
 
     return staff.map(mapStaffRecord);
   }
+
+  async findById(
+    id: string,
+    organizationId?: string,
+  ): Promise<DomainStaffMember | null> {
+    const member = await this.prisma.staffMember.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+        organizationId: organizationId ?? undefined,
+      },
+      include: {
+        assignments: {
+          where: {
+            deletedAt: null,
+            status: 'active',
+            facility: {
+              deletedAt: null,
+              status: 'active',
+            },
+          },
+          include: {
+            facility: true,
+          },
+          orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
+        },
+      },
+    });
+
+    return member ? mapStaffRecord(member) : null;
+  }
 }
 
 function mapStaffRecord(record: StaffRecord): DomainStaffMember {
@@ -103,8 +134,6 @@ function normalizeShiftWindow(value: string): DomainStaffMember['shift'] {
     : 'morning';
 }
 
-function normalizeEntityStatus(
-  value: string,
-): DomainStaffMember['status'] {
+function normalizeEntityStatus(value: string): DomainStaffMember['status'] {
   return value === 'inactive' || value === 'archived' ? value : 'active';
 }

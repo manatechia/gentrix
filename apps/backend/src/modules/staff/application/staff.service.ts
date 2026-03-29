@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import type { StaffMember } from '@gentrix/domain-staff';
 import type { StaffOverview } from '@gentrix/shared-types';
@@ -54,5 +54,15 @@ export class StaffService {
 
   async getStaffEntities(organizationId?: string): Promise<StaffMember[]> {
     return this.staffRepository.list(organizationId);
+  }
+
+  async getStaffEntityById(staffId: string): Promise<StaffMember> {
+    const member = await this.staffRepository.findById(staffId);
+
+    if (!member) {
+      throw new NotFoundException('No encontre el personal solicitado.');
+    }
+
+    return member;
   }
 }
