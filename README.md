@@ -72,7 +72,7 @@ Package manager oficial del repo: `pnpm`.
 - `docker compose up -d --build` levanta `frontend`, `backend` y `postgres`.
 - Frontend: `http://localhost:4200`
 - Backend: `http://localhost:3333`
-- PostgreSQL: `localhost:55432`
+- PostgreSQL: `localhost:55515`
 - Las imagenes base quedaron pinneadas a versiones actuales y compatibles del 27 de marzo de 2026:
   `node:22.22.2-bookworm-slim`, `postgres:16.13-alpine`, `nginx:1.28.3-alpine`.
 - `frontend` ahora corre con Vite dentro de Docker y refleja cambios del repo por bind mounts + polling, sin rebuild por cada ajuste de UI.

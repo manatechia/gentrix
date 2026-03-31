@@ -3,7 +3,7 @@ import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 
 const defaultDatabaseUrl =
-  'postgresql://gentrix:gentrix@localhost:55432/gentrix?schema=public';
+  'postgresql://gentrix:gentrix@localhost:55515/gentrix?schema=public';
 
 export default defineConfig({
   schema: 'apps/backend/prisma/schema.prisma',
