@@ -9,7 +9,13 @@ import type {
   AuthSessionWithToken,
 } from '../../../domain/repositories/auth-session.repository';
 
-const authRoles = new Set<AuthRole>(['admin', 'coordinator', 'staff']);
+const authRoles = new Set<AuthRole>([
+  'admin',
+  'nurse',
+  'assistant',
+  'health-director',
+  'external',
+]);
 
 @Injectable()
 export class PrismaAuthSessionRepository implements AuthSessionRepository {
@@ -75,7 +81,13 @@ export class PrismaAuthSessionRepository implements AuthSessionRepository {
       orderBy: [{ isDefault: 'desc' }, { joinedAt: 'asc' }],
     });
 
-    if (!membership || !authRoles.has(membership.roleCode as AuthRole)) {
+    if (!membership) {
+      return null;
+    }
+
+    const normalizedRole = normalizeAuthRole(membership.roleCode);
+
+    if (!normalizedRole) {
       return null;
     }
 
@@ -85,7 +97,7 @@ export class PrismaAuthSessionRepository implements AuthSessionRepository {
         id: session.user.id as AuthSessionWithToken['user']['id'],
         fullName: session.user.fullName,
         email: session.user.email,
-        role: membership.roleCode as AuthRole,
+        role: normalizedRole,
       },
       activeOrganization: {
         id: session.activeOrganization
@@ -123,4 +135,16 @@ export class PrismaAuthSessionRepository implements AuthSessionRepository {
 
     return result.count > 0;
   }
+}
+
+function normalizeAuthRole(value: string): AuthRole | null {
+  if (value === 'coordinator') {
+    return 'health-director';
+  }
+
+  if (value === 'staff') {
+    return 'assistant';
+  }
+
+  return authRoles.has(value as AuthRole) ? (value as AuthRole) : null;
 }

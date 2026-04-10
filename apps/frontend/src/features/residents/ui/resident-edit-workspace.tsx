@@ -2,11 +2,7 @@ import { useMemo } from 'react';
 
 import type { AuthSession, ResidentDetail } from '@gentrix/shared-types';
 
-import {
-  primaryButtonClassName,
-  shellCardClassName,
-} from '../../../shared/ui/class-names';
-import { BackChevronButton } from '../../../shared/ui/back-chevron-button';
+import { PageToolbar } from '../../../shared/ui/page-toolbar';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
@@ -53,32 +49,12 @@ export function ResidentEditWorkspace({
       session={session}
       onLogout={onLogout}
     >
-      <section
-        className={`${shellCardClassName} flex flex-wrap items-start justify-between gap-5 px-7 py-6`}
-      >
-        <div className="grid gap-2.5">
-          <div className="flex items-center gap-3">
-            <BackChevronButton title="Volver a ficha" fallbackTo={detailHref} />
-            <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-              Residentes
-            </span>
-          </div>
-          <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
-            Editar paciente
-          </h1>
-          <p className="max-w-[64ch] leading-[1.65] text-brand-text-secondary">
-            Corrige los datos de ingreso ya cargados para{' '}
-            <strong className="text-brand-text">
-              {resident?.fullName ?? 'este residente'}
-            </strong>
-            . Aqui editas el perfil vigente del paciente. El historial clinico
-            cronologico se mantiene append-only y ahora se agrega desde la
-            ficha del residente.
-          </p>
-        </div>
-
-        <span className={primaryButtonClassName}>{residentCount} residentes</span>
-      </section>
+      <PageToolbar
+        section="Residentes"
+        title="Editar paciente"
+        backTitle="Volver a ficha"
+        backFallbackTo={detailHref}
+      />
 
       {screenState === 'loading' && (
         <StatusNotice message="Cargando los datos del paciente para editar." />
@@ -102,13 +78,11 @@ export function ResidentEditWorkspace({
           mode="edit"
           initialValues={initialValues ?? undefined}
           showMedicalHistorySection={false}
+          showPanelHeader={false}
           isSavingResident={isSavingResident}
           residentCount={residentCount}
           residentNoticeTone={residentNoticeTone}
           residentNotice={residentNotice}
-          panelEyebrow="Edicion"
-          panelTitle="Editar paciente"
-          panelDescription="Revisa los bloques y actualiza solo lo necesario. El formulario conserva la estructura principal del alta, pero deja el historial clinico en la ficha para no reescribir eventos previos."
           submitLabel="Guardar cambios"
           secondaryAction={{
             href: detailHref,

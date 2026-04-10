@@ -1,9 +1,12 @@
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import type { AuthSession, ResidentOverview } from '@gentrix/shared-types';
 
-import { canManageResidents, isStaffRole } from '../../../shared/lib/authz';
+import { canManageResidents } from '../../../shared/lib/authz';
 import {
+  badgeBaseClassName,
+  inputClassName,
   primaryButtonClassName,
   shellCardClassName,
 } from '../../../shared/ui/class-names';
@@ -17,7 +20,6 @@ interface ResidentsWorkspaceProps {
   session: AuthSession;
   authError: string | null;
   residentCount: number;
-  memoryCareResidents: number;
   residents: ResidentOverview[];
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
@@ -28,13 +30,20 @@ export function ResidentsWorkspace({
   session,
   authError,
   residentCount,
-  memoryCareResidents,
   residents,
   onLogout,
   onRetry,
 }: ResidentsWorkspaceProps) {
   const canManageRecords = canManageResidents(session.user.role);
-  const isStaffSession = isStaffRole(session.user.role);
+  const [query, setQuery] = useState('');
+  const normalizedQuery = normalizeResidentQuery(query);
+  const filteredResidents = useMemo(
+    () =>
+      residents.filter((resident) =>
+        normalizeResidentQuery(resident.fullName).includes(normalizedQuery),
+      ),
+    [normalizedQuery, residents],
+  );
 
   return (
     <WorkspaceShell
@@ -43,33 +52,35 @@ export function ResidentsWorkspace({
       onLogout={onLogout}
     >
       <section
-        className={`${shellCardClassName} flex flex-wrap items-start justify-between gap-5 px-7 py-6`}
+        className={`${shellCardClassName} grid gap-3 px-4 py-4 min-[900px]:grid-cols-[minmax(0,1fr)_auto] min-[900px]:items-center min-[900px]:px-5`}
       >
-        <div className="grid gap-2.5">
-          <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-            Residentes
-          </span>
-          <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
-            Padron de residentes
-          </h1>
-          <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
-            {isStaffSession
-              ? 'Consulta el padron operativo y abre cada ficha sin editar datos administrativos.'
-              : 'Consulta todos los pacientes actuales, entra a cada ficha y deriva las nuevas altas a una subpagina propia del modulo.'}
-          </p>
-        </div>
+        <label className="w-full min-[900px]:max-w-[520px]">
+          <input
+            data-testid="resident-search-input"
+            className={inputClassName}
+            type="search"
+            placeholder="Nombre del paciente"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
 
-        {canManageRecords ? (
-          <Link
-            className={primaryButtonClassName}
-            data-testid="residents-add-button"
-            to="/residentes/nuevo"
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span
+            className={`${badgeBaseClassName} bg-brand-secondary/12 text-brand-secondary`}
           >
-            Agregar paciente
-          </Link>
-        ) : (
-          <span className={primaryButtonClassName}>Vista personal</span>
-        )}
+            {filteredResidents.length} visibles
+          </span>
+          {canManageRecords ? (
+            <Link
+              className={primaryButtonClassName}
+              data-testid="residents-add-button"
+              to="/residentes/nuevo"
+            >
+              Agregar paciente
+            </Link>
+          ) : null}
+        </div>
       </section>
 
       {screenState === 'loading' && (
@@ -95,12 +106,12 @@ export function ResidentsWorkspace({
       )}
 
       {screenState === 'ready' && (
-        <ResidentsPanel
-          residents={residents}
-          memoryCareResidents={memoryCareResidents}
-          residentBasePath="/residentes"
-        />
+        <ResidentsPanel residents={filteredResidents} residentBasePath="/residentes" />
       )}
     </WorkspaceShell>
   );
+}
+
+function normalizeResidentQuery(value: string): string {
+  return value.replace(/\s+/g, ' ').trim().toLowerCase();
 }

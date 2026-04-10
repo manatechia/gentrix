@@ -54,6 +54,7 @@ interface AdmissionsPanelProps {
   mode?: 'create' | 'edit';
   initialValues?: ResidentFormValues;
   showMedicalHistorySection?: boolean;
+  showPanelHeader?: boolean;
   isSavingResident: boolean;
   residentCount: number;
   residentNoticeTone: 'success' | 'error';
@@ -864,6 +865,7 @@ export function AdmissionsPanel({
   mode = 'create',
   initialValues,
   showMedicalHistorySection = true,
+  showPanelHeader = true,
   isSavingResident,
   residentCount,
   residentNoticeTone,
@@ -905,29 +907,33 @@ export function AdmissionsPanel({
 
   return (
     <article id="intake-panel" className={surfaceCardClassName}>
-      <div className="mb-[18px] flex items-start justify-between gap-4">
-        <div>
-          <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-            {resolvedPanelEyebrow}
-          </span>
-          <h2 className="mt-1 text-[1.35rem] font-bold tracking-[-0.04em] text-brand-text">
-            {resolvedPanelTitle}
-          </h2>
-        </div>
-        <span
-          className={`${badgeBaseClassName} bg-brand-primary/12 text-brand-primary`}
-        >
-          {residentCount} residentes
-        </span>
-      </div>
+      {showPanelHeader ? (
+        <>
+          <div className="mb-[18px] flex items-start justify-between gap-4">
+            <div>
+              <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
+                {resolvedPanelEyebrow}
+              </span>
+              <h2 className="mt-1 text-[1.35rem] font-bold tracking-[-0.04em] text-brand-text">
+                {resolvedPanelTitle}
+              </h2>
+            </div>
+            <span
+              className={`${badgeBaseClassName} bg-brand-primary/12 text-brand-primary`}
+            >
+              {residentCount} residentes
+            </span>
+          </div>
 
-      <p className="leading-[1.65] text-brand-text-secondary">
-        {resolvedPanelDescription}
-      </p>
+          <p className="leading-[1.65] text-brand-text-secondary">
+            {resolvedPanelDescription}
+          </p>
+        </>
+      ) : null}
 
       {residentNotice && (
         <div
-          className={`mt-4 rounded-[18px] px-4 py-3.5 text-[0.95rem] leading-[1.55] ${
+          className={`${showPanelHeader ? 'mt-4' : 'mb-4'} rounded-[18px] px-4 py-3.5 text-[0.95rem] leading-[1.55] ${
             residentNoticeTone === 'error'
               ? 'border border-[rgba(168,43,17,0.16)] bg-[rgba(168,43,17,0.08)] text-[rgb(130,44,25)]'
               : 'border border-[rgba(0,102,132,0.14)] bg-[rgba(0,102,132,0.08)] text-brand-secondary'

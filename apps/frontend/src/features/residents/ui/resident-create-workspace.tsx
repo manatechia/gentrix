@@ -1,11 +1,7 @@
 import type { AuthSession } from '@gentrix/shared-types';
 
 import type { ResidentFormValues } from '../types/resident-form-values';
-import {
-  primaryButtonClassName,
-  shellCardClassName,
-} from '../../../shared/ui/class-names';
-import { BackChevronButton } from '../../../shared/ui/back-chevron-button';
+import { PageToolbar } from '../../../shared/ui/page-toolbar';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
@@ -40,32 +36,12 @@ export function ResidentCreateWorkspace({
       session={session}
       onLogout={onLogout}
     >
-      <section
-        className={`${shellCardClassName} flex flex-wrap items-start justify-between gap-5 px-7 py-6`}
-      >
-        <div className="grid gap-2.5">
-          <div className="flex items-center gap-3">
-            <BackChevronButton
-              title="Volver a residentes"
-              fallbackTo="/residentes"
-            />
-            <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-              Residentes
-            </span>
-          </div>
-          <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
-            Alta de paciente
-          </h1>
-          <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
-            El alta ahora vive en una subpagina propia y separa la carga en
-            bloques desplegables de identificacion, contacto, cobertura,
-            salud, pertenencias, familiares y adjuntos. La edad se muestra
-            como calculo automatico para validar rapidamente la informacion.
-          </p>
-        </div>
-
-        <span className={primaryButtonClassName}>{residentCount} residentes</span>
-      </section>
+      <PageToolbar
+        section="Residentes"
+        title="Alta paciente"
+        backTitle="Volver a residentes"
+        backFallbackTo="/residentes"
+      />
 
       {screenState === 'error' && authError && (
         <StatusNotice
@@ -79,6 +55,7 @@ export function ResidentCreateWorkspace({
         residentCount={residentCount}
         residentNoticeTone={residentNoticeTone}
         residentNotice={residentNotice}
+        showPanelHeader={false}
         onSubmit={onResidentCreate}
       />
     </WorkspaceShell>

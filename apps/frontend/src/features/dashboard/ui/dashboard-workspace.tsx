@@ -1,9 +1,7 @@
 import type { AuthSession, DashboardSnapshot } from '@gentrix/shared-types';
 
 import type { DashboardScreenState } from '../types/dashboard-screen-state';
-import { DashboardHeader } from './dashboard-header';
 import { MetricsGrid } from './metrics-grid';
-import { SectionIntro } from './section-intro';
 import { StatusNotice } from './status-notice';
 import { WorkspaceShell } from './workspace-shell';
 import { AlertsPanel } from '../../alerts/ui/alerts-panel';
@@ -37,9 +35,6 @@ export function DashboardWorkspace({
       session={session}
       onLogout={onLogout}
     >
-      <DashboardHeader />
-      <SectionIntro />
-
       {screenState === 'loading' && (
         <StatusNotice message="Cargando el tablero con la sesion activa." />
       )}

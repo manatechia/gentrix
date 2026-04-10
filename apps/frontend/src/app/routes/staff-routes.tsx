@@ -3,14 +3,14 @@ import { Navigate } from 'react-router-dom';
 import { useAuthSession } from '../../features/auth/hooks/use-auth-session';
 import { AuthCheckingScreen } from '../../features/auth/ui/auth-checking-screen';
 import { useResidentsRoute } from '../../features/residents/hooks/use-residents-route';
-import { useStaffSchedulesRoute } from '../../features/staff/hooks/use-staff-schedules-route';
-import { StaffSchedulesWorkspace } from '../../features/staff/ui/staff-schedules-workspace';
-import { canManageStaffSchedules } from '../../shared/lib/authz';
+import { useUsersRoute } from '../../features/users/hooks/use-users-route';
+import { UsersAdminWorkspace } from '../../features/users/ui/users-admin-workspace';
+import { canManageUsers } from '../../shared/lib/authz';
 
 export function StaffSchedulesRoute() {
   const auth = useAuthSession();
   const residents = useResidentsRoute();
-  const staffSchedules = useStaffSchedulesRoute();
+  const users = useUsersRoute();
 
   if (auth.status === 'checking') {
     return <AuthCheckingScreen />;
@@ -20,25 +20,23 @@ export function StaffSchedulesRoute() {
     return <Navigate to="/login" replace />;
   }
 
+  if (!canManageUsers(auth.session.user.role)) {
+    return <Navigate to="/residentes" replace />;
+  }
+
   return (
-    <StaffSchedulesWorkspace
-      screenState={staffSchedules.screenState}
+    <UsersAdminWorkspace
+      screenState={users.screenState}
       session={auth.session}
       residentCount={residents.residentCount}
-      staff={staffSchedules.staff}
-      selectedStaffId={staffSchedules.selectedStaffId}
-      schedules={staffSchedules.schedules}
-      staffError={staffSchedules.staffError}
-      isLoadingSchedules={staffSchedules.isLoadingSchedules}
-      isSavingSchedule={staffSchedules.isSavingSchedule}
-      scheduleNotice={staffSchedules.scheduleNotice}
-      scheduleNoticeTone={staffSchedules.scheduleNoticeTone}
-      canManageSchedules={canManageStaffSchedules(auth.session.user.role)}
-      onSelectStaff={staffSchedules.handleSelectStaff}
-      onScheduleCreate={staffSchedules.handleScheduleCreate}
-      onScheduleUpdate={staffSchedules.handleScheduleUpdate}
+      users={users.users}
+      usersError={users.usersError}
+      isSavingUser={users.isSavingUser}
+      userNotice={users.userNotice}
+      userNoticeTone={users.userNoticeTone}
+      onUserCreate={users.handleUserCreate}
       onLogout={auth.logout}
-      onRetry={staffSchedules.handleRetry}
+      onRetry={users.handleRetry}
     />
   );
 }
