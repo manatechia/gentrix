@@ -26,6 +26,17 @@ export function Sidebar({
   const mobileVisibilityClassName = isMobileOpen
     ? 'max-[1180px]:translate-x-0 max-[1180px]:opacity-100 max-[1180px]:pointer-events-auto'
     : 'max-[1180px]:-translate-x-[110%] max-[1180px]:opacity-0 max-[1180px]:pointer-events-none';
+  const navigationSections = sidebarSections.filter((section) => {
+    if (section.hiddenInMenu) {
+      return false;
+    }
+
+    if (!section.visibleTo) {
+      return true;
+    }
+
+    return section.visibleTo.some((role) => role === session.user.role);
+  });
 
   return (
     <aside
@@ -78,9 +89,11 @@ export function Sidebar({
       </div>
 
       <nav className="grid min-h-0 flex-1 gap-2 overflow-y-auto pr-1">
-        {sidebarSections.map((section) => (
+        {navigationSections.map((section) => (
           <NavLink
             key={section.label}
+            data-testid={section.testId}
+            aria-label={section.label}
             to={section.path}
             end={section.end}
             onClick={onClose}

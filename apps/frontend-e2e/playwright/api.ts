@@ -2,12 +2,14 @@ import { expect, type APIRequestContext, type APIResponse } from '@playwright/te
 
 import type {
   ApiEnvelope,
+  AuthLoginRequest,
   AuthLoginResponse,
   MedicationCatalogItem,
   MedicationOverview,
   ResidentOverview,
   StaffOverview,
   StaffSchedule,
+  UserOverview,
 } from '@gentrix/shared-types';
 
 import { demoCredentials } from '../../frontend/src/features/auth/constants/demo-credentials';
@@ -34,8 +36,15 @@ export function buildAuthHeaders(token: string): Record<string, string> {
 export async function loginWithDemoCredentials(
   request: APIRequestContext,
 ): Promise<AuthLoginResponse> {
+  return loginWithCredentials(request, demoCredentials);
+}
+
+export async function loginWithCredentials(
+  request: APIRequestContext,
+  credentials: AuthLoginRequest,
+): Promise<AuthLoginResponse> {
   const response = await request.post(`${getApiBaseUrl()}/api/auth/login`, {
-    data: demoCredentials,
+    data: credentials,
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
@@ -102,4 +111,15 @@ export async function fetchStaffSchedules(
   );
 
   return readEnvelope<StaffSchedule[]>(response);
+}
+
+export async function fetchUsers(
+  request: APIRequestContext,
+  token: string,
+): Promise<UserOverview[]> {
+  const response = await request.get(`${getApiBaseUrl()}/api/users`, {
+    headers: buildAuthHeaders(token),
+  });
+
+  return readEnvelope<UserOverview[]>(response);
 }

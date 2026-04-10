@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 import type { AuthSession } from '@gentrix/shared-types';
 
+import { formatAuthRole } from '../../../shared/lib/display-labels';
 import { shellCardClassName } from '../../../shared/ui/class-names';
 import { Sidebar } from './sidebar';
 
@@ -14,6 +15,37 @@ function readIsMobileSidebar(): boolean {
   }
 
   return window.matchMedia(mobileSidebarMediaQuery).matches;
+}
+
+function getMobilePageContext(pathname: string): string {
+  if (pathname === '/residentes/nuevo') {
+    return 'Residentes';
+  }
+
+  if (pathname.startsWith('/residentes/')) {
+    return 'Residentes';
+  }
+
+  if (pathname.startsWith('/residentes')) {
+    return 'Residentes';
+  }
+
+  if (pathname.startsWith('/personal')) {
+    return 'Personal';
+  }
+
+  if (pathname.startsWith('/handoff')) {
+    return 'Pase';
+  }
+
+  if (
+    pathname.startsWith('/medicacion') ||
+    pathname.startsWith('/medicaciones')
+  ) {
+    return 'Medicacion';
+  }
+
+  return 'Resumen';
 }
 
 interface WorkspaceShellProps extends PropsWithChildren {
@@ -29,6 +61,7 @@ export function WorkspaceShell({
   onLogout,
 }: WorkspaceShellProps) {
   const location = useLocation();
+  const mobilePageContext = getMobilePageContext(location.pathname);
   const [isMobileSidebar, setIsMobileSidebar] = useState(readIsMobileSidebar);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -112,9 +145,9 @@ export function WorkspaceShell({
           onClose={closeSidebar}
         />
 
-        <section className="grid gap-5 px-7 py-6 pb-10 max-sm:px-[18px] max-sm:py-[18px]">
+        <section className="grid gap-4 px-6 py-5 pb-10 max-sm:px-4 max-sm:py-4">
           <div
-            className={`${shellCardClassName} flex items-center justify-between gap-4 p-3 min-[1181px]:hidden`}
+            className={`${shellCardClassName} flex items-center justify-between gap-3 p-2.5 min-[1181px]:hidden`}
           >
             <div className="flex items-center gap-3">
               <button
@@ -126,7 +159,7 @@ export function WorkspaceShell({
                     ? 'Cerrar menu lateral'
                     : 'Abrir menu lateral'
                 }
-                className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[rgba(0,102,132,0.12)] bg-brand-neutral text-brand-secondary transition hover:border-[rgba(0,102,132,0.2)] hover:bg-white"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[rgba(0,102,132,0.12)] bg-brand-neutral text-brand-secondary transition hover:border-[rgba(0,102,132,0.2)] hover:bg-white"
                 type="button"
                 onClick={toggleSidebar}
               >
@@ -137,18 +170,13 @@ export function WorkspaceShell({
                 </span>
               </button>
 
-              <div>
-                <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-                  Navegacion
-                </span>
-                <strong className="block text-[1rem] font-semibold text-brand-text">
-                  Gentrix MVP
-                </strong>
-              </div>
+              <strong className="block text-[0.95rem] font-semibold uppercase tracking-[0.14em] text-brand-text">
+                {mobilePageContext}
+              </strong>
             </div>
 
-            <span className="inline-flex min-h-10 items-center justify-center rounded-full bg-brand-primary/10 px-3 text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-brand-primary">
-              Menu
+            <span className="inline-flex min-h-9 items-center justify-center rounded-full bg-brand-primary/10 px-3 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-brand-primary">
+              {formatAuthRole(session.user.role)}
             </span>
           </div>
 

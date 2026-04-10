@@ -27,7 +27,7 @@ import {
   shellCardClassName,
   surfaceCardClassName,
 } from '../../../shared/ui/class-names';
-import { BackChevronButton } from '../../../shared/ui/back-chevron-button';
+import { PageToolbar } from '../../../shared/ui/page-toolbar';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
@@ -137,22 +137,6 @@ export function ResidentDetailWorkspace({
   const canViewAdministrativeData = canViewResidentAdministrativeData(
     session.user.role,
   );
-  const headerDetails = resident
-    ? [
-        {
-          label: 'Ingreso',
-          value: showDateValue(resident.admissionDate),
-        },
-        {
-          label: 'Nacimiento',
-          value: showDateValue(resident.birthDate),
-        },
-        {
-          label: 'Edad',
-          value: `${resident.age} anios`,
-        },
-      ]
-    : [];
   const overviewDetails = resident
     ? [
         {
@@ -187,47 +171,13 @@ export function ResidentDetailWorkspace({
       session={session}
       onLogout={onLogout}
     >
-      <section
-        className={`${shellCardClassName} flex flex-wrap items-start justify-between gap-5 px-7 py-6`}
-      >
-        <div className="grid gap-2.5">
-          <div className="flex items-center gap-3">
-            <BackChevronButton
-              title="Volver a residentes"
-              fallbackTo="/residentes"
-            />
-            <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-              Residentes
-            </span>
-          </div>
-          <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
-            {resident?.fullName ?? 'Detalle del residente'}
-          </h1>
-          {resident ? (
-            <div className="grid gap-3 pt-1 min-[680px]:grid-cols-3">
-              {headerDetails.map((detail) => (
-                <article
-                  key={detail.label}
-                  className="rounded-[20px] bg-brand-neutral px-4 py-3"
-                >
-                  <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-                    {detail.label}
-                  </span>
-                  <strong className="mt-1.5 block text-brand-text">
-                    {detail.value}
-                  </strong>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
-              Consulta la ficha actual del residente y sus datos principales.
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          {resident && canManageRecords ? (
+      <PageToolbar
+        section="Residentes"
+        title={resident?.fullName ?? 'Detalle del residente'}
+        backTitle="Volver a residentes"
+        backFallbackTo="/residentes"
+        actions={
+          resident && canManageRecords ? (
             <Link
               data-testid="resident-edit-button"
               className={primaryButtonClassName}
@@ -235,23 +185,9 @@ export function ResidentDetailWorkspace({
             >
               Editar paciente
             </Link>
-          ) : resident ? (
-            <span
-              className={`${badgeBaseClassName} bg-brand-primary/12 text-brand-primary`}
-            >
-              Vista personal
-            </span>
-          ) : (
-            <button
-              className={`${primaryButtonClassName} cursor-not-allowed opacity-70`}
-              type="button"
-              disabled
-            >
-              Editar paciente
-            </button>
-          )}
-        </div>
-      </section>
+          ) : null
+        }
+      />
 
       {residentNotice && (
         <section
@@ -289,18 +225,13 @@ export function ResidentDetailWorkspace({
 
       {screenState === 'ready' && resident && (
         <>
-          {!canViewAdministrativeData && (
-            <section className={`${shellCardClassName} px-6 py-[22px]`}>
-              <span className="block text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                Vista operativa del personal
-              </span>
-              <p className="mt-2 leading-[1.6] text-brand-text-secondary">
-                Esta sesion muestra informacion clinica y de turno. Los datos
-                administrativos, familiares y de auditoria quedan reservados a
-                administracion y coordinacion.
-              </p>
-            </section>
-          )}
+          <ClinicalHistoryPanel
+            events={clinicalHistory}
+            isSavingEvent={isSavingClinicalHistoryEvent}
+            notice={clinicalHistoryNotice}
+            noticeTone={clinicalHistoryNoticeTone}
+            onCreate={onClinicalHistoryCreate}
+          />
 
           <ResidentLiveProfilePanel profile={residentLiveProfile} />
 
@@ -637,14 +568,6 @@ export function ResidentDetailWorkspace({
           )}
 
           <section className="grid gap-[18px] min-[980px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <ClinicalHistoryPanel
-              events={clinicalHistory}
-              isSavingEvent={isSavingClinicalHistoryEvent}
-              notice={clinicalHistoryNotice}
-              noticeTone={clinicalHistoryNoticeTone}
-              onCreate={onClinicalHistoryCreate}
-            />
-
             {canViewAdministrativeData && (
               <article className={surfaceCardClassName}>
                 <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">

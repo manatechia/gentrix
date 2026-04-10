@@ -29,7 +29,6 @@ export function ResidentsRoute() {
       session={auth.session}
       authError={residents.residentsError}
       residentCount={residents.residentCount}
-      memoryCareResidents={residents.memoryCareResidents}
       residents={residents.residents}
       onLogout={auth.logout}
       onRetry={residents.handleRetry}

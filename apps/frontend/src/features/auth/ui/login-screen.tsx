@@ -263,7 +263,7 @@ export function LoginScreen({
                         setValues(demoAccessOptions[0].credentials);
                       }}
                     >
-                      Cargar acceso administrador
+                      Cargar acceso admin
                     </button>
                   </form>
                 );
@@ -276,9 +276,10 @@ export function LoginScreen({
                   Diferencias por rol
                 </span>
                 <p className="mt-2 leading-[1.6] text-brand-text-secondary">
-                  Administracion conserva altas y ediciones maestras. Personal
-                  entra a la vista operativa y solo registra ejecuciones de
-                  medicacion.
+                  Admin gestiona usuarios y configuracion sensible. Director de
+                  salud opera residentes y medicacion sin panel admin.
+                  Enfermeria, asistentes y externos trabajan sobre la vista
+                  operativa del turno.
                 </p>
               </div>
               <div>

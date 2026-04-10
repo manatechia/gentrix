@@ -36,7 +36,14 @@ export interface ApiEnvelope<T> {
   };
 }
 
-export type AuthRole = 'admin' | 'coordinator' | 'staff';
+export type AuthRole =
+  | 'admin'
+  | 'nurse'
+  | 'assistant'
+  | 'health-director'
+  | 'external';
+
+export type UserCreateRole = Exclude<AuthRole, 'admin'>;
 
 export type ResidentCareLevel =
   | 'independent'
@@ -222,6 +229,21 @@ export interface AuthFacility {
 
 export interface AuthLoginRequest {
   email: string;
+  password: string;
+}
+
+export interface UserOverview {
+  id: EntityId;
+  fullName: string;
+  email: string;
+  role: AuthRole;
+  status: EntityStatus;
+}
+
+export interface UserCreateInput {
+  fullName: string;
+  email: string;
+  role: UserCreateRole;
   password: string;
 }
 

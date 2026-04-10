@@ -12,7 +12,13 @@ import type {
   StoredAuthUser,
 } from '../../../domain/repositories/auth-user.repository';
 
-const authRoles = new Set<AuthRole>(['admin', 'coordinator', 'staff']);
+const authRoles = new Set<AuthRole>([
+  'admin',
+  'nurse',
+  'assistant',
+  'health-director',
+  'external',
+]);
 
 @Injectable()
 export class PrismaAuthUserRepository implements AuthUserRepository {
@@ -68,10 +74,13 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
       (membership) => membership.organization.deletedAt === null,
     );
 
-    if (
-      !activeMembership ||
-      !authRoles.has(activeMembership.roleCode as AuthRole)
-    ) {
+    if (!activeMembership) {
+      return null;
+    }
+
+    const normalizedRole = normalizeAuthRole(activeMembership.roleCode);
+
+    if (!normalizedRole) {
       return null;
     }
 
@@ -99,9 +108,21 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
       fullName: user.fullName,
       email: user.email,
       password: user.password,
-      role: activeMembership.roleCode as AuthRole,
+      role: normalizedRole,
       activeOrganization,
       activeFacility,
     };
   }
+}
+
+function normalizeAuthRole(value: string): AuthRole | null {
+  if (value === 'coordinator') {
+    return 'health-director';
+  }
+
+  if (value === 'staff') {
+    return 'assistant';
+  }
+
+  return authRoles.has(value as AuthRole) ? (value as AuthRole) : null;
 }

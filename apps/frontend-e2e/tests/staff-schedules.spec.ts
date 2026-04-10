@@ -1,77 +1,152 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
+import { demoAccessOptions } from '../../frontend/src/features/auth/constants/demo-credentials';
+import { authTokenStorageKey } from '../../frontend/src/shared/lib/auth-token-storage';
 import {
-  fetchStaff,
-  fetchStaffSchedules,
+  fetchUsers,
+  loginWithCredentials,
   loginWithDemoCredentials,
 } from '../playwright/api';
-import {
-  createFutureDate,
-  createNumericScenarioId,
-} from '../playwright/paths';
-import { selectFieldOption } from '../playwright/ui';
+import { createNumericScenarioId } from '../playwright/paths';
+import { openSidebarIfNeeded, selectFieldOption } from '../playwright/ui';
 
-test('create and edit a staff coverage schedule', async (
-  { page, request },
-  testInfo,
-) => {
-  test.slow();
+const emptyStorageState = {
+  cookies: [],
+  origins: [],
+};
 
-  const authSession = await loginWithDemoCredentials(request);
-  const staff = await fetchStaff(request, authSession.token);
-  const targetStaff = staff[0];
-  const scenarioId = createNumericScenarioId(testInfo.project.name);
-  const coverageNote = `Cobertura Playwright ${scenarioId}`;
-  const updatedCoverageNote = `${coverageNote} actualizada`;
+async function authenticatePage(
+  page: Page,
+  request: APIRequestContext,
+  email: string,
+  password: string,
+  destination = '/dashboard',
+): Promise<void> {
+  const authSession = await loginWithCredentials(request, { email, password });
 
-  expect(targetStaff).toBeDefined();
+  await page.goto('/login');
+  await page.evaluate(
+    ({ storageKey, token }) => {
+      window.localStorage.setItem(storageKey, token);
+    },
+    {
+      storageKey: authTokenStorageKey,
+      token: authSession.token,
+    },
+  );
+  await page.goto(destination);
+}
 
-  if (!targetStaff) {
-    throw new Error('No hay personal disponible para el smoke test.');
-  }
+test('admin sees Personal while Pase and Medicacion stay hidden in menu', async ({
+  page,
+}) => {
+  await page.goto('/dashboard');
+  await openSidebarIfNeeded(page);
 
-  await page.goto('/personal');
-
-  await expect(page).toHaveURL(/\/personal$/);
-  await page.getByTestId(`staff-member-${targetStaff.id}`).click();
-
+  await expect(page.getByTestId('workspace-sidebar-link-users')).toBeVisible();
+  await expect(page.getByTestId('workspace-sidebar-link-handoff')).toHaveCount(0);
   await expect(
-    page.getByRole('heading', { name: targetStaff.name }),
-  ).toBeVisible();
-  await selectFieldOption(page, 'staff-schedule-weekday-select', '2');
-  await page.getByTestId('staff-schedule-start-time-input').fill('09:00');
-  await page.getByTestId('staff-schedule-end-time-input').fill('17:00');
-  await page
-    .getByTestId('staff-schedule-date-input')
-    .fill(createFutureDate(8));
-  await page.getByTestId('staff-schedule-note-input').fill(coverageNote);
-  await page.getByTestId('staff-schedule-submit-button').click();
+    page.getByTestId('workspace-sidebar-link-medication'),
+  ).toHaveCount(0);
+});
 
-  await expect(page.getByText('Horario agregado correctamente.')).toBeVisible();
+test.describe('personal route restrictions', () => {
+  test.use({ storageState: emptyStorageState });
 
-  const createdSchedule = (
-    await fetchStaffSchedules(request, authSession.token, targetStaff.id)
-  ).find((schedule) => schedule.coverageNote === coverageNote);
+  test('non-admin roles do not see Personal and cannot open /personal', async ({
+    browser,
+    request,
+  }) => {
+    for (const option of demoAccessOptions.filter(
+      (candidate) => candidate.id !== 'admin',
+    )) {
+      const context = await browser.newContext();
+      const page = await context.newPage();
 
-  expect(createdSchedule).toBeDefined();
+      await authenticatePage(
+        page,
+        request,
+        option.credentials.email,
+        option.credentials.password,
+      );
 
-  if (!createdSchedule) {
-    throw new Error('No pude encontrar el horario creado por el smoke test.');
-  }
+      await expect(page).toHaveURL(/\/dashboard$/);
+      await openSidebarIfNeeded(page);
+      await expect(page.getByTestId('workspace-sidebar-link-users')).toHaveCount(
+        0,
+      );
+      await expect(
+        page.getByTestId('workspace-sidebar-link-handoff'),
+      ).toHaveCount(0);
+      await expect(
+        page.getByTestId('workspace-sidebar-link-medication'),
+      ).toHaveCount(0);
 
-  await page.getByTestId(`staff-schedule-edit-${createdSchedule.id}`).click();
-  await page.getByTestId('staff-schedule-note-input').fill(updatedCoverageNote);
-  await page.getByTestId('staff-schedule-end-time-input').fill('18:00');
-  await page.getByTestId('staff-schedule-submit-button').click();
+      await page.goto('/personal');
+      await expect(page).toHaveURL(/\/residentes$/);
+      await context.close();
+    }
+  });
+});
 
-  await expect(
-    page.getByText('Horario actualizado correctamente.'),
-  ).toBeVisible();
+test.describe('admin user management', () => {
+  test.use({ storageState: emptyStorageState });
 
-  const updatedSchedule = (
-    await fetchStaffSchedules(request, authSession.token, targetStaff.id)
-  ).find((schedule) => schedule.id === createdSchedule.id);
+  test('admin creates a user and the new role gets the correct menu visibility', async ({
+    page,
+    request,
+  }, testInfo) => {
+    test.slow();
 
-  expect(updatedSchedule?.coverageNote).toBe(updatedCoverageNote);
-  expect(updatedSchedule?.endTime).toBe('18:00');
+    const scenarioId = createNumericScenarioId(testInfo.project.name);
+    const fullName = `Director Salud Playwright ${scenarioId}`;
+    const email = `director.salud.${scenarioId}@gentrix.local`;
+    const password = `gentrix-${scenarioId}`;
+
+    await authenticatePage(
+      page,
+      request,
+      demoAccessOptions[0].credentials.email,
+      demoAccessOptions[0].credentials.password,
+      '/personal',
+    );
+
+    await expect(page).toHaveURL(/\/personal$/);
+    const usersWorkspace = page.getByTestId('users-admin-workspace');
+    await expect(usersWorkspace).toBeVisible();
+    await expect(page.getByText('Usuarios de la plataforma')).toHaveCount(0);
+    await expect(usersWorkspace.getByText('Admin')).toHaveCount(0);
+    await expect(usersWorkspace.getByText('Sofia Quiroga')).toHaveCount(0);
+
+    await page.getByTestId('users-form-full-name-input').fill(fullName);
+    await page.getByTestId('users-form-email-input').fill(email);
+    await selectFieldOption(page, 'users-form-role-select', 'health-director');
+    await page.getByTestId('users-form-password-input').fill(password);
+    await page.getByTestId('users-form-submit-button').click();
+
+    await expect(page.getByText('Usuario creado correctamente.')).toBeVisible();
+    await expect(page.getByText(fullName)).toBeVisible();
+
+    const adminSession = await loginWithDemoCredentials(request);
+    const users = await fetchUsers(request, adminSession.token);
+    expect(users.some((user) => user.email === email)).toBeTruthy();
+
+    await openSidebarIfNeeded(page);
+    await page.getByTestId('workspace-logout-button').click();
+
+    await expect(page).toHaveURL(/\/login$/);
+    await page.getByTestId('login-email-input').fill(email);
+    await page.getByTestId('login-password-input').fill(password);
+    await page.getByTestId('login-submit-button').click();
+
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await openSidebarIfNeeded(page);
+    await expect(page.getByTestId('workspace-sidebar-link-users')).toHaveCount(
+      0,
+    );
+    await expect(page.getByText('Director de salud').first()).toBeVisible();
+
+    await page.goto('/personal');
+    await expect(page).toHaveURL(/\/residentes$/);
+  });
 });

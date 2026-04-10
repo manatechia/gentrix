@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
 
+import {
+  fetchResidents,
+  loginWithDemoCredentials,
+} from '../playwright/api';
 import { createNumericScenarioId } from '../playwright/paths';
 import { selectFieldOption } from '../playwright/ui';
 
@@ -20,20 +24,50 @@ function createResidentScenario(projectName: string) {
   };
 }
 
-test('create, edit, and append clinical history for a resident', async (
-  { page },
+test('create, edit, search, and append clinical history for a resident', async (
+  { page, request },
   testInfo,
 ) => {
   test.slow();
 
   const scenario = createResidentScenario(testInfo.project.name);
+  const authSession = await loginWithDemoCredentials(request);
+  const seededResidents = await fetchResidents(request, authSession.token);
+  const primaryResident = seededResidents[0];
+  const secondaryResident = seededResidents[1];
+
+  expect(primaryResident).toBeDefined();
+  expect(secondaryResident).toBeDefined();
+
+  if (!primaryResident || !secondaryResident) {
+    throw new Error('No hay suficientes residentes para validar la busqueda.');
+  }
 
   await page.goto('/residentes');
   await expect(page).toHaveURL(/\/residentes$/);
+  await expect(page.getByText('Padron de residentes')).toHaveCount(0);
+  await expect(page.getByText('Vista general de residentes')).toHaveCount(0);
+  await expect(page.getByText('Buscar por nombre')).toHaveCount(0);
+
+  const searchInput = page.getByTestId('resident-search-input');
+
+  await expect(searchInput).toBeVisible();
+  await expect(searchInput).toBeInViewport();
+  await searchInput.fill(primaryResident.fullName);
+  await expect(
+    page.getByTestId(`resident-card-${primaryResident.id}`),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId(`resident-card-${secondaryResident.id}`),
+  ).toBeHidden();
+  await searchInput.fill('');
 
   await page.getByTestId('residents-add-button').click();
 
   await expect(page).toHaveURL(/\/residentes\/nuevo$/);
+  await expect(
+    page.getByText('Carga el ingreso en bloques cortos'),
+  ).toHaveCount(0);
   await selectFieldOption(page, 'resident-document-type-select', 'dni');
   await page.getByTestId('resident-document-number-input').fill(
     scenario.documentNumber,
@@ -50,10 +84,17 @@ test('create, edit, and append clinical history for a resident', async (
     page.getByRole('heading', { name: scenario.fullName }),
   ).toBeVisible();
   await expect(page.getByTestId('resident-edit-button')).toBeVisible();
+  await expect(page.getByText('Prioriza el timeline clinico')).toHaveCount(0);
+  await expect(page.getByText('Vista operativa del personal')).toHaveCount(0);
+
+  if (testInfo.project.name === 'mobile-chromium') {
+    await expect(page.getByTestId('clinical-history-panel')).toBeInViewport();
+  }
 
   await page.getByTestId('resident-edit-button').click();
 
   await expect(page).toHaveURL(/\/residentes\/[^/]+\/editar$/);
+  await expect(page.getByText('Corrige solo lo necesario')).toHaveCount(0);
   await page.getByTestId('resident-room-input').fill(scenario.updatedRoom);
   await page.getByTestId('resident-submit-button').click();
 

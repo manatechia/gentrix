@@ -24,6 +24,8 @@ test('login and logout from the dashboard', async ({ page }) => {
   await page.getByTestId('login-submit-button').click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByText('Consola operativa Gentrix')).toHaveCount(0);
+  await expect(page.getByText('Plan de vistas')).toHaveCount(0);
   await openSidebarIfNeeded(page);
   const logoutButton = page.getByTestId('workspace-logout-button');
 

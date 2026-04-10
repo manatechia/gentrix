@@ -128,7 +128,10 @@ export function ClinicalHistoryPanel({
   }
 
   return (
-    <section className={`${surfaceCardClassName} grid gap-5`}>
+    <section
+      className={`${surfaceCardClassName} grid gap-5`}
+      data-testid="clinical-history-panel"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="grid gap-1.5">
           <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">

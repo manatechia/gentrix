@@ -1,7 +1,7 @@
 import type { AuthLoginRequest } from '@gentrix/shared-types';
 
 export interface DemoAccessOption {
-  id: 'admin' | 'staff';
+  id: 'admin' | 'health-director' | 'nurse';
   label: string;
   description: string;
   capabilities: string;
@@ -11,7 +11,7 @@ export interface DemoAccessOption {
 export const demoAccessOptions: DemoAccessOption[] = [
   {
     id: 'admin',
-    label: 'Administrador',
+    label: 'Admin',
     description:
       'Acceso completo a residentes, medicacion y configuracion operativa.',
     capabilities: 'Puede crear y editar fichas, ordenes y vistas de gestion.',
@@ -21,9 +21,20 @@ export const demoAccessOptions: DemoAccessOption[] = [
     },
   },
   {
-    id: 'staff',
-    label: 'Personal',
-    description: 'Vista operativa para enfermeria y cuidadores del turno.',
+    id: 'health-director',
+    label: 'Director de salud',
+    description: 'Supervisa la operacion clinica y el seguimiento de residentes.',
+    capabilities:
+      'Puede editar fichas operativas y medicacion, pero no administrar usuarios.',
+    credentials: {
+      email: 'maria.lopez@gentrix.local',
+      password: 'gentrix123',
+    },
+  },
+  {
+    id: 'nurse',
+    label: 'Enfermeras/os',
+    description: 'Vista operativa para registrar el seguimiento del turno.',
     capabilities:
       'Puede consultar residentes y registrar ejecuciones de medicacion.',
     credentials: {
