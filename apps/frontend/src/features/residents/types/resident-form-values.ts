@@ -1,9 +1,13 @@
 import type {
   ResidentAttachmentKind,
   ResidentCareLevel,
+  ResidentGeriatricAssessmentLevel,
 } from '@gentrix/shared-types';
 
 export type ResidentBooleanAnswer = '' | 'si' | 'no';
+export type ResidentGeriatricAssessmentAnswer =
+  | ''
+  | ResidentGeriatricAssessmentLevel;
 
 export interface ResidentMedicalHistoryFormValue {
   localId: string;
@@ -61,6 +65,17 @@ export interface ResidentBelongingsFormValues {
   notes: string;
 }
 
+export interface ResidentGeriatricAssessmentFormValues {
+  cognition: ResidentGeriatricAssessmentAnswer;
+  mobility: ResidentGeriatricAssessmentAnswer;
+  feeding: ResidentGeriatricAssessmentAnswer;
+  skinIntegrity: ResidentGeriatricAssessmentAnswer;
+  dependencyLevel: ResidentGeriatricAssessmentAnswer;
+  mood: ResidentGeriatricAssessmentAnswer;
+  supportEquipment: string;
+  notes: string;
+}
+
 export interface ResidentFamilyContactFormValue {
   localId: string;
   fullName: string;
@@ -99,6 +114,7 @@ export interface ResidentFormValues {
   transfer: ResidentTransferFormValues;
   psychiatry: ResidentPsychiatryFormValues;
   clinicalProfile: ResidentClinicalProfileFormValues;
+  geriatricAssessment: ResidentGeriatricAssessmentFormValues;
   belongings: ResidentBelongingsFormValues;
   familyContacts: ResidentFamilyContactFormValue[];
   discharge: ResidentDischargeFormValues;

@@ -19,6 +19,8 @@ function createResidentScenario(projectName: string) {
     documentNumber,
     room,
     updatedRoom: `${room}-B`,
+    vgiSupportEquipment: `Andador escenario ${scenarioId}`,
+    updatedVgiNotes: `VGI editada por Playwright en el escenario ${scenarioId}.`,
     clinicalHistoryTitle: `Seguimiento automatizado ${scenarioId}`,
     clinicalHistoryDescription: `Evento agregado por Playwright para el escenario ${scenarioId}.`,
     observationTitle: `Observacion automatizada ${scenarioId}`,
@@ -82,6 +84,11 @@ test('create, edit, search, and append clinical history for a resident', async (
   await page.getByTestId('resident-birth-date-input').fill('14/05/1941');
   await selectFieldOption(page, 'resident-sex-select', 'femenino');
   await page.getByTestId('resident-room-input').fill(scenario.room);
+  await selectFieldOption(page, 'resident-vgi-cognition-select', 'monitored');
+  await selectFieldOption(page, 'resident-vgi-mobility-select', 'monitored');
+  await page
+    .getByTestId('resident-vgi-support-equipment-input')
+    .fill(scenario.vgiSupportEquipment);
   await page.getByTestId('resident-submit-button').click();
 
   await expect(page).toHaveURL(/\/residentes\/[^/]+$/);
@@ -89,6 +96,8 @@ test('create, edit, search, and append clinical history for a resident', async (
     page.getByRole('heading', { name: scenario.fullName }),
   ).toBeVisible();
   await expect(page.getByTestId('resident-edit-button')).toBeVisible();
+  await expect(page.getByText('VGI inicial')).toBeVisible();
+  await expect(page.getByText(scenario.vgiSupportEquipment)).toBeVisible();
   await expect(page.getByText('Prioriza el timeline clinico')).toHaveCount(0);
   await expect(page.getByText('Vista operativa del personal')).toHaveCount(0);
 
@@ -103,10 +112,14 @@ test('create, edit, search, and append clinical history for a resident', async (
   await expect(page).toHaveURL(/\/residentes\/[^/]+\/editar$/);
   await expect(page.getByText('Corrige solo lo necesario')).toHaveCount(0);
   await page.getByTestId('resident-room-input').fill(scenario.updatedRoom);
+  await page
+    .getByTestId('resident-vgi-notes-input')
+    .fill(scenario.updatedVgiNotes);
   await page.getByTestId('resident-submit-button').click();
 
   await expect(page).toHaveURL(/\/residentes\/[^/]+$/);
   await expect(page.getByText(scenario.updatedRoom).first()).toBeVisible();
+  await expect(page.getByText(scenario.updatedVgiNotes)).toBeVisible();
 
   await page
     .getByTestId('clinical-history-title-input')

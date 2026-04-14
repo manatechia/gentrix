@@ -2,6 +2,7 @@ import type {
   ResidentCreateInput,
   ResidentDetail,
   ResidentDocumentType,
+  ResidentGeriatricAssessmentLevel,
   ResidentSex,
   ResidentUpdateInput,
 } from '@gentrix/shared-types';
@@ -93,6 +94,12 @@ function toResidentBooleanAnswer(
   return '';
 }
 
+function toResidentGeriatricAssessmentAnswer(
+  value: ResidentGeriatricAssessmentLevel | undefined,
+): '' | ResidentGeriatricAssessmentLevel {
+  return value ?? '';
+}
+
 export function toResidentFormValues(
   resident: ResidentDetail,
 ): ResidentFormValues {
@@ -153,6 +160,28 @@ export function toResidentFormValues(
         typeof resident.clinicalProfile.currentWeightKg === 'number'
           ? String(resident.clinicalProfile.currentWeightKg)
           : '',
+    },
+    geriatricAssessment: {
+      cognition: toResidentGeriatricAssessmentAnswer(
+        resident.geriatricAssessment.cognition,
+      ),
+      mobility: toResidentGeriatricAssessmentAnswer(
+        resident.geriatricAssessment.mobility,
+      ),
+      feeding: toResidentGeriatricAssessmentAnswer(
+        resident.geriatricAssessment.feeding,
+      ),
+      skinIntegrity: toResidentGeriatricAssessmentAnswer(
+        resident.geriatricAssessment.skinIntegrity,
+      ),
+      dependencyLevel: toResidentGeriatricAssessmentAnswer(
+        resident.geriatricAssessment.dependencyLevel,
+      ),
+      mood: toResidentGeriatricAssessmentAnswer(
+        resident.geriatricAssessment.mood,
+      ),
+      supportEquipment: resident.geriatricAssessment.supportEquipment ?? '',
+      notes: resident.geriatricAssessment.notes ?? '',
     },
     belongings: {
       glasses: resident.belongings.glasses,
@@ -216,6 +245,19 @@ function toResidentBaseInput(
     email: values.email.trim() || undefined,
     room: values.room.trim(),
     careLevel: values.careLevel,
+    geriatricAssessment: {
+      cognition: values.geriatricAssessment.cognition || undefined,
+      mobility: values.geriatricAssessment.mobility || undefined,
+      feeding: values.geriatricAssessment.feeding || undefined,
+      skinIntegrity: values.geriatricAssessment.skinIntegrity || undefined,
+      dependencyLevel:
+        values.geriatricAssessment.dependencyLevel || undefined,
+      mood: values.geriatricAssessment.mood || undefined,
+      supportEquipment: toOptionalString(
+        values.geriatricAssessment.supportEquipment,
+      ),
+      notes: toOptionalString(values.geriatricAssessment.notes),
+    },
   };
 }
 
@@ -262,13 +304,6 @@ export function toResidentCreateInput(
       drinksAlcohol: toOptionalBoolean(values.clinicalProfile.drinksAlcohol),
       currentWeightKg: toOptionalNumber(values.clinicalProfile.currentWeightKg),
     },
-    belongings: {
-      glasses: values.belongings.glasses,
-      dentures: values.belongings.dentures,
-      walker: values.belongings.walker,
-      orthopedicBed: values.belongings.orthopedicBed,
-      notes: toOptionalString(values.belongings.notes),
-    },
     familyContacts: values.familyContacts.map((contact) => ({
       fullName: contact.fullName.trim(),
       relationship: contact.relationship.trim(),
@@ -282,6 +317,13 @@ export function toResidentCreateInput(
         ? (toResidentDateIso(values.discharge.date) ?? values.discharge.date)
         : undefined,
       reason: toOptionalString(values.discharge.reason),
+    },
+    belongings: {
+      glasses: values.belongings.glasses,
+      dentures: values.belongings.dentures,
+      walker: values.belongings.walker,
+      orthopedicBed: values.belongings.orthopedicBed,
+      notes: toOptionalString(values.belongings.notes),
     },
     medicalHistory: values.medicalHistory.map((entry) => ({
       recordedAt: toResidentDateIso(entry.recordedAt) ?? entry.recordedAt,

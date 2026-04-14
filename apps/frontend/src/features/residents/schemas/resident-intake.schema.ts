@@ -109,6 +109,42 @@ const clinicalProfileSchema = Yup.object({
     ),
 });
 
+const geriatricAssessmentSchema = Yup.object({
+  cognition: Yup.string().oneOf([
+    '',
+    'preserved',
+    'monitored',
+    'high-support',
+  ]),
+  mobility: Yup.string().oneOf([
+    '',
+    'preserved',
+    'monitored',
+    'high-support',
+  ]),
+  feeding: Yup.string().oneOf([
+    '',
+    'preserved',
+    'monitored',
+    'high-support',
+  ]),
+  skinIntegrity: Yup.string().oneOf([
+    '',
+    'preserved',
+    'monitored',
+    'high-support',
+  ]),
+  dependencyLevel: Yup.string().oneOf([
+    '',
+    'preserved',
+    'monitored',
+    'high-support',
+  ]),
+  mood: Yup.string().oneOf(['', 'preserved', 'monitored', 'high-support']),
+  supportEquipment: Yup.string().trim(),
+  notes: Yup.string().trim(),
+});
+
 const belongingsSchema = Yup.object({
   glasses: Yup.boolean().required(),
   dentures: Yup.boolean().required(),
@@ -189,6 +225,7 @@ const residentBaseFormShape = {
 
 export const residentBaseUpdateSchema = Yup.object({
   ...residentBaseFormShape,
+  geriatricAssessment: geriatricAssessmentSchema.required(),
 }).test(
   'cuit-complete',
   'Completa el CUIT con 2 digitos iniciales y 1 digito final.',
@@ -224,6 +261,7 @@ export const residentIntakeSchema = Yup.object({
   transfer: transferSchema.required(),
   psychiatry: psychiatrySchema.required(),
   clinicalProfile: clinicalProfileSchema.required(),
+  geriatricAssessment: geriatricAssessmentSchema.required(),
   belongings: belongingsSchema.required(),
   familyContacts: Yup.array()
     .of(familyContactSchema)

@@ -176,6 +176,7 @@ model Resident {
   transfer               Json?
   psychiatry             Json?
   clinicalProfile        Json?
+  geriatricAssessment    Json?
   belongings             Json?
   familyContacts         Json?
   discharge              Json?

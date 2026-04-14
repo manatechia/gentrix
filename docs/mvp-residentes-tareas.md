@@ -172,7 +172,7 @@ Lo complementa con un recorte mas chico y mas cercano al producto que hoy querem
 
 ### MVP-RES-18 - Incorporar VGI en el alta del residente
 
-- Estado: `pending`
+- Estado: `done`
 - Prioridad: media
 - Estimacion: M
 - Objetivo: sumar al alta una `Valoracion Geriatrica Integral` estructurada, sin dejarla dispersa en texto libre.

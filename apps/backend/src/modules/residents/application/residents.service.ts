@@ -7,6 +7,7 @@ import {
 
 import {
   createResidentFromIntake,
+  isResidentGeriatricAssessmentLevel,
   toResidentCard,
   toResidentDetail,
   updateResidentBaseProfile,
@@ -18,6 +19,7 @@ import type {
   ResidentDischargeInfo,
   ResidentEvent,
   ResidentEventCreateInput,
+  ResidentGeriatricAssessment,
   ResidentObservation,
   ResidentObservationCreateInput,
   ResidentObservationEntryCreateInput,
@@ -270,11 +272,13 @@ export class ResidentsService {
   private validateResidentCreateInput(input: ResidentCreateInput): void {
     this.validateResidentBaseProfile(input);
     this.validateResidentSupportingRecords(input);
+    this.validateResidentGeriatricAssessment(input.geriatricAssessment);
     this.validateResidentDischarge(input.admissionDate, input.discharge);
   }
 
   private validateResidentUpdateInput(input: ResidentUpdateInput): void {
     this.validateResidentBaseProfile(input);
+    this.validateResidentGeriatricAssessment(input.geriatricAssessment);
   }
 
   private validateResidentEventCreateInput(input: ResidentEventCreateInput): void {
@@ -427,6 +431,30 @@ export class ResidentsService {
       if (dischargeDay < admissionDay) {
         throw new BadRequestException(
           'La fecha de salida no puede ser anterior a la fecha de ingreso.',
+        );
+      }
+    }
+  }
+
+  private validateResidentGeriatricAssessment(
+    geriatricAssessment: ResidentGeriatricAssessment,
+  ): void {
+    const domains = [
+      geriatricAssessment.cognition,
+      geriatricAssessment.mobility,
+      geriatricAssessment.feeding,
+      geriatricAssessment.skinIntegrity,
+      geriatricAssessment.dependencyLevel,
+      geriatricAssessment.mood,
+    ];
+
+    for (const domainValue of domains) {
+      if (
+        domainValue !== undefined &&
+        !isResidentGeriatricAssessmentLevel(domainValue)
+      ) {
+        throw new BadRequestException(
+          'La VGI tiene niveles de valoracion no validos.',
         );
       }
     }

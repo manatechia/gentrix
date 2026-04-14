@@ -119,6 +119,22 @@ export interface ResidentClinicalProfile {
   currentWeightKg?: number;
 }
 
+export type ResidentGeriatricAssessmentLevel =
+  | 'preserved'
+  | 'monitored'
+  | 'high-support';
+
+export interface ResidentGeriatricAssessment {
+  cognition?: ResidentGeriatricAssessmentLevel;
+  mobility?: ResidentGeriatricAssessmentLevel;
+  feeding?: ResidentGeriatricAssessmentLevel;
+  skinIntegrity?: ResidentGeriatricAssessmentLevel;
+  dependencyLevel?: ResidentGeriatricAssessmentLevel;
+  mood?: ResidentGeriatricAssessmentLevel;
+  supportEquipment?: string;
+  notes?: string;
+}
+
 export interface ResidentBelongings {
   glasses: boolean;
   dentures: boolean;
@@ -191,6 +207,7 @@ export interface ResidentSupportingRecordInput {
   transfer: ResidentTransferInfo;
   psychiatry: ResidentPsychiatricCareInfo;
   clinicalProfile: ResidentClinicalProfile;
+  geriatricAssessment: ResidentGeriatricAssessment;
   belongings: ResidentBelongings;
   familyContacts: ResidentFamilyContactInput[];
   discharge: ResidentDischargeInfo;
@@ -203,6 +220,7 @@ export interface ResidentSupportingRecordSnapshot {
   transfer: ResidentTransferInfo;
   psychiatry: ResidentPsychiatricCareInfo;
   clinicalProfile: ResidentClinicalProfile;
+  geriatricAssessment: ResidentGeriatricAssessment;
   belongings: ResidentBelongings;
   familyContacts: ResidentFamilyContact[];
   discharge: ResidentDischargeInfo;
@@ -288,11 +306,14 @@ export interface ResidentCreateInput
 /**
  * Resident updates are limited to the base profile and current state.
  * Supporting intake records stay outside this contract so base edits can
- * preserve child identities without rewriting the full snapshot.
+ * preserve child identities without rewriting the full snapshot. The VGI block
+ * remains editable because it is part of the living resident profile.
  */
 export interface ResidentBaseUpdateInput
   extends ResidentBaseProfileInput,
-    ResidentCurrentStateInput {}
+    ResidentCurrentStateInput {
+  geriatricAssessment: ResidentGeriatricAssessment;
+}
 
 export type ResidentUpdateInput = ResidentBaseUpdateInput;
 

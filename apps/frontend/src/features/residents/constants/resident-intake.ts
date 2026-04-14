@@ -1,12 +1,14 @@
 import type {
   ResidentCareLevel,
   ResidentDocumentType,
+  ResidentGeriatricAssessmentLevel,
   ResidentSex,
 } from '@gentrix/shared-types';
 
 import {
   formatResidentCareLevel,
   formatResidentDocumentType,
+  formatResidentGeriatricAssessmentLevel,
   formatResidentSex,
 } from '../../../shared/lib/display-labels';
 import { formatCurrentDateForResidentInput } from '../lib/resident-form-utils';
@@ -58,6 +60,16 @@ export const residentFormInitialValues: ResidentFormValues = {
     smokes: '',
     drinksAlcohol: '',
     currentWeightKg: '',
+  },
+  geriatricAssessment: {
+    cognition: '',
+    mobility: '',
+    feeding: '',
+    skinIntegrity: '',
+    dependencyLevel: '',
+    mood: '',
+    supportEquipment: '',
+    notes: '',
   },
   belongings: {
     glasses: false,
@@ -125,6 +137,24 @@ export const residentBooleanAnswerOptions = [
   { value: 'si', label: 'Si' },
   { value: 'no', label: 'No' },
 ] as const;
+
+export const residentGeriatricAssessmentOptions: Array<{
+  value: ResidentGeriatricAssessmentLevel;
+  label: string;
+}> = [
+  {
+    value: 'preserved',
+    label: formatResidentGeriatricAssessmentLevel('preserved'),
+  },
+  {
+    value: 'monitored',
+    label: formatResidentGeriatricAssessmentLevel('monitored'),
+  },
+  {
+    value: 'high-support',
+    label: formatResidentGeriatricAssessmentLevel('high-support'),
+  },
+];
 
 export const documentIssuingCountryOptions = [
   'Argentina',

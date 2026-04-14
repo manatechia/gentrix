@@ -17,7 +17,10 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-import { residentCareLevels } from '@gentrix/domain-residents';
+import {
+  residentCareLevels,
+  residentGeriatricAssessmentLevels,
+} from '@gentrix/domain-residents';
 import type {
   ResidentAttachmentInput,
   ResidentBelongings,
@@ -26,6 +29,7 @@ import type {
   ResidentDocumentType,
   ResidentDischargeInfo,
   ResidentFamilyContactInput,
+  ResidentGeriatricAssessment,
   ResidentInsuranceInfo,
   ResidentMedicalHistoryEntryInput,
   ResidentPsychiatricCareInfo,
@@ -168,6 +172,42 @@ export class CreateResidentClinicalProfileDto
   @Max(500)
   @IsOptional()
   currentWeightKg?: number;
+}
+
+export class CreateResidentGeriatricAssessmentDto
+  implements ResidentGeriatricAssessment
+{
+  @IsIn(residentGeriatricAssessmentLevels)
+  @IsOptional()
+  cognition?: ResidentGeriatricAssessment['cognition'];
+
+  @IsIn(residentGeriatricAssessmentLevels)
+  @IsOptional()
+  mobility?: ResidentGeriatricAssessment['mobility'];
+
+  @IsIn(residentGeriatricAssessmentLevels)
+  @IsOptional()
+  feeding?: ResidentGeriatricAssessment['feeding'];
+
+  @IsIn(residentGeriatricAssessmentLevels)
+  @IsOptional()
+  skinIntegrity?: ResidentGeriatricAssessment['skinIntegrity'];
+
+  @IsIn(residentGeriatricAssessmentLevels)
+  @IsOptional()
+  dependencyLevel?: ResidentGeriatricAssessment['dependencyLevel'];
+
+  @IsIn(residentGeriatricAssessmentLevels)
+  @IsOptional()
+  mood?: ResidentGeriatricAssessment['mood'];
+
+  @IsString()
+  @IsOptional()
+  supportEquipment?: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string;
 }
 
 export class CreateResidentBelongingsDto implements ResidentBelongings {
@@ -317,6 +357,10 @@ export class CreateResidentDto implements ResidentCreateInput {
   @ValidateNested()
   @Type(() => CreateResidentClinicalProfileDto)
   clinicalProfile!: ResidentCreateInput['clinicalProfile'];
+
+  @ValidateNested()
+  @Type(() => CreateResidentGeriatricAssessmentDto)
+  geriatricAssessment!: ResidentCreateInput['geriatricAssessment'];
 
   @ValidateNested()
   @Type(() => CreateResidentBelongingsDto)
