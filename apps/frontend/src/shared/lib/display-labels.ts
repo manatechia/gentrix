@@ -10,6 +10,10 @@ import type {
   ResidentAttachmentKind,
   ResidentCareLevel,
   ResidentDocumentType,
+  ResidentObservationEntryType,
+  ResidentObservationResolutionType,
+  ResidentObservationSeverity,
+  ResidentObservationStatus,
   ResidentSex,
 } from '@gentrix/shared-types';
 
@@ -108,6 +112,38 @@ const handoffMedicationStatusLabels: Record<HandoffMedicationStatus, string> = {
   rejected: 'Rechazada',
 };
 
+const residentObservationSeverityLabels: Record<
+  ResidentObservationSeverity,
+  string
+> = {
+  warning: 'Seguimiento',
+  critical: 'Critica',
+};
+
+const residentObservationStatusLabels: Record<ResidentObservationStatus, string> =
+  {
+    active: 'En observacion',
+    resolved: 'Resuelta',
+  };
+
+const residentObservationEntryTypeLabels: Record<
+  ResidentObservationEntryType,
+  string
+> = {
+  'follow-up': 'Seguimiento',
+  action: 'Accion',
+  resolution: 'Cierre',
+};
+
+const residentObservationResolutionTypeLabels: Record<
+  ResidentObservationResolutionType,
+  string
+> = {
+  completed: 'Finalizada',
+  'phone-call': 'Llamado',
+  'medical-visit': 'Visita medica',
+};
+
 export function formatEntityStatus(status: EntityStatus): string {
   return entityStatusLabels[status] ?? status;
 }
@@ -176,4 +212,30 @@ export function formatHandoffMedicationStatus(
   status: HandoffMedicationStatus,
 ): string {
   return handoffMedicationStatusLabels[status] ?? status;
+}
+
+export function formatResidentObservationSeverity(
+  severity: ResidentObservationSeverity,
+): string {
+  return residentObservationSeverityLabels[severity] ?? severity;
+}
+
+export function formatResidentObservationStatus(
+  status: ResidentObservationStatus,
+): string {
+  return residentObservationStatusLabels[status] ?? status;
+}
+
+export function formatResidentObservationEntryType(
+  entryType: ResidentObservationEntryType,
+): string {
+  return residentObservationEntryTypeLabels[entryType] ?? entryType;
+}
+
+export function formatResidentObservationResolutionType(
+  resolutionType: ResidentObservationResolutionType,
+): string {
+  return (
+    residentObservationResolutionTypeLabels[resolutionType] ?? resolutionType
+  );
 }

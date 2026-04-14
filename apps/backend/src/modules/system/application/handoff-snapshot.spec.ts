@@ -6,7 +6,7 @@ import {
   type MedicationExecution,
 } from '@gentrix/domain-medication';
 import { createResidentSeed, toResidentCard } from '@gentrix/domain-residents';
-import type { ResidentEvent } from '@gentrix/shared-types';
+import type { ResidentEvent, ResidentObservation } from '@gentrix/shared-types';
 import { createEntityId } from '@gentrix/shared-utils';
 
 import { deriveHandoffSnapshot } from './handoff-snapshot';
@@ -73,6 +73,27 @@ describe('deriveHandoffSnapshot', () => {
           occurredAt: '2026-03-26T18:00:00.000-03:00',
         }),
       ],
+      residentObservations: [
+        createResidentObservationSeed({
+          id: 'resident-observation-elena',
+          residentId: elena.id,
+          severity: 'warning',
+          title: 'Menor ingesta en la tarde',
+          description: 'Queda en observacion por menor ingesta.',
+          openedAt: '2026-03-26T17:30:00.000-03:00',
+          entries: [
+            createResidentObservationEntrySeed({
+              id: 'resident-observation-entry-elena-action',
+              observationId: 'resident-observation-elena',
+              residentId: elena.id,
+              entryType: 'action',
+              title: 'Aviso a familia',
+              description: 'Se avisa a la hija para seguimiento.',
+              occurredAt: '2026-03-26T20:10:00.000-03:00',
+            }),
+          ],
+        }),
+      ],
       medicationExecutions: [
         createMedicationExecutionSeed({
           id: 'execution-marta-administered',
@@ -99,6 +120,7 @@ describe('deriveHandoffSnapshot', () => {
     expect(snapshot.summary).toMatchObject({
       residentCount: 3,
       relevantResidentCount: 2,
+      activeObservationCount: 1,
       recentEventCount: 1,
       pendingMedicationCount: 1,
       omittedMedicationCount: 1,
@@ -119,6 +141,10 @@ describe('deriveHandoffSnapshot', () => {
     expect(snapshot.residents[1]).toMatchObject({
       residentId: elena.id,
       priority: 'warning',
+    });
+    expect(snapshot.residents[1].observations[0]).toMatchObject({
+      title: 'Menor ingesta en la tarde',
+      latestEntrySummary: 'Aviso a familia: Se avisa a la hija para seguimiento.',
     });
     expect(snapshot.residents[1].medicationIssues[0]).toMatchObject({
       medicationName: 'Quetiapina',
@@ -163,6 +189,16 @@ describe('deriveHandoffSnapshot', () => {
         ),
       ],
       residentEvents: [],
+      residentObservations: [
+        createResidentObservationSeed({
+          id: 'resident-observation-critical',
+          residentId: resident.id,
+          severity: 'critical',
+          title: 'Saturacion inestable',
+          description: 'Queda en observacion respiratoria.',
+          openedAt: '2026-03-26T23:20:00.000-03:00',
+        }),
+      ],
       medicationExecutions: [
         createMedicationExecutionSeed({
           id: 'execution-night-rejected',
@@ -181,10 +217,12 @@ describe('deriveHandoffSnapshot', () => {
     expect(snapshot.summary).toMatchObject({
       residentCount: 1,
       relevantResidentCount: 1,
+      activeObservationCount: 1,
       pendingMedicationCount: 1,
       omittedMedicationCount: 0,
       rejectedMedicationCount: 1,
     });
+    expect(snapshot.residents[0].priority).toBe('critical');
     expect(snapshot.residents[0].medicationIssues).toHaveLength(2);
     expect(snapshot.residents[0].medicationIssues).toEqual(
       expect.arrayContaining([
@@ -244,6 +282,51 @@ function createMedicationExecutionSeed(
     audit: {
       createdAt: '2026-03-27T09:05:00.000-03:00',
       updatedAt: '2026-03-27T09:05:00.000-03:00',
+      createdBy: 'seed-script',
+      updatedBy: 'seed-script',
+    },
+    ...overrides,
+  };
+}
+
+function createResidentObservationSeed(
+  overrides: Partial<ResidentObservation> = {},
+): ResidentObservation {
+  return {
+    id: 'resident-observation-seed',
+    residentId: 'resident-seed',
+    status: 'active',
+    severity: 'warning',
+    title: 'Observacion simple',
+    description: 'Se deja seguimiento operativo.',
+    openedAt: '2026-03-26T17:30:00.000-03:00',
+    openedBy: 'seed-script',
+    entries: [],
+    audit: {
+      createdAt: '2026-03-26T17:30:00.000-03:00',
+      updatedAt: '2026-03-26T17:30:00.000-03:00',
+      createdBy: 'seed-script',
+      updatedBy: 'seed-script',
+    },
+    ...overrides,
+  };
+}
+
+function createResidentObservationEntrySeed(
+  overrides: Partial<ResidentObservation['entries'][number]> = {},
+): ResidentObservation['entries'][number] {
+  return {
+    id: 'resident-observation-entry-seed',
+    observationId: 'resident-observation-seed',
+    residentId: 'resident-seed',
+    entryType: 'follow-up',
+    title: 'Seguimiento simple',
+    description: 'Se observa evolucion estable.',
+    occurredAt: '2026-03-26T18:00:00.000-03:00',
+    actor: 'seed-script',
+    audit: {
+      createdAt: '2026-03-26T18:00:00.000-03:00',
+      updatedAt: '2026-03-26T18:00:00.000-03:00',
       createdBy: 'seed-script',
       updatedBy: 'seed-script',
     },

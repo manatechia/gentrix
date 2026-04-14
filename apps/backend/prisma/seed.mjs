@@ -52,6 +52,15 @@ const ids = {
     martaAdmission: 'c1ab5e2a-f96d-45a6-ad33-48f7d41ceb14',
     elenaNeurologyReview: '3e773a38-77f4-4c17-934b-4e4dbd5c287f',
   },
+  observations: {
+    elenaAppetite: '7f12de44-6c4f-4838-a4e8-c925ba13c084',
+    martaResolvedHydration: '6a6c4491-0db5-4eef-a650-ec204f4a82ad',
+  },
+  observationEntries: {
+    elenaAppetiteFollowUp: '253dcbd5-9c4a-40aa-8f07-5f18d76f85fb',
+    elenaAppetiteAction: '31812c2d-f27f-4b6f-89d2-ae9e3e3f1f02',
+    martaHydrationResolution: '81ef3b2a-f3b7-40ff-9b9f-c12a495b0ad9',
+  },
   schedules: {
     anaMondayMorning: 'ba2660f8-2d11-4305-8341-cc1e933265a8',
     mauroWednesdayAfternoon: 'f7f6b3c7-a18f-4f75-8ff7-c24635fce4d1',
@@ -68,6 +77,8 @@ export async function seedDatabase(prisma) {
   await prisma.authSession.deleteMany();
   await prisma.staffSchedule.deleteMany();
   await prisma.staffFacilityAssignment.deleteMany();
+  await prisma.residentObservationEntry.deleteMany();
+  await prisma.residentObservation.deleteMany();
   await prisma.clinicalHistoryEvent.deleteMany();
   await prisma.medicationExecution.deleteMany();
   await prisma.medicationOrder.deleteMany();
@@ -639,6 +650,98 @@ export async function seedDatabase(prisma) {
         createdBy: 'seed-script',
         updatedAt: new Date('2026-03-12T18:00:00.000Z'),
         updatedBy: 'seed-script',
+      },
+    ],
+  });
+
+  await prisma.residentObservation.createMany({
+    data: [
+      {
+        id: ids.observations.elenaAppetite,
+        organizationId: ids.organizations.gentrixDemo,
+        residentId: ids.residents.elenaSuarez,
+        status: 'active',
+        severity: 'warning',
+        title: 'Menor ingesta en la tarde',
+        description:
+          'Se registra que hoy comio menos de lo habitual y queda en observacion para el proximo turno.',
+        openedAt: new Date('2026-03-26T17:30:00.000Z'),
+        openedBy: 'Ana Gomez',
+        createdAt: new Date('2026-03-26T17:30:00.000Z'),
+        createdBy: 'Ana Gomez',
+        updatedAt: new Date('2026-03-26T20:10:00.000Z'),
+        updatedBy: 'Mauro Paz',
+      },
+      {
+        id: ids.observations.martaResolvedHydration,
+        organizationId: ids.organizations.gentrixDemo,
+        residentId: ids.residents.martaDiaz,
+        status: 'resolved',
+        severity: 'warning',
+        title: 'Control de hidratacion',
+        description:
+          'Se abrio seguimiento por baja ingesta de liquidos durante la manana.',
+        openedAt: new Date('2026-03-24T10:00:00.000Z'),
+        openedBy: 'Ana Gomez',
+        resolvedAt: new Date('2026-03-24T15:15:00.000Z'),
+        resolvedBy: 'Maria Lopez',
+        resolutionType: 'completed',
+        resolutionSummary:
+          'Se normalizo la hidratacion en el mismo dia y sale de observacion.',
+        createdAt: new Date('2026-03-24T10:00:00.000Z'),
+        createdBy: 'Ana Gomez',
+        updatedAt: new Date('2026-03-24T15:15:00.000Z'),
+        updatedBy: 'Maria Lopez',
+      },
+    ],
+  });
+
+  await prisma.residentObservationEntry.createMany({
+    data: [
+      {
+        id: ids.observationEntries.elenaAppetiteFollowUp,
+        observationId: ids.observations.elenaAppetite,
+        organizationId: ids.organizations.gentrixDemo,
+        residentId: ids.residents.elenaSuarez,
+        entryType: 'follow-up',
+        title: 'Seguimiento de merienda',
+        description:
+          'Se controla de nuevo en merienda y mantiene rechazo parcial, sin otros sintomas.',
+        occurredAt: new Date('2026-03-26T18:45:00.000Z'),
+        createdAt: new Date('2026-03-26T18:45:00.000Z'),
+        createdBy: 'Ana Gomez',
+        updatedAt: new Date('2026-03-26T18:45:00.000Z'),
+        updatedBy: 'Ana Gomez',
+      },
+      {
+        id: ids.observationEntries.elenaAppetiteAction,
+        observationId: ids.observations.elenaAppetite,
+        organizationId: ids.organizations.gentrixDemo,
+        residentId: ids.residents.elenaSuarez,
+        entryType: 'action',
+        title: 'Aviso a familia',
+        description:
+          'Se informa a la hija para reforzar antecedentes de apetito y conducta habitual.',
+        occurredAt: new Date('2026-03-26T20:10:00.000Z'),
+        createdAt: new Date('2026-03-26T20:10:00.000Z'),
+        createdBy: 'Mauro Paz',
+        updatedAt: new Date('2026-03-26T20:10:00.000Z'),
+        updatedBy: 'Mauro Paz',
+      },
+      {
+        id: ids.observationEntries.martaHydrationResolution,
+        observationId: ids.observations.martaResolvedHydration,
+        organizationId: ids.organizations.gentrixDemo,
+        residentId: ids.residents.martaDiaz,
+        entryType: 'resolution',
+        title: 'Observacion cerrada',
+        description:
+          'Se normalizo la hidratacion en el mismo dia y sale de observacion.',
+        occurredAt: new Date('2026-03-24T15:15:00.000Z'),
+        createdAt: new Date('2026-03-24T15:15:00.000Z'),
+        createdBy: 'Maria Lopez',
+        updatedAt: new Date('2026-03-24T15:15:00.000Z'),
+        updatedBy: 'Maria Lopez',
       },
     ],
   });

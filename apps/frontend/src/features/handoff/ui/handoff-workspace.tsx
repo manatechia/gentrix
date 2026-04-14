@@ -6,6 +6,7 @@ import {
   formatDashboardAlertSeverity,
   formatHandoffMedicationStatus,
   formatResidentCareLevel,
+  formatResidentObservationSeverity,
   formatShiftLabel,
 } from '../../../shared/lib/display-labels';
 import {
@@ -61,6 +62,16 @@ const medicationIssueBadgeClassNames: Record<
   omitted:
     'border border-[rgba(166,89,42,0.2)] bg-[rgba(255,236,214,0.76)] text-[rgb(138,72,36)]',
   rejected:
+    'border border-[rgba(143,38,38,0.2)] bg-[rgba(255,223,223,0.86)] text-[rgb(127,28,28)]',
+};
+
+const observationBadgeClassNames: Record<
+  HandoffSnapshot['residents'][number]['observations'][number]['severity'],
+  string
+> = {
+  warning:
+    'border border-[rgba(166,89,42,0.2)] bg-[rgba(255,236,214,0.76)] text-[rgb(138,72,36)]',
+  critical:
     'border border-[rgba(143,38,38,0.2)] bg-[rgba(255,223,223,0.86)] text-[rgb(127,28,28)]',
 };
 
@@ -184,10 +195,14 @@ export function HandoffWorkspace({
               </div>
             </div>
 
-            <div className="grid gap-3 min-[860px]:grid-cols-5">
+            <div className="grid gap-3 min-[860px]:grid-cols-6">
               <SummaryTile
                 label="Residentes"
                 value={handoff.summary.relevantResidentCount}
+              />
+              <SummaryTile
+                label="Observaciones"
+                value={handoff.summary.activeObservationCount}
               />
               <SummaryTile
                 label="Eventos recientes"
@@ -255,7 +270,79 @@ export function HandoffWorkspace({
                     </Link>
                   </div>
 
-                  <div className="mt-5 grid gap-4 min-[1040px]:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                  <div className="mt-5 grid gap-4 min-[1180px]:grid-cols-3">
+                    <section className="grid gap-3 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/50 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                          Observaciones activas
+                        </span>
+                        <span className="text-[0.9rem] text-brand-text-secondary">
+                          {resident.observations.length === 0
+                            ? 'Sin novedades'
+                            : `${resident.observations.length} activa${resident.observations.length === 1 ? '' : 's'}`}
+                        </span>
+                      </div>
+
+                      {resident.observations.length === 0 ? (
+                        <div className="rounded-[20px] border border-dashed border-[rgba(0,102,132,0.18)] bg-white/65 px-4 py-4 text-brand-text-secondary">
+                          No hay observaciones abiertas para sumar al pase de
+                          turno de este residente.
+                        </div>
+                      ) : (
+                        <div className="grid gap-2.5">
+                          {resident.observations.map((observation) => (
+                            <article
+                              key={observation.id}
+                              className="rounded-[20px] border border-[rgba(0,102,132,0.08)] bg-white/78 px-4 py-4"
+                            >
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="grid gap-1.5">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span
+                                      className={[
+                                        badgeBaseClassName,
+                                        observationBadgeClassNames[
+                                          observation.severity
+                                        ],
+                                      ].join(' ')}
+                                    >
+                                      {formatResidentObservationSeverity(
+                                        observation.severity,
+                                      )}
+                                    </span>
+                                    <strong className="text-brand-text">
+                                      {observation.title}
+                                    </strong>
+                                  </div>
+                                  <p className="leading-[1.55] text-brand-text-secondary">
+                                    {observation.description}
+                                  </p>
+                                  {observation.latestEntrySummary && (
+                                    <span className="text-[0.92rem] text-brand-text-secondary">
+                                      Ultimo movimiento:{' '}
+                                      {observation.latestEntrySummary}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="grid gap-1 text-right text-brand-text-secondary">
+                                  <span>
+                                    {formatShiftDateTime(
+                                      observation.latestEntryAt ??
+                                        observation.openedAt,
+                                    )}
+                                  </span>
+                                  <strong className="text-brand-text">
+                                    {observation.openedBy}
+                                  </strong>
+                                </div>
+                              </div>
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+
                     <section className="grid gap-3 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/50 p-4">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">

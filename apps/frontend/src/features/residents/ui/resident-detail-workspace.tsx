@@ -7,6 +7,10 @@ import type {
   ClinicalHistoryEventCreateInput,
   ResidentDetail,
   ResidentLiveProfile,
+  ResidentObservation,
+  ResidentObservationCreateInput,
+  ResidentObservationEntryCreateInput,
+  ResidentObservationResolveInput,
 } from '@gentrix/shared-types';
 
 import {
@@ -33,6 +37,7 @@ import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
 import { ClinicalHistoryPanel } from './clinical-history-panel';
 import { ResidentLiveProfilePanel } from './resident-live-profile-panel';
+import { ResidentObservationsPanel } from './resident-observations-panel';
 
 interface ResidentDetailWorkspaceProps {
   screenState: DashboardScreenState;
@@ -41,15 +46,31 @@ interface ResidentDetailWorkspaceProps {
   resident: ResidentDetail | null;
   residentLiveProfile: ResidentLiveProfile | null;
   clinicalHistory: ClinicalHistoryEvent[];
+  observations: ResidentObservation[];
   residentError: string | null;
   isSavingClinicalHistoryEvent: boolean;
+  isSavingObservation: boolean;
+  activeObservationMutationId: string | null;
   clinicalHistoryNoticeTone: 'success' | 'error';
   clinicalHistoryNotice: string | null;
+  observationNoticeTone: 'success' | 'error';
+  observationNotice: string | null;
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
   onClinicalHistoryCreate: (
     input: ClinicalHistoryEventCreateInput,
   ) => Promise<ClinicalHistoryEvent | null>;
+  onObservationCreate: (
+    input: ResidentObservationCreateInput,
+  ) => Promise<ResidentObservation | null>;
+  onObservationEntryCreate: (
+    observationId: string,
+    input: ResidentObservationEntryCreateInput,
+  ) => Promise<ResidentObservation | null>;
+  onObservationResolve: (
+    observationId: string,
+    input: ResidentObservationResolveInput,
+  ) => Promise<ResidentObservation | null>;
 }
 
 interface DetailFieldProps {
@@ -127,13 +148,21 @@ export function ResidentDetailWorkspace({
   resident,
   residentLiveProfile,
   clinicalHistory,
+  observations,
   residentError,
   isSavingClinicalHistoryEvent,
+  isSavingObservation,
+  activeObservationMutationId,
   clinicalHistoryNoticeTone,
   clinicalHistoryNotice,
+  observationNoticeTone,
+  observationNotice,
   onLogout,
   onRetry,
   onClinicalHistoryCreate,
+  onObservationCreate,
+  onObservationEntryCreate,
+  onObservationResolve,
 }: ResidentDetailWorkspaceProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -234,6 +263,17 @@ export function ResidentDetailWorkspace({
 
       {screenState === 'ready' && resident && (
         <>
+          <ResidentObservationsPanel
+            observations={observations}
+            isSavingObservation={isSavingObservation}
+            activeObservationMutationId={activeObservationMutationId}
+            notice={observationNotice}
+            noticeTone={observationNoticeTone}
+            onCreate={onObservationCreate}
+            onCreateEntry={onObservationEntryCreate}
+            onResolve={onObservationResolve}
+          />
+
           <ClinicalHistoryPanel
             events={clinicalHistory}
             isSavingEvent={isSavingClinicalHistoryEvent}

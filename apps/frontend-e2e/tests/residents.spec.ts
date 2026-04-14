@@ -21,6 +21,11 @@ function createResidentScenario(projectName: string) {
     updatedRoom: `${room}-B`,
     clinicalHistoryTitle: `Seguimiento automatizado ${scenarioId}`,
     clinicalHistoryDescription: `Evento agregado por Playwright para el escenario ${scenarioId}.`,
+    observationTitle: `Observacion automatizada ${scenarioId}`,
+    observationDescription: `Se abre observacion por un desvio operativo en el escenario ${scenarioId}.`,
+    observationEntryTitle: `Seguimiento automatizado ${scenarioId}`,
+    observationEntryDescription: `Se agrega seguimiento dentro de la observacion para el escenario ${scenarioId}.`,
+    observationResolutionSummary: `Se cierra la observacion del escenario ${scenarioId} sin nuevas incidencias.`,
   };
 }
 
@@ -88,7 +93,9 @@ test('create, edit, search, and append clinical history for a resident', async (
   await expect(page.getByText('Vista operativa del personal')).toHaveCount(0);
 
   if (testInfo.project.name === 'mobile-chromium') {
-    await expect(page.getByTestId('clinical-history-panel')).toBeInViewport();
+    await expect(
+      page.getByTestId('resident-observations-panel'),
+    ).toBeInViewport();
   }
 
   await page.getByTestId('resident-edit-button').click();
@@ -113,4 +120,46 @@ test('create, edit, search, and append clinical history for a resident', async (
   await expect(
     page.getByText(scenario.clinicalHistoryDescription),
   ).toBeVisible();
+
+  await page
+    .getByTestId('resident-observation-title-input')
+    .fill(scenario.observationTitle);
+  await page
+    .getByTestId('resident-observation-description-input')
+    .fill(scenario.observationDescription);
+  await page.getByTestId('resident-observation-create-submit-button').click();
+
+  const observationCard = page
+    .locator('[data-testid^="resident-observation-card-"]')
+    .first();
+
+  await expect(observationCard).toContainText(scenario.observationTitle);
+  await expect(observationCard).toContainText('En observacion');
+
+  await observationCard
+    .locator('[data-testid^="resident-observation-entry-title-input-"]')
+    .fill(scenario.observationEntryTitle);
+  await observationCard
+    .locator('[data-testid^="resident-observation-entry-description-input-"]')
+    .fill(scenario.observationEntryDescription);
+  await observationCard
+    .locator('[data-testid^="resident-observation-entry-submit-"]')
+    .click();
+
+  await expect(observationCard).toContainText(scenario.observationEntryTitle);
+  await expect(observationCard).toContainText(
+    scenario.observationEntryDescription,
+  );
+
+  await observationCard
+    .locator('[data-testid^="resident-observation-resolution-summary-input-"]')
+    .fill(scenario.observationResolutionSummary);
+  await observationCard
+    .locator('[data-testid^="resident-observation-resolve-submit-"]')
+    .click();
+
+  await expect(observationCard).toContainText('Resuelta');
+  await expect(observationCard).toContainText(
+    scenario.observationResolutionSummary,
+  );
 });

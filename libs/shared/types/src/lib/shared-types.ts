@@ -328,6 +328,71 @@ export interface ResidentEventCreateInput {
   occurredAt: IsoDateString;
 }
 
+export type ResidentObservationSeverity = 'warning' | 'critical';
+
+export type ResidentObservationStatus = 'active' | 'resolved';
+
+export type ResidentObservationEntryType =
+  | 'follow-up'
+  | 'action'
+  | 'resolution';
+
+export type ResidentObservationEntryCreatableType = Exclude<
+  ResidentObservationEntryType,
+  'resolution'
+>;
+
+export type ResidentObservationResolutionType =
+  | 'completed'
+  | 'phone-call'
+  | 'medical-visit';
+
+export interface ResidentObservationEntry {
+  id: EntityId;
+  observationId: EntityId;
+  residentId: EntityId;
+  entryType: ResidentObservationEntryType;
+  title: string;
+  description: string;
+  occurredAt: IsoDateString;
+  actor: string;
+  audit: AuditTrail;
+}
+
+export interface ResidentObservation {
+  id: EntityId;
+  residentId: EntityId;
+  status: ResidentObservationStatus;
+  severity: ResidentObservationSeverity;
+  title: string;
+  description: string;
+  openedAt: IsoDateString;
+  openedBy: string;
+  resolvedAt?: IsoDateString;
+  resolvedBy?: string;
+  resolutionType?: ResidentObservationResolutionType;
+  resolutionSummary?: string;
+  entries: ResidentObservationEntry[];
+  audit: AuditTrail;
+}
+
+export interface ResidentObservationCreateInput {
+  severity: ResidentObservationSeverity;
+  title: string;
+  description: string;
+}
+
+export interface ResidentObservationEntryCreateInput {
+  entryType: ResidentObservationEntryCreatableType;
+  title: string;
+  description: string;
+}
+
+export interface ResidentObservationResolveInput {
+  resolutionType: ResidentObservationResolutionType;
+  summary: string;
+}
+
 export interface ResidentLiveProfileResident
   extends ResidentBaseProfile,
     ResidentCurrentState {
@@ -538,12 +603,24 @@ export interface HandoffMedicationIssue {
   actor?: string;
 }
 
+export interface HandoffObservation {
+  id: EntityId;
+  severity: ResidentObservationSeverity;
+  title: string;
+  description: string;
+  openedAt: IsoDateString;
+  openedBy: string;
+  latestEntryAt?: IsoDateString;
+  latestEntrySummary?: string;
+}
+
 export interface HandoffResident {
   residentId: EntityId;
   fullName: string;
   room: string;
   careLevel: ResidentCareLevel;
   priority: DashboardAlertSeverity;
+  observations: HandoffObservation[];
   recentEvents: ResidentEvent[];
   medicationIssues: HandoffMedicationIssue[];
 }
@@ -551,6 +628,7 @@ export interface HandoffResident {
 export interface HandoffSummary {
   residentCount: number;
   relevantResidentCount: number;
+  activeObservationCount: number;
   recentEventCount: number;
   pendingMedicationCount: number;
   omittedMedicationCount: number;

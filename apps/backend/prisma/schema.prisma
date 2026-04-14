@@ -21,6 +21,8 @@ model Organization {
   deletedAt        DateTime?
   deletedBy        String?
   clinicalEvents   ClinicalHistoryEvent[]
+  observationEntries ResidentObservationEntry[]
+  observations     ResidentObservation[]
   medicationExecutions MedicationExecution[]
   facilities       Facility[]
   medicationOrders MedicationOrder[]
@@ -186,6 +188,8 @@ model Resident {
   deletedAt              DateTime?
   deletedBy              String?
   clinicalEvents         ClinicalHistoryEvent[]
+  observationEntries     ResidentObservationEntry[]
+  observations           ResidentObservation[]
   facility               Facility               @relation(fields: [facilityId], references: [id], onDelete: Restrict)
   medicationExecutions   MedicationExecution[]
   medications            MedicationOrder[]
@@ -342,6 +346,58 @@ model ClinicalHistoryEvent {
 
   @@index([organizationId, residentId, occurredAt])
   @@index([facilityId, occurredAt])
+  @@index([deletedAt])
+}
+
+model ResidentObservation {
+  id                String                   @id @default(uuid()) @db.Uuid
+  organizationId    String                   @db.Uuid
+  residentId        String                   @db.Uuid
+  status            String
+  severity          String
+  title             String
+  description       String
+  openedAt          DateTime
+  openedBy          String
+  resolvedAt        DateTime?
+  resolvedBy        String?
+  resolutionType    String?
+  resolutionSummary String?
+  createdAt         DateTime
+  createdBy         String
+  updatedAt         DateTime
+  updatedBy         String
+  deletedAt         DateTime?
+  deletedBy         String?
+  organization      Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  resident          Resident                 @relation(fields: [residentId], references: [id], onDelete: Restrict)
+  entries           ResidentObservationEntry[]
+
+  @@index([organizationId, residentId, status, openedAt])
+  @@index([deletedAt])
+}
+
+model ResidentObservationEntry {
+  id             String              @id @default(uuid()) @db.Uuid
+  observationId  String              @db.Uuid
+  organizationId String              @db.Uuid
+  residentId     String              @db.Uuid
+  entryType      String
+  title          String
+  description    String
+  occurredAt     DateTime
+  createdAt      DateTime
+  createdBy      String
+  updatedAt      DateTime
+  updatedBy      String
+  deletedAt      DateTime?
+  deletedBy      String?
+  observation    ResidentObservation @relation(fields: [observationId], references: [id], onDelete: Cascade)
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  resident       Resident            @relation(fields: [residentId], references: [id], onDelete: Restrict)
+
+  @@index([observationId, occurredAt])
+  @@index([organizationId, residentId, occurredAt])
   @@index([deletedAt])
 }
 

@@ -96,13 +96,21 @@ export function ResidentDetailRoute() {
       resident={detail.resident}
       residentLiveProfile={detail.residentLiveProfile}
       clinicalHistory={detail.clinicalHistory}
+      observations={detail.observations}
       residentError={detail.residentError}
       isSavingClinicalHistoryEvent={detail.isSavingClinicalHistoryEvent}
+      isSavingObservation={detail.isSavingObservation}
+      activeObservationMutationId={detail.activeObservationMutationId}
       clinicalHistoryNoticeTone={detail.clinicalHistoryNoticeTone}
       clinicalHistoryNotice={detail.clinicalHistoryNotice}
+      observationNoticeTone={detail.observationNoticeTone}
+      observationNotice={detail.observationNotice}
       onLogout={auth.logout}
       onRetry={detail.handleRetry}
       onClinicalHistoryCreate={detail.handleClinicalHistoryCreate}
+      onObservationCreate={detail.handleObservationCreate}
+      onObservationEntryCreate={detail.handleObservationEntryCreate}
+      onObservationResolve={detail.handleObservationResolve}
     />
   );
 }
