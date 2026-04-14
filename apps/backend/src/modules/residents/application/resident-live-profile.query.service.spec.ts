@@ -6,7 +6,7 @@ import {
   type MedicationOrder,
 } from '@gentrix/domain-medication';
 import { createResidentSeed, type Resident } from '@gentrix/domain-residents';
-import type { ResidentEvent } from '@gentrix/shared-types';
+import type { ResidentEvent, ResidentObservation } from '@gentrix/shared-types';
 
 import type { MedicationRepository } from '../../medication/domain/repositories/medication.repository';
 import type { ResidentRepository } from '../domain/repositories/resident.repository';
@@ -49,6 +49,30 @@ class ResidentRepositoryStub implements ResidentRepository {
   }
 
   async createEvent(): Promise<ResidentEvent> {
+    throw new Error('Not implemented in query tests.');
+  }
+
+  async listObservations(): Promise<ResidentObservation[]> {
+    return [];
+  }
+
+  async listObservationsByResidentId(): Promise<ResidentObservation[]> {
+    return [];
+  }
+
+  async findObservationById(): Promise<ResidentObservation | null> {
+    return null;
+  }
+
+  async createObservation(): Promise<ResidentObservation> {
+    throw new Error('Not implemented in query tests.');
+  }
+
+  async createObservationEntry(): Promise<ResidentObservation> {
+    throw new Error('Not implemented in query tests.');
+  }
+
+  async resolveObservation(): Promise<ResidentObservation> {
     throw new Error('Not implemented in query tests.');
   }
 }

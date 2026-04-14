@@ -3,22 +3,26 @@ import { createEntityId, toIsoDateString } from '@gentrix/shared-utils';
 import type {
   DashboardAlertSeverity,
   HandoffMedicationIssue,
+  HandoffObservation,
   HandoffResident,
   HandoffShift,
   HandoffSnapshot,
   MedicationOverview,
   ResidentEvent,
+  ResidentObservation,
   ResidentOverview,
 } from '@gentrix/shared-types';
 
 const recentResidentEventWindowMs = 1000 * 60 * 60 * 24 * 21;
 const residentRecentEventsLimit = 2;
 const medicationExecutionMatchWindowMs = 1000 * 60 * 60 * 2;
+const facilityUtcOffsetMinutes = -180;
 
 interface DeriveHandoffSnapshotInput {
   residents: ResidentOverview[];
   medications: MedicationOverview[];
   residentEvents: ResidentEvent[];
+  residentObservations: ResidentObservation[];
   medicationExecutions: MedicationExecution[];
   referenceDate?: Date;
 }
@@ -35,6 +39,7 @@ export function deriveHandoffSnapshot({
   residents,
   medications,
   residentEvents,
+  residentObservations,
   medicationExecutions,
   referenceDate = new Date(),
 }: DeriveHandoffSnapshotInput): HandoffSnapshot {
@@ -48,20 +53,31 @@ export function deriveHandoffSnapshot({
     medicationExecutions,
     shiftContext,
   );
+  const activeObservationsByResidentId = buildActiveObservationsByResidentId(
+    residentObservations,
+  );
   const relevantResidents = residents
     .filter((resident) => {
       const medicationIssues =
         medicationIssuesByResidentId.get(resident.id) ?? [];
       const recentResidentEvents =
         recentEventsByResidentId.get(resident.id) ?? [];
+      const activeObservations =
+        activeObservationsByResidentId.get(resident.id) ?? [];
 
-      return medicationIssues.length > 0 || recentResidentEvents.length > 0;
+      return (
+        medicationIssues.length > 0 ||
+        recentResidentEvents.length > 0 ||
+        activeObservations.length > 0
+      );
     })
     .map((resident) => {
       const medicationIssues =
         medicationIssuesByResidentId.get(resident.id) ?? [];
       const recentResidentEvents =
         recentEventsByResidentId.get(resident.id) ?? [];
+      const activeObservations =
+        activeObservationsByResidentId.get(resident.id) ?? [];
 
       return {
         residentId: resident.id,
@@ -70,9 +86,11 @@ export function deriveHandoffSnapshot({
         careLevel: resident.careLevel,
         priority: resolveResidentPriority(
           resident,
+          activeObservations,
           medicationIssues,
           recentResidentEvents,
         ),
+        observations: activeObservations,
         recentEvents: recentResidentEvents,
         medicationIssues,
       } satisfies HandoffResident;
@@ -88,6 +106,10 @@ export function deriveHandoffSnapshot({
     summary: {
       residentCount: residents.length,
       relevantResidentCount: relevantResidents.length,
+      activeObservationCount: relevantResidents.reduce(
+        (total, resident) => total + resident.observations.length,
+        0,
+      ),
       recentEventCount: relevantResidents.reduce(
         (total, resident) => total + resident.recentEvents.length,
         0,
@@ -107,6 +129,47 @@ export function deriveHandoffSnapshot({
     },
     residents: relevantResidents,
   };
+}
+
+function buildActiveObservationsByResidentId(
+  residentObservations: ResidentObservation[],
+): Map<ResidentOverview['id'], HandoffObservation[]> {
+  const groupedObservations = new Map<ResidentOverview['id'], HandoffObservation[]>();
+
+  for (const observation of residentObservations) {
+    if (observation.status !== 'active') {
+      continue;
+    }
+
+    const residentObservationsGroup =
+      groupedObservations.get(observation.residentId) ?? [];
+    const latestEntry = observation.entries[0];
+
+    residentObservationsGroup.push({
+      id: observation.id,
+      severity: observation.severity,
+      title: observation.title,
+      description: observation.description,
+      openedAt: observation.openedAt,
+      openedBy: observation.openedBy,
+      latestEntryAt: latestEntry?.occurredAt,
+      latestEntrySummary: latestEntry
+        ? `${latestEntry.title}: ${latestEntry.description}`
+        : undefined,
+    });
+    groupedObservations.set(observation.residentId, residentObservationsGroup);
+  }
+
+  return new Map(
+    [...groupedObservations.entries()].map(([residentId, observations]) => [
+      residentId,
+      [...observations].sort(
+        (left, right) =>
+          resolveObservationActivityTime(right) -
+          resolveObservationActivityTime(left),
+      ),
+    ]),
+  );
 }
 
 function buildRecentEventsByResidentId(
@@ -387,10 +450,12 @@ function compareHandoffResidents(
 
 function resolveResidentPriority(
   resident: ResidentOverview,
+  observations: HandoffObservation[],
   medicationIssues: HandoffMedicationIssue[],
   recentEvents: ResidentEvent[],
 ): DashboardAlertSeverity {
   if (
+    observations.some((observation) => observation.severity === 'critical') ||
     medicationIssues.some((issue) => issue.status === 'rejected') ||
     (resident.careLevel === 'high-dependency' && medicationIssues.length > 0)
   ) {
@@ -398,6 +463,7 @@ function resolveResidentPriority(
   }
 
   if (
+    observations.length > 0 ||
     medicationIssues.length > 0 ||
     (resident.careLevel === 'memory-care' && recentEvents.length > 0)
   ) {
@@ -417,8 +483,11 @@ function resolveLatestResidentActivity(resident: HandoffResident): number {
   const latestEvent = resident.recentEvents[0]
     ? new Date(resident.recentEvents[0].occurredAt).getTime()
     : Number.NEGATIVE_INFINITY;
+  const latestObservation = resident.observations[0]
+    ? resolveObservationActivityTime(resident.observations[0])
+    : Number.NEGATIVE_INFINITY;
 
-  return Math.max(latestMedicationIssue, latestEvent);
+  return Math.max(latestMedicationIssue, latestEvent, latestObservation);
 }
 
 function countMedicationIssuesByStatus(
@@ -458,15 +527,20 @@ function getResidentPriorityRank(priority: DashboardAlertSeverity): number {
   }
 }
 
+function resolveObservationActivityTime(observation: HandoffObservation): number {
+  return new Date(observation.latestEntryAt ?? observation.openedAt).getTime();
+}
+
 function resolveHandoffShiftContext(referenceDate: Date): HandoffShiftContext {
-  const hour = referenceDate.getHours();
+  const localReferenceDate = toFacilityDateParts(referenceDate);
+  const hour = localReferenceDate.hours;
 
   if (hour >= 6 && hour < 14) {
     return {
       shift: 'morning',
       nextShift: 'afternoon',
-      shiftStartedAt: setTime(referenceDate, 6, 0, 0, 0),
-      shiftEndsAt: setTime(referenceDate, 13, 59, 59, 999),
+      shiftStartedAt: buildFacilityDate(localReferenceDate, 6, 0, 0, 0),
+      shiftEndsAt: buildFacilityDate(localReferenceDate, 13, 59, 59, 999),
       referenceDate,
     };
   }
@@ -475,15 +549,21 @@ function resolveHandoffShiftContext(referenceDate: Date): HandoffShiftContext {
     return {
       shift: 'afternoon',
       nextShift: 'night',
-      shiftStartedAt: setTime(referenceDate, 14, 0, 0, 0),
-      shiftEndsAt: setTime(referenceDate, 21, 59, 59, 999),
+      shiftStartedAt: buildFacilityDate(localReferenceDate, 14, 0, 0, 0),
+      shiftEndsAt: buildFacilityDate(localReferenceDate, 21, 59, 59, 999),
       referenceDate,
     };
   }
 
   if (hour >= 22) {
-    const shiftStartedAt = setTime(referenceDate, 22, 0, 0, 0);
-    const shiftEndsAt = addDays(setTime(referenceDate, 5, 59, 59, 999), 1);
+    const shiftStartedAt = buildFacilityDate(localReferenceDate, 22, 0, 0, 0);
+    const shiftEndsAt = buildFacilityDate(
+      addFacilityDays(localReferenceDate, 1),
+      5,
+      59,
+      59,
+      999,
+    );
 
     return {
       shift: 'night',
@@ -497,8 +577,14 @@ function resolveHandoffShiftContext(referenceDate: Date): HandoffShiftContext {
   return {
     shift: 'night',
     nextShift: 'morning',
-    shiftStartedAt: addDays(setTime(referenceDate, 22, 0, 0, 0), -1),
-    shiftEndsAt: setTime(referenceDate, 5, 59, 59, 999),
+    shiftStartedAt: buildFacilityDate(
+      addFacilityDays(localReferenceDate, -1),
+      22,
+      0,
+      0,
+      0,
+    ),
+    shiftEndsAt: buildFacilityDate(localReferenceDate, 5, 59, 59, 999),
     referenceDate,
   };
 }
@@ -519,27 +605,64 @@ function mergeDateAndTime(baseDate: Date, scheduleTime: string): Date | null {
     return null;
   }
 
-  return setTime(baseDate, hours, minutes, 0, 0);
+  return buildFacilityDate(toFacilityDateParts(baseDate), hours, minutes, 0, 0);
 }
 
 function startOfDay(value: Date): Date {
-  return setTime(value, 0, 0, 0, 0);
+  return buildFacilityDate(toFacilityDateParts(value), 0, 0, 0, 0);
 }
 
-function setTime(
-  baseDate: Date,
+function buildFacilityDate(
+  baseDate: FacilityDateParts,
   hours: number,
   minutes: number,
   seconds: number,
   milliseconds: number,
 ): Date {
-  const nextDate = new Date(baseDate);
-  nextDate.setHours(hours, minutes, seconds, milliseconds);
-  return nextDate;
+  return new Date(
+    Date.UTC(
+      baseDate.year,
+      baseDate.monthIndex,
+      baseDate.day,
+      hours,
+      minutes,
+      seconds,
+      milliseconds,
+    ) -
+      facilityUtcOffsetMinutes * 60_000,
+  );
 }
 
-function addDays(value: Date, days: number): Date {
-  const nextDate = new Date(value);
-  nextDate.setDate(nextDate.getDate() + days);
-  return nextDate;
+function addFacilityDays(value: FacilityDateParts, days: number): FacilityDateParts {
+  const nextDate = new Date(
+    Date.UTC(value.year, value.monthIndex, value.day + days, 12, 0, 0, 0),
+  );
+
+  return {
+    year: nextDate.getUTCFullYear(),
+    monthIndex: nextDate.getUTCMonth(),
+    day: nextDate.getUTCDate(),
+    hours: value.hours,
+    minutes: value.minutes,
+  };
+}
+
+interface FacilityDateParts {
+  year: number;
+  monthIndex: number;
+  day: number;
+  hours: number;
+  minutes: number;
+}
+
+function toFacilityDateParts(value: Date): FacilityDateParts {
+  const shifted = new Date(value.getTime() + facilityUtcOffsetMinutes * 60_000);
+
+  return {
+    year: shifted.getUTCFullYear(),
+    monthIndex: shifted.getUTCMonth(),
+    day: shifted.getUTCDate(),
+    hours: shifted.getUTCHours(),
+    minutes: shifted.getUTCMinutes(),
+  };
 }

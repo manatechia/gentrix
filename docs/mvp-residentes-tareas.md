@@ -161,7 +161,7 @@ Lo complementa con un recorte mas chico y mas cercano al producto que hoy querem
 
 ### MVP-RES-16 - Extender observacion con seguimiento y desenlace
 
-- Estado: `pending`
+- Estado: `done`
 - Prioridad: alta
 - Estimacion: L
 - Objetivo: modelar observaciones con subeventos de seguimiento y un desenlace claro, por ejemplo `no comio -> seguimiento -> llamar/ir al medico -> cierre`.

@@ -1,8 +1,9 @@
-# Resident Event Model
+# Resident Event and Observation Model
 
 ## Status
 
 - Accepted on 2026-03-26 to close `TASK-003` before implementing `TASK-004`.
+- Extended on 2026-04-14 while closing `MVP-RES-16`.
 
 ## Context
 
@@ -12,6 +13,10 @@
 - Resident intake still projects `medical-history` through
   `Resident.medicalHistory`, but the application needs a stable event contract and
   dedicated API before opening new resident timeline features.
+- Operational follow-up now needs a second lane:
+  - append-only clinical timeline for events
+  - open observation flow for cases that stay active across turns and require
+    follow-up or closure
 
 ## Decision
 
@@ -20,6 +25,12 @@
   table.
 - Use the route family `/api/residents/:residentId/events` as the minimal timeline
   API surface.
+- Keep observations as a dedicated model:
+  - `ResidentObservation` stores the open/resolved case
+  - `ResidentObservationEntry` stores internal follow-ups, actions and the final
+    resolution entry
+- Use the route family `/api/residents/:residentId/observations` for active or
+  resolved cases, plus nested routes for entry creation and resolution.
 
 ## Initial Event Types
 
@@ -38,6 +49,38 @@
 - `occurredAt`
 - `actor`
 
+## Observation Flow
+
+- `ResidentObservation`
+  - `status`: `active` or `resolved`
+  - `severity`: `warning` or `critical`
+  - `title`
+  - `description`
+  - `openedAt`
+  - `openedBy`
+  - optional closure fields: `resolvedAt`, `resolvedBy`, `resolutionType`,
+    `resolutionSummary`
+- `ResidentObservationEntry`
+  - `entryType`: `follow-up`, `action` or `resolution`
+  - `title`
+  - `description`
+  - `occurredAt`
+  - `actor`
+
+## Observation Rules
+
+- Opening an observation puts the resident in an operational observation state
+  until explicit closure.
+- New movement inside the same case is recorded as:
+  - `follow-up` when we describe evolution or monitoring
+  - `action` when someone actually does something
+  - `resolution` only when the case is closed
+- Resolving an observation always:
+  - marks the case as `resolved`
+  - stores `resolutionType` and `resolutionSummary`
+  - appends a `resolution` entry so the internal sequence stays readable
+- Handoff reads only active observations.
+
 ## Implementation Rule
 
 - The authenticated user provides `actor` through `createdBy` and `updatedBy`.
@@ -49,6 +92,5 @@
 ## Out Of Scope
 
 - Separate incident modules.
-- Handoff-specific entities.
 - Medication administration execution.
 - Replacing `Resident.medicalHistory` projection in this iteration.

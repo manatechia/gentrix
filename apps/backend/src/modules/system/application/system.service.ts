@@ -85,6 +85,7 @@ export class SystemService {
       staff,
       medications,
       residentEvents,
+      residentObservations,
       medicationExecutions,
     } = await this.getOperationalContext(organizationId);
 
@@ -114,13 +115,20 @@ export class SystemService {
   async getHandoffSnapshot(
     organizationId?: AuthOrganization['id'],
   ): Promise<HandoffSnapshot> {
-    const { residents, medications, residentEvents, medicationExecutions } =
+    const {
+      residents,
+      medications,
+      residentEvents,
+      residentObservations,
+      medicationExecutions,
+    } =
       await this.getOperationalContext(organizationId);
 
     return deriveHandoffSnapshot({
       residents,
       medications,
       residentEvents,
+      residentObservations,
       medicationExecutions,
     });
   }
@@ -131,12 +139,14 @@ export class SystemService {
       staff,
       medications,
       residentEvents,
+      residentObservations,
       medicationExecutions,
     ] = await Promise.all([
       this.residentsService.getResidents(organizationId),
       this.staffService.getStaff(organizationId),
       this.medicationService.getMedications(organizationId),
       this.residentRepository.listEvents(organizationId),
+      this.residentRepository.listObservations(organizationId),
       this.medicationExecutionRepository.list(organizationId),
     ]);
 
@@ -145,6 +155,7 @@ export class SystemService {
       staff,
       medications,
       residentEvents,
+      residentObservations,
       medicationExecutions,
     };
   }

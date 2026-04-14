@@ -5,6 +5,10 @@ import type {
   ResidentCreateInput,
   ResidentDetail,
   ResidentLiveProfile,
+  ResidentObservation,
+  ResidentObservationCreateInput,
+  ResidentObservationEntryCreateInput,
+  ResidentObservationResolveInput,
   ResidentOverview,
   ResidentUpdateInput,
 } from '@gentrix/shared-types';
@@ -78,6 +82,54 @@ export async function createClinicalHistoryEvent(
 ): Promise<ApiEnvelope<ClinicalHistoryEvent>> {
   const response = await apiClient.post<ApiEnvelope<ClinicalHistoryEvent>>(
     `/api/residents/${residentId}/clinical-history`,
+    input,
+  );
+
+  return response.data;
+}
+
+export async function getResidentObservations(
+  residentId: string,
+): Promise<ApiEnvelope<ResidentObservation[]>> {
+  const response = await apiClient.get<ApiEnvelope<ResidentObservation[]>>(
+    `/api/residents/${residentId}/observations`,
+  );
+
+  return response.data;
+}
+
+export async function createResidentObservation(
+  residentId: string,
+  input: ResidentObservationCreateInput,
+): Promise<ApiEnvelope<ResidentObservation>> {
+  const response = await apiClient.post<ApiEnvelope<ResidentObservation>>(
+    `/api/residents/${residentId}/observations`,
+    input,
+  );
+
+  return response.data;
+}
+
+export async function createResidentObservationEntry(
+  residentId: string,
+  observationId: string,
+  input: ResidentObservationEntryCreateInput,
+): Promise<ApiEnvelope<ResidentObservation>> {
+  const response = await apiClient.post<ApiEnvelope<ResidentObservation>>(
+    `/api/residents/${residentId}/observations/${observationId}/entries`,
+    input,
+  );
+
+  return response.data;
+}
+
+export async function resolveResidentObservation(
+  residentId: string,
+  observationId: string,
+  input: ResidentObservationResolveInput,
+): Promise<ApiEnvelope<ResidentObservation>> {
+  const response = await apiClient.post<ApiEnvelope<ResidentObservation>>(
+    `/api/residents/${residentId}/observations/${observationId}/resolve`,
     input,
   );
 
