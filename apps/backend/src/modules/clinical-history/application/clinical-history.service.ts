@@ -32,12 +32,18 @@ export class ClinicalHistoryService {
     input: ClinicalHistoryEventCreateInput,
     actor: string,
   ): Promise<ClinicalHistoryEvent> {
-    await this.ensureResidentExists(residentId);
-    return this.clinicalHistoryRepository.create(
+    const resident = await this.residentsService.getResidentEntityById(residentId);
+    const createdEvent = await this.clinicalHistoryRepository.create(
       residentId as ClinicalHistoryEvent['residentId'],
       input,
       actor,
     );
+    await this.residentsService.touchResidentAudit(
+      resident.id,
+      actor,
+      resident.organizationId,
+    );
+    return createdEvent;
   }
 
   private async ensureResidentExists(residentId: string): Promise<void> {

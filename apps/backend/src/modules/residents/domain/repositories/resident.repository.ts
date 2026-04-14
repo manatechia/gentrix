@@ -18,6 +18,11 @@ export interface ResidentRepository {
   findById(id: string, organizationId?: string): Promise<Resident | null>;
   create(resident: Resident): Promise<Resident>;
   update(resident: Resident): Promise<Resident>;
+  touchAudit(
+    residentId: Resident['id'],
+    actor: string,
+    organizationId?: Resident['organizationId'],
+  ): Promise<void>;
   listEvents(
     organizationId?: Resident['organizationId'],
   ): Promise<ResidentEvent[]>;

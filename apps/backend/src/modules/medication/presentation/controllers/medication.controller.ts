@@ -9,6 +9,7 @@ import {
   Req,
 } from '@nestjs/common';
 
+import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
 import { assertCanManageMedicationOrders } from '../../../../common/auth/role-access';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { MedicationService } from '../../application/medication.service';
@@ -76,7 +77,7 @@ export class MedicationController {
     assertCanManageMedicationOrders(request.authSession!.user.role);
     return this.medicationService.createMedication(
       body,
-      request.authSession!.user.email,
+      getAuditActorFromRequest(request),
       request.authSession!.activeOrganization.id,
     );
   }
@@ -90,7 +91,7 @@ export class MedicationController {
     return this.medicationService.createMedicationExecution(
       medicationId,
       body,
-      request.authSession!.user.email,
+      getAuditActorFromRequest(request),
       request.authSession!.activeOrganization.id,
     );
   }
@@ -105,7 +106,7 @@ export class MedicationController {
     return this.medicationService.updateMedication(
       medicationId,
       body,
-      request.authSession!.user.email,
+      getAuditActorFromRequest(request),
       request.authSession!.activeOrganization.id,
     );
   }

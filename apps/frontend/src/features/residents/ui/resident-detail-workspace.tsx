@@ -66,8 +66,17 @@ const dateFormatter = new Intl.DateTimeFormat('es-AR', {
   dateStyle: 'long',
 });
 
+const dateTimeFormatter = new Intl.DateTimeFormat('es-AR', {
+  dateStyle: 'long',
+  timeStyle: 'short',
+});
+
 function formatDate(value: string): string {
   return dateFormatter.format(new Date(value));
+}
+
+function formatDateTime(value: string): string {
+  return dateTimeFormatter.format(new Date(value));
 }
 
 function formatAttachmentSize(sizeBytes: number): string {
@@ -654,7 +663,7 @@ export function ResidentDetailWorkspace({
                     </strong>
                     <span>{resident.audit.createdBy}</span>
                     <span className="mt-1 block">
-                      {formatDate(resident.audit.createdAt)}
+                      {formatDateTime(resident.audit.createdAt)}
                     </span>
                   </div>
                   <div>
@@ -663,7 +672,7 @@ export function ResidentDetailWorkspace({
                     </strong>
                     <span>{resident.audit.updatedBy}</span>
                     <span className="mt-1 block">
-                      {formatDate(resident.audit.updatedAt)}
+                      {formatDateTime(resident.audit.updatedAt)}
                     </span>
                   </div>
                 </div>

@@ -144,6 +144,87 @@ Lo complementa con un recorte mas chico y mas cercano al producto que hoy querem
 - Dependencias: MVP-RES-03, MVP-RES-06, MVP-RES-08, MVP-RES-09.
 - Definition of Done: hay cobertura automatizada para `listado -> alta -> ficha -> novedad -> observacion -> handoff` y, si queda en alcance, para medicacion basica.
 
+## Fase 4. Pendientes siguientes
+
+- Nota: dentro de esta fase, el orden sigue prioridad operativa real. Los IDs se mantienen estables aunque no queden en orden numerico.
+
+### MVP-RES-13 - Auditoria minima de cambios con updatedAt y updatedBy
+
+- Estado: `done`
+- Prioridad: alta
+- Estimacion: M
+- Objetivo: registrar quien hizo cambios relevantes y cuando, especialmente sobre estados operativos y eventos del residente.
+- Aprovecha lo actual: ya existen sesion, actor minimo y modelos con timestamps parciales.
+- Toca: `apps/backend/prisma/schema.prisma`, servicios/backend que cambian estados, `libs/shared/types`, vistas donde se muestra trazabilidad si aplica.
+- Dependencias: ninguna.
+- Definition of Done: los cambios relevantes persisten `updatedAt` y `updatedBy`; la trazabilidad basica queda disponible para auditoria operativa.
+
+### MVP-RES-16 - Extender observacion con seguimiento y desenlace
+
+- Estado: `pending`
+- Prioridad: alta
+- Estimacion: L
+- Objetivo: modelar observaciones con subeventos de seguimiento y un desenlace claro, por ejemplo `no comio -> seguimiento -> llamar/ir al medico -> cierre`.
+- Aprovecha lo actual: ya esta planteado abrir/cerrar observaciones y registrar novedades en timeline.
+- Toca: `docs/resident-event-model.md`, `libs/shared/types`, backend de residentes/clinical history/handoff, ficha del residente y timeline.
+- Dependencias: MVP-RES-06, MVP-RES-07.
+- Definition of Done: una observacion admite seguimiento interno, acciones tomadas y cierre explicito; la ficha y el handoff cuentan esa secuencia completa.
+
+### MVP-RES-18 - Incorporar VGI en el alta del residente
+
+- Estado: `pending`
+- Prioridad: media
+- Estimacion: M
+- Objetivo: sumar al alta una `Valoracion Geriatrica Integral` estructurada, sin dejarla dispersa en texto libre.
+- Aprovecha lo actual: el alta ya viene absorbiendo parte de la valoracion inicial minima.
+- Toca: `libs/shared/types`, `apps/backend/prisma/schema.prisma`, backend de residentes, `admissions-panel.tsx`, detalle/edicion del residente y docs si hace falta cerrar el instrumento minimo.
+- Dependencias: MVP-RES-03.
+- Definition of Done: el alta incluye un bloque claro de VGI editable despues; sus datos quedan persistidos y visibles en la ficha.
+
+### MVP-RES-17 - Clasificar modalidad de residente
+
+- Estado: `pending`
+- Prioridad: media
+- Estimacion: S
+- Objetivo: distinguir si la persona pertenece a `Residencia de Larga Estadia`, `Hogar de dia` o `Guarderia / RLE temporal`.
+- Aprovecha lo actual: el alta ya captura datos administrativos y contexto del residente.
+- Toca: `libs/shared/types`, `apps/backend/prisma/schema.prisma`, DTOs/backend de residentes, formulario de alta/edicion y vistas de ficha/listado si corresponde.
+- Dependencias: MVP-RES-03.
+- Definition of Done: la modalidad del residente queda guardada y visible en los recorridos donde aporta contexto operativo.
+
+### MVP-RES-12 - Reinicio de contrasena y cambio obligatorio en primer ingreso
+
+- Estado: `pending`
+- Prioridad: media
+- Estimacion: M
+- Objetivo: permitir que administracion recupere accesos perdidos y que todo usuario nuevo defina una contrasena propia al entrar por primera vez.
+- Aprovecha lo actual: ya existe modulo admin de usuarios, login y persistencia de credenciales.
+- Toca: `apps/frontend/src/features/users`, `apps/frontend/src/features/auth`, `apps/backend/src/modules/users`, `apps/backend/src/modules/auth`, `apps/backend/prisma/schema.prisma`, `libs/shared/types`.
+- Dependencias: ninguna.
+- Definition of Done: admin puede reiniciar contrasenas desde `personal`; un usuario nuevo queda marcado para cambio obligatorio de contrasena en su primer login.
+
+### MVP-RES-15 - Dashboards distintos por tipo de usuario
+
+- Estado: `pending`
+- Prioridad: media
+- Estimacion: M
+- Objetivo: adaptar la home operativa segun el perfil: asistentes ven su dia a dia, enfermeria ve tambien lo asistencial y admin ve el geriatrico completo.
+- Aprovecha lo actual: ya existe dashboard, shell con permisos y roles operativos basicos.
+- Toca: `apps/frontend/src/features/dashboard`, `apps/frontend/src/shared/lib/authz.ts`, consultas backend que alimentan paneles y contratos compartidos si cambia el payload.
+- Dependencias: MVP-RES-10, MVP-RES-13.
+- Definition of Done: cada rol aterriza en un dashboard acorde a su alcance operativo sin perder el flujo principal del residente.
+
+### MVP-RES-14 - Agenda operativa por residente
+
+- Estado: `pending`
+- Prioridad: media
+- Estimacion: L
+- Objetivo: centralizar por residente una agenda con medicaciones periodicas, turnos medicos y actividades como yoga, gym u otras rutinas.
+- Aprovecha lo actual: ya existe base de medicacion, ficha del residente y eventos diarios.
+- Toca: `libs/shared/types`, `apps/backend/src/modules/residents`, `apps/backend/src/modules/medication`, frontend de ficha/listado del residente y modelo Prisma si hace falta agenda dedicada.
+- Dependencias: MVP-RES-03, MVP-RES-09.
+- Definition of Done: cada residente puede tener una agenda visible con items recurrentes y puntuales; la ficha muestra lo proximo sin mezclarlo con el timeline historico.
+
 ## Tareas que no deberian abrirse mientras tanto
 
 - stock e insumos

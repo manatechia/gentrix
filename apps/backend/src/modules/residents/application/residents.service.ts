@@ -108,6 +108,15 @@ export class ResidentsService {
     return toResidentDetail(persistedResident);
   }
 
+  async touchResidentAudit(
+    residentId: string,
+    actor: string,
+    organizationId?: Resident['organizationId'],
+  ): Promise<void> {
+    const resident = await this.getResidentEntityById(residentId, organizationId);
+    await this.residents.touchAudit(resident.id, actor, resident.organizationId);
+  }
+
   async createResidentEvent(
     residentId: string,
     input: ResidentEventCreateInput,
@@ -131,7 +140,9 @@ export class ResidentsService {
       createdAt: now,
     };
 
-    return this.residents.createEvent(eventRecord);
+    const createdEvent = await this.residents.createEvent(eventRecord);
+    await this.residents.touchAudit(resident.id, actor, resident.organizationId);
+    return createdEvent;
   }
 
   private validateResidentCreateInput(input: ResidentCreateInput): void {

@@ -1,6 +1,17 @@
 import type { AuthRole } from '@gentrix/shared-types';
 
-export const sidebarSections = [
+interface SidebarSection {
+  testId: string;
+  label: string;
+  meta: string;
+  badge: string;
+  path: string;
+  end: boolean;
+  visibleTo?: ReadonlyArray<AuthRole>;
+  hiddenInMenu?: boolean;
+}
+
+export const sidebarSections: ReadonlyArray<SidebarSection> = [
   {
     testId: 'workspace-sidebar-link-dashboard',
     label: 'Resumen',
@@ -44,4 +55,4 @@ export const sidebarSections = [
     end: false,
     hiddenInMenu: true,
   },
-] as const;
+];

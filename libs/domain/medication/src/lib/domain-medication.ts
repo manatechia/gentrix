@@ -267,6 +267,7 @@ export function toMedicationOverview(
     status: order.status,
     active: isMedicationActive(order),
     schedule: buildMedicationSchedule(order),
+    audit: { ...order.audit },
   };
 }
 

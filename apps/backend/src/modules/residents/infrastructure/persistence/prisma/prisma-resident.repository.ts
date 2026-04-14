@@ -170,6 +170,24 @@ export class PrismaResidentRepository implements ResidentRepository {
     return mapResidentRecord(persistedResident);
   }
 
+  async touchAudit(
+    residentId: Resident['id'],
+    actor: string,
+    organizationId?: Resident['organizationId'],
+  ): Promise<void> {
+    await this.prisma.resident.updateMany({
+      where: {
+        id: residentId,
+        organizationId: organizationId ?? undefined,
+        deletedAt: null,
+      },
+      data: {
+        updatedAt: new Date(),
+        updatedBy: actor,
+      },
+    });
+  }
+
   async listEvents(
     organizationId?: Resident['organizationId'],
   ): Promise<ResidentEvent[]> {

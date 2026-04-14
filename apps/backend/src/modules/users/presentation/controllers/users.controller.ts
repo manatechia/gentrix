@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Inject, Post, Req } from '@nestjs/common';
 
+import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
 import { assertCanManageUsers } from '../../../../common/auth/role-access';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { UsersService } from '../../application/users.service';
@@ -26,7 +27,7 @@ export class UsersController {
     assertCanManageUsers(request.authSession!.user.role);
     return this.usersService.createUser(
       body,
-      request.authSession!.user.email,
+      getAuditActorFromRequest(request),
       request.authSession!.activeOrganization.id,
     );
   }

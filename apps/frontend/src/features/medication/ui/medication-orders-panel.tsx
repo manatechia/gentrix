@@ -294,6 +294,10 @@ export function MedicationOrdersPanel({
                   <span className="text-brand-text-secondary">
                     Prescripto por {order.prescribedBy}
                   </span>
+                  <span className="text-brand-text-secondary">
+                    Ultima actualizacion: {order.audit.updatedBy} el{' '}
+                    {formatExecutionDateTime(order.audit.updatedAt)}
+                  </span>
                 </div>
 
                 <section className="mt-5 grid gap-4 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-white/70 p-4">
