@@ -10,6 +10,7 @@ import type {
   ResidentAttachmentKind,
   ResidentCareLevel,
   ResidentDocumentType,
+  ResidentGeriatricAssessmentLevel,
   ResidentObservationEntryType,
   ResidentObservationResolutionType,
   ResidentObservationSeverity,
@@ -47,6 +48,15 @@ const residentSexLabels: Record<ResidentSex, string> = {
 const residentAttachmentKindLabels: Record<ResidentAttachmentKind, string> = {
   image: 'Imagen',
   pdf: 'PDF',
+};
+
+const residentGeriatricAssessmentLevelLabels: Record<
+  ResidentGeriatricAssessmentLevel,
+  string
+> = {
+  preserved: 'Conservado',
+  monitored: 'Con apoyo / seguimiento',
+  'high-support': 'Alta dependencia',
 };
 
 const authRoleLabels: Record<AuthRole, string> = {
@@ -166,6 +176,12 @@ export function formatResidentAttachmentKind(
   kind: ResidentAttachmentKind,
 ): string {
   return residentAttachmentKindLabels[kind] ?? kind;
+}
+
+export function formatResidentGeriatricAssessmentLevel(
+  level: ResidentGeriatricAssessmentLevel,
+): string {
+  return residentGeriatricAssessmentLevelLabels[level] ?? level;
 }
 
 export function formatAuthRole(role: AuthRole): string {

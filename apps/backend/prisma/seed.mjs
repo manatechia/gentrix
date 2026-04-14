@@ -307,6 +307,18 @@ export async function seedDatabase(prisma) {
           drinksAlcohol: false,
           currentWeightKg: 62.4,
         },
+        geriatricAssessment: {
+          cognition: 'monitored',
+          mobility: 'monitored',
+          feeding: 'preserved',
+          skinIntegrity: 'preserved',
+          dependencyLevel: 'monitored',
+          mood: 'preserved',
+          supportEquipment:
+            'Anteojos y ayuda puntual para traslados largos.',
+          notes:
+            'Valoracion inicial de ingreso con foco en autonomia y seguimiento diario.',
+        },
         belongings: {
           glasses: true,
           dentures: false,
@@ -395,6 +407,17 @@ export async function seedDatabase(prisma) {
           drinksAlcohol: false,
           currentWeightKg: 58.1,
         },
+        geriatricAssessment: {
+          cognition: 'high-support',
+          mobility: 'monitored',
+          feeding: 'monitored',
+          skinIntegrity: 'preserved',
+          dependencyLevel: 'high-support',
+          mood: 'monitored',
+          supportEquipment: 'Supervision continua y referencia visual estable.',
+          notes:
+            'Conviene sostener rutinas simples, acompanamiento vespertino y ambiente conocido.',
+        },
         belongings: {
           glasses: true,
           dentures: true,
@@ -482,6 +505,18 @@ export async function seedDatabase(prisma) {
           smokes: false,
           drinksAlcohol: false,
           currentWeightKg: 74.8,
+        },
+        geriatricAssessment: {
+          cognition: 'preserved',
+          mobility: 'high-support',
+          feeding: 'monitored',
+          skinIntegrity: 'monitored',
+          dependencyLevel: 'high-support',
+          mood: 'preserved',
+          supportEquipment:
+            'Andador, cama ortopedica y asistencia para higiene y traslados.',
+          notes:
+            'Requiere apoyo fisico sostenido por secuela motora y seguimiento preventivo de piel.',
         },
         belongings: {
           glasses: false,

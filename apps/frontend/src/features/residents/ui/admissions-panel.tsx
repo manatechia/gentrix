@@ -15,6 +15,7 @@ import {
   residentCareLevelOptions,
   residentDocumentTypeOptions,
   residentFormInitialValues,
+  residentGeriatricAssessmentOptions,
   residentMaritalStatusOptions,
   residentSexOptions,
 } from '../constants/resident-intake';
@@ -38,6 +39,7 @@ import type {
   ResidentAttachmentFormValue,
   ResidentFamilyContactFormValue,
   ResidentFormValues,
+  ResidentGeriatricAssessmentFormValues,
   ResidentMedicalHistoryFormValue,
 } from '../types/resident-form-values';
 import { formatResidentAttachmentKind } from '../../../shared/lib/display-labels';
@@ -306,6 +308,10 @@ type ResidentFormSectionState = Pick<
 interface HealthAndMedicalSectionProps {
   form: ResidentFormSectionState;
   showMedicalHistorySection: boolean;
+}
+
+interface GeriatricAssessmentSectionProps {
+  form: ResidentFormSectionState;
 }
 
 interface FamilyContactsSectionProps {
@@ -678,6 +684,142 @@ function HealthAndMedicalSection({
   );
 }
 
+function GeriatricAssessmentSection({
+  form,
+}: GeriatricAssessmentSectionProps) {
+  const {
+    errors,
+    handleBlur,
+    handleChange,
+    setFieldTouched,
+    setFieldValue,
+    touched,
+    values,
+  } = form;
+  const vgiFields: Array<{
+    key: keyof ResidentGeriatricAssessmentFormValues;
+    label: string;
+    testId?: string;
+  }> = [
+    {
+      key: 'cognition',
+      label: 'Cognicion',
+      testId: 'resident-vgi-cognition-select',
+    },
+    {
+      key: 'mobility',
+      label: 'Movilidad',
+      testId: 'resident-vgi-mobility-select',
+    },
+    {
+      key: 'feeding',
+      label: 'Alimentacion',
+      testId: 'resident-vgi-feeding-select',
+    },
+    {
+      key: 'skinIntegrity',
+      label: 'Piel',
+      testId: 'resident-vgi-skin-integrity-select',
+    },
+    {
+      key: 'dependencyLevel',
+      label: 'Dependencia',
+      testId: 'resident-vgi-dependency-level-select',
+    },
+    {
+      key: 'mood',
+      label: 'Animo y conducta',
+      testId: 'resident-vgi-mood-select',
+    },
+  ];
+
+  return (
+    <CollapsibleSection
+      title="VGI"
+      description="Valoracion geriatrica integral inicial para dejar un corte rapido del ingreso."
+      defaultOpen
+    >
+      <article className={innerPanelClassName}>
+        <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+          Valoracion inicial
+        </span>
+
+        <div className="mt-4 grid gap-[14px] min-[980px]:grid-cols-2">
+          {vgiFields.map((field) => {
+            const path = `geriatricAssessment.${field.key}`;
+            const value = values.geriatricAssessment[field.key];
+
+            if (
+              field.key === 'supportEquipment' ||
+              field.key === 'notes'
+            ) {
+              return null;
+            }
+
+            return (
+              <label key={field.key} className="grid gap-2.5">
+                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                  {field.label}
+                </span>
+                <SelectField
+                  name={path}
+                  testId={field.testId}
+                  value={value}
+                  options={residentGeriatricAssessmentOptions}
+                  allowEmptyOption
+                  onBlur={() => {
+                    void setFieldTouched(path, true);
+                  }}
+                  onChange={(nextValue) => {
+                    void setFieldValue(path, nextValue);
+                  }}
+                />
+                <ValidationMessage
+                  message={getFieldMessage(errors, touched, path)}
+                />
+              </label>
+            );
+          })}
+        </div>
+
+        <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-2">
+          <label className="grid gap-2.5">
+            <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+              Apoyos o equipamiento
+            </span>
+            <input
+              data-testid="resident-vgi-support-equipment-input"
+              className={inputClassName}
+              type="text"
+              name="geriatricAssessment.supportEquipment"
+              value={values.geriatricAssessment.supportEquipment}
+              onBlur={handleBlur}
+              onChange={handleChange}
+              placeholder="Ej. Andador, silla de ruedas, supervision en traslados"
+            />
+            <ValidationMessage />
+          </label>
+
+          <label className="grid gap-2.5">
+            <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+              Notas VGI
+            </span>
+            <textarea
+              data-testid="resident-vgi-notes-input"
+              className={`${textareaClassName} min-h-[110px]`}
+              name="geriatricAssessment.notes"
+              value={values.geriatricAssessment.notes}
+              onBlur={handleBlur}
+              onChange={handleChange}
+            />
+            <ValidationMessage />
+          </label>
+        </div>
+      </article>
+    </CollapsibleSection>
+  );
+}
+
 function FamilyContactsSection({ form }: FamilyContactsSectionProps) {
   const { errors, handleBlur, handleChange, touched, values } = form;
 
@@ -895,8 +1037,8 @@ export function AdmissionsPanel({
   const resolvedPanelDescription =
     panelDescription ??
     (mode === 'edit'
-      ? 'En esta etapa la edicion actualiza solo el perfil base y el estado actual del residente. Los antecedentes, contactos, adjuntos y otros registros de ingreso se conservan sin reescribirse desde este formulario.'
-      : 'El alta ahora se completa por bloques desplegables para separar identificacion, contacto, cobertura, salud, pertenencias, familiares y adjuntos. La fecha de ingreso se precarga con hoy y la edad se calcula automaticamente desde la fecha de nacimiento.');
+      ? 'La edicion mantiene el perfil base y la VGI inicial del residente. Los antecedentes, contactos, adjuntos y otros registros de ingreso se conservan sin reescribirse desde este formulario.'
+      : 'El alta ahora se completa por bloques desplegables para separar identificacion, contacto, VGI, cobertura, salud, pertenencias, familiares y adjuntos. La fecha de ingreso se precarga con hoy y la edad se calcula automaticamente desde la fecha de nacimiento.');
   const resolvedSubmitLabel =
     submitLabel ?? (mode === 'edit' ? 'Guardar cambios' : 'Guardar paciente');
   const isCreateMode = mode === 'create';
@@ -1443,6 +1585,18 @@ export function AdmissionsPanel({
                   </label>
                 </div>
               </CollapsibleSection>
+
+              <GeriatricAssessmentSection
+                form={{
+                  values,
+                  errors,
+                  touched,
+                  handleBlur,
+                  handleChange,
+                  setFieldTouched,
+                  setFieldValue,
+                }}
+              />
 
               {isCreateMode && (
                 <>

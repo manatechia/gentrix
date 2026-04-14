@@ -15,6 +15,7 @@ import type {
   ResidentClinicalProfile,
   ResidentDischargeInfo,
   ResidentEvent,
+  ResidentGeriatricAssessment,
   ResidentObservation,
   ResidentObservationEntry,
   ResidentFamilyContact,
@@ -459,6 +460,10 @@ function mapResidentRecord(record: ResidentRecord): Resident {
       record.clinicalProfile,
       {},
     ),
+    geriatricAssessment: fromJson<ResidentGeriatricAssessment>(
+      record.geriatricAssessment,
+      {},
+    ),
     belongings: fromJson<ResidentBelongings>(record.belongings, {
       glasses: false,
       dentures: false,
@@ -603,6 +608,7 @@ function toResidentPersistenceData(resident: Resident) {
     transfer: toJsonInput(resident.transfer),
     psychiatry: toJsonInput(resident.psychiatry),
     clinicalProfile: toJsonInput(resident.clinicalProfile),
+    geriatricAssessment: toJsonInput(resident.geriatricAssessment),
     belongings: toJsonInput(resident.belongings),
     familyContacts: toJsonInput(resident.familyContacts),
     discharge: toJsonInput(resident.discharge),
@@ -630,6 +636,7 @@ function toResidentBaseUpdatePersistenceData(resident: Resident) {
     email: resident.email,
     room: resident.room,
     careLevel: resident.careLevel,
+    geriatricAssessment: toJsonInput(resident.geriatricAssessment),
     status: resident.status,
     address: toJsonInput(resident.address),
   };

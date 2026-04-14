@@ -15,6 +15,8 @@ import type {
   ResidentCurrentState,
   ResidentDetail,
   ResidentFamilyContact,
+  ResidentGeriatricAssessment,
+  ResidentGeriatricAssessmentLevel,
   ResidentInsuranceInfo,
   ResidentMedicalHistoryEntry,
   ResidentMedicalHistoryEntryInput,
@@ -98,6 +100,17 @@ const baseClinicalProfile: ResidentClinicalProfile = {
   currentWeightKg: 62.4,
 };
 
+const baseGeriatricAssessment: ResidentGeriatricAssessment = {
+  cognition: 'monitored',
+  mobility: 'monitored',
+  feeding: 'preserved',
+  skinIntegrity: 'preserved',
+  dependencyLevel: 'monitored',
+  mood: 'preserved',
+  supportEquipment: 'Anteojos y ayuda puntual para traslados largos.',
+  notes: 'Valoracion inicial de ingreso con foco en autonomia y seguimiento diario.',
+};
+
 const baseBelongings: ResidentBelongings = {
   glasses: true,
   dentures: false,
@@ -135,10 +148,24 @@ export const residentCareLevels: CareLevel[] = [
   'memory-care',
 ];
 
+export const residentGeriatricAssessmentLevels: ResidentGeriatricAssessmentLevel[] =
+  ['preserved', 'monitored', 'high-support'];
+
 export function isResidentCareLevel(value: unknown): value is CareLevel {
   return (
     typeof value === 'string' &&
     residentCareLevels.includes(value as CareLevel)
+  );
+}
+
+export function isResidentGeriatricAssessmentLevel(
+  value: unknown,
+): value is ResidentGeriatricAssessmentLevel {
+  return (
+    typeof value === 'string' &&
+    residentGeriatricAssessmentLevels.includes(
+      value as ResidentGeriatricAssessmentLevel,
+    )
   );
 }
 
@@ -225,6 +252,7 @@ export function createResidentSeed(
     transfer: { ...baseTransfer },
     psychiatry: { ...basePsychiatry },
     clinicalProfile: { ...baseClinicalProfile },
+    geriatricAssessment: { ...baseGeriatricAssessment },
     belongings: { ...baseBelongings },
     familyContacts: baseFamilyContacts.map((contact) => ({ ...contact })),
     discharge: {},
@@ -256,6 +284,10 @@ export function createResidentSeed(
     clinicalProfile: {
       ...baseClinicalProfile,
       ...residentBase.clinicalProfile,
+    },
+    geriatricAssessment: {
+      ...baseGeriatricAssessment,
+      ...residentBase.geriatricAssessment,
     },
     belongings: { ...baseBelongings, ...residentBase.belongings },
     familyContacts: (residentBase.familyContacts ?? []).map((contact) => ({
@@ -366,6 +398,7 @@ export function toResidentDetail(resident: Resident): ResidentDetail {
     transfer: { ...resident.transfer },
     psychiatry: { ...resident.psychiatry },
     clinicalProfile: { ...resident.clinicalProfile },
+    geriatricAssessment: { ...resident.geriatricAssessment },
     belongings: { ...resident.belongings },
     familyContacts: resident.familyContacts.map((contact) => ({ ...contact })),
     discharge: { ...resident.discharge },
@@ -404,6 +437,7 @@ type ResidentSupportingIntakeFields = Pick<
   | 'transfer'
   | 'psychiatry'
   | 'clinicalProfile'
+  | 'geriatricAssessment'
   | 'belongings'
   | 'familyContacts'
   | 'discharge'
@@ -414,7 +448,9 @@ type ResidentEditableIntakeFields = ResidentStableProfileFields &
   ResidentSupportingIntakeFields;
 
 type ResidentEditableBaseUpdateFields = ResidentStableProfileFields &
-  ResidentCurrentStateFields;
+  ResidentCurrentStateFields & {
+    geriatricAssessment: ResidentGeriatricAssessment;
+  };
 
 function mapResidentCreateInput(
   input: ResidentCreateInput,
@@ -503,6 +539,17 @@ function mapResidentCreateInput(
       drinksAlcohol: input.clinicalProfile.drinksAlcohol,
       currentWeightKg: input.clinicalProfile.currentWeightKg,
     },
+    geriatricAssessment: {
+      cognition: input.geriatricAssessment.cognition,
+      mobility: input.geriatricAssessment.mobility,
+      feeding: input.geriatricAssessment.feeding,
+      skinIntegrity: input.geriatricAssessment.skinIntegrity,
+      dependencyLevel: input.geriatricAssessment.dependencyLevel,
+      mood: input.geriatricAssessment.mood,
+      supportEquipment:
+        input.geriatricAssessment.supportEquipment?.trim() || undefined,
+      notes: input.geriatricAssessment.notes?.trim() || undefined,
+    },
     belongings: {
       glasses: input.belongings.glasses,
       dentures: input.belongings.dentures,
@@ -541,6 +588,17 @@ function mapResidentUpdateInput(
     email: input.email?.trim() || undefined,
     room: input.room.trim(),
     careLevel: input.careLevel,
+    geriatricAssessment: {
+      cognition: input.geriatricAssessment.cognition,
+      mobility: input.geriatricAssessment.mobility,
+      feeding: input.geriatricAssessment.feeding,
+      skinIntegrity: input.geriatricAssessment.skinIntegrity,
+      dependencyLevel: input.geriatricAssessment.dependencyLevel,
+      mood: input.geriatricAssessment.mood,
+      supportEquipment:
+        input.geriatricAssessment.supportEquipment?.trim() || undefined,
+      notes: input.geriatricAssessment.notes?.trim() || undefined,
+    },
   };
 }
 

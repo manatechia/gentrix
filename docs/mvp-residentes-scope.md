@@ -79,6 +79,7 @@ Un tema no entra si:
 - historia clinica append-only
 - historia de vida basica separada de la historia clinica
 - valoracion de ingreso minima
+- VGI minima estructurada con cognition, movilidad, alimentacion, piel, dependencia, animo y apoyos
 - registro diario por excepcion, no checklist exhaustivo
 - observacion como estado operativo abierto y cerrable
 - handoff centrado en residentes
@@ -97,7 +98,6 @@ Un tema no entra si:
 
 ### Queda abierto
 
-- instrumento exacto de valoracion geriatrica inicial
 - si cama entra en v1 o si alcanza con habitacion
 - que observaciones requieren validacion de enfermeria
 - que eventos pasan a historia formal y cuales quedan solo para handoff

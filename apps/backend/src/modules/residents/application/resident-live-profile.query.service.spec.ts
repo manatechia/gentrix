@@ -250,6 +250,7 @@ function cloneResident(resident: Resident): Resident {
     transfer: { ...resident.transfer },
     psychiatry: { ...resident.psychiatry },
     clinicalProfile: { ...resident.clinicalProfile },
+    geriatricAssessment: { ...resident.geriatricAssessment },
     belongings: { ...resident.belongings },
     familyContacts: resident.familyContacts.map((contact) => ({ ...contact })),
     discharge: { ...resident.discharge },

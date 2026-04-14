@@ -5,7 +5,9 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 import { residentCareLevels } from '@gentrix/domain-residents';
 import type {
@@ -13,6 +15,7 @@ import type {
   ResidentSex,
   ResidentUpdateInput,
 } from '@gentrix/shared-types';
+import { CreateResidentGeriatricAssessmentDto } from './create-resident.dto';
 
 const residentDocumentTypes: ResidentDocumentType[] = [
   'dni',
@@ -87,4 +90,8 @@ export class UpdateResidentDto implements ResidentUpdateInput {
 
   @IsIn(residentCareLevels)
   careLevel!: ResidentUpdateInput['careLevel'];
+
+  @ValidateNested()
+  @Type(() => CreateResidentGeriatricAssessmentDto)
+  geriatricAssessment!: ResidentUpdateInput['geriatricAssessment'];
 }

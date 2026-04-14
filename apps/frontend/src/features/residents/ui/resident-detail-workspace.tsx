@@ -6,6 +6,7 @@ import type {
   ClinicalHistoryEvent,
   ClinicalHistoryEventCreateInput,
   ResidentDetail,
+  ResidentGeriatricAssessmentLevel,
   ResidentLiveProfile,
   ResidentObservation,
   ResidentObservationCreateInput,
@@ -22,6 +23,7 @@ import {
   formatResidentAttachmentKind,
   formatResidentCareLevel,
   formatResidentDocumentType,
+  formatResidentGeriatricAssessmentLevel,
   formatResidentSex,
 } from '../../../shared/lib/display-labels';
 import {
@@ -130,6 +132,16 @@ function showBooleanValue(value: boolean | undefined): string {
 
 function showWeight(value: number | undefined): string {
   return typeof value === 'number' ? `${value.toFixed(1)} kg` : 'No informado';
+}
+
+function showGeriatricAssessmentValue(
+  value: ResidentGeriatricAssessmentLevel | undefined,
+): string {
+  if (!value) {
+    return 'No informado';
+  }
+
+  return formatResidentGeriatricAssessmentLevel(value);
 }
 
 function DetailField({ label, value }: DetailFieldProps) {
@@ -514,7 +526,61 @@ export function ResidentDetailWorkspace({
             </article>
           </section>
 
-          <section className="grid gap-[18px] min-[980px]:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+          <section className="grid gap-[18px] min-[980px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.9fr)]">
+            <article className={surfaceCardClassName}>
+              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                VGI inicial
+              </span>
+              <div className="mt-4 grid gap-3 text-brand-text-secondary min-[700px]:grid-cols-2">
+                <DetailField
+                  label="Cognicion"
+                  value={showGeriatricAssessmentValue(
+                    resident.geriatricAssessment.cognition,
+                  )}
+                />
+                <DetailField
+                  label="Movilidad"
+                  value={showGeriatricAssessmentValue(
+                    resident.geriatricAssessment.mobility,
+                  )}
+                />
+                <DetailField
+                  label="Alimentacion"
+                  value={showGeriatricAssessmentValue(
+                    resident.geriatricAssessment.feeding,
+                  )}
+                />
+                <DetailField
+                  label="Piel"
+                  value={showGeriatricAssessmentValue(
+                    resident.geriatricAssessment.skinIntegrity,
+                  )}
+                />
+                <DetailField
+                  label="Dependencia"
+                  value={showGeriatricAssessmentValue(
+                    resident.geriatricAssessment.dependencyLevel,
+                  )}
+                />
+                <DetailField
+                  label="Animo y conducta"
+                  value={showGeriatricAssessmentValue(
+                    resident.geriatricAssessment.mood,
+                  )}
+                />
+                <DetailField
+                  label="Apoyos o equipamiento"
+                  value={showValue(
+                    resident.geriatricAssessment.supportEquipment,
+                  )}
+                />
+                <DetailField
+                  label="Notas"
+                  value={showValue(resident.geriatricAssessment.notes)}
+                />
+              </div>
+            </article>
+
             <article className={surfaceCardClassName}>
               <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
                 Resumen clinico

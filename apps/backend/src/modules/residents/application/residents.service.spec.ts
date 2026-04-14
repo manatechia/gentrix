@@ -302,6 +302,11 @@ describe('ResidentsService.updateResident', () => {
       buildResidentUpdateInput(resident, {
         email: 'marta.diaz@nuevo-mail.local',
         room: 'B-204',
+        geriatricAssessment: {
+          ...resident.geriatricAssessment,
+          mobility: 'high-support',
+          notes: 'Necesita asistencia sostenida en traslados cortos.',
+        },
       }),
       'coordinator-user',
       resident.organizationId,
@@ -309,6 +314,10 @@ describe('ResidentsService.updateResident', () => {
 
     expect(updated.email).toBe('marta.diaz@nuevo-mail.local');
     expect(updated.room).toBe('B-204');
+    expect(updated.geriatricAssessment.mobility).toBe('high-support');
+    expect(updated.geriatricAssessment.notes).toBe(
+      'Necesita asistencia sostenida en traslados cortos.',
+    );
     expect(updated.medicalHistory.map((entry) => entry.id)).toEqual(
       resident.medicalHistory.map((entry) => entry.id),
     );
@@ -327,6 +336,11 @@ describe('ResidentsService.updateResident', () => {
     expect(residents.lastUpdatedResident?.familyContacts).toEqual(
       resident.familyContacts,
     );
+    expect(residents.lastUpdatedResident?.geriatricAssessment).toEqual({
+      ...resident.geriatricAssessment,
+      mobility: 'high-support',
+      notes: 'Necesita asistencia sostenida en traslados cortos.',
+    });
   });
 });
 
@@ -634,6 +648,7 @@ function buildResidentUpdateInput(
     email: resident.email,
     room: resident.room,
     careLevel: resident.careLevel,
+    geriatricAssessment: { ...resident.geriatricAssessment },
     ...overrides,
   };
 }
@@ -647,6 +662,7 @@ function cloneResident(resident: Resident): Resident {
     transfer: { ...resident.transfer },
     psychiatry: { ...resident.psychiatry },
     clinicalProfile: { ...resident.clinicalProfile },
+    geriatricAssessment: { ...resident.geriatricAssessment },
     belongings: { ...resident.belongings },
     familyContacts: resident.familyContacts.map((contact) => ({ ...contact })),
     discharge: { ...resident.discharge },
