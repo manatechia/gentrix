@@ -10,6 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 
+import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
 import { assertCanManageResidentRecords } from '../../../../common/auth/role-access';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { ResidentLiveProfileQueryService } from '../../application/resident-live-profile.query.service';
@@ -83,7 +84,7 @@ export class ResidentsController {
 
     return this.residentsService.createResident(
       body,
-      request.authSession!.user.email,
+      getAuditActorFromRequest(request),
       request.authSession!.activeOrganization.id,
       activeFacility.id,
     );
@@ -99,7 +100,7 @@ export class ResidentsController {
     return this.residentsService.updateResident(
       residentId,
       body,
-      request.authSession!.user.email,
+      getAuditActorFromRequest(request),
       request.authSession!.activeOrganization.id,
     );
   }
@@ -113,7 +114,7 @@ export class ResidentsController {
     return this.residentsService.createResidentEvent(
       residentId,
       body,
-      request.authSession!.user.email,
+      getAuditActorFromRequest(request),
       request.authSession!.activeOrganization.id,
     );
   }

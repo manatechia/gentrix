@@ -421,6 +421,7 @@ export interface MedicationOverview {
   status: EntityStatus;
   active: boolean;
   schedule: string;
+  audit: AuditTrail;
 }
 
 export interface MedicationDetail extends MedicationOverview {

@@ -9,6 +9,7 @@ import {
   Req,
 } from '@nestjs/common';
 
+import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
 import { assertCanManageStaffSchedules } from '../../../../common/auth/role-access';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { SchedulesService } from '../../application/schedules.service';
@@ -37,7 +38,7 @@ export class SchedulesController {
     return this.schedulesService.create(
       staffId,
       body,
-      request.authSession!.user.email,
+      getAuditActorFromRequest(request),
     );
   }
 
@@ -51,7 +52,7 @@ export class SchedulesController {
     return this.schedulesService.update(
       scheduleId,
       body,
-      request.authSession!.user.email,
+      getAuditActorFromRequest(request),
     );
   }
 }

@@ -34,6 +34,10 @@ class ResidentRepositoryStub implements ResidentRepository {
     return cloneResident(resident);
   }
 
+  async touchAudit(): Promise<void> {
+    // Query service does not mutate resident audit state.
+  }
+
   async listEvents(): Promise<ResidentEvent[]> {
     return this.residentEvents.map(cloneResidentEvent);
   }

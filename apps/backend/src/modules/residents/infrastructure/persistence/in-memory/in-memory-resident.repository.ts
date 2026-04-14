@@ -63,6 +63,31 @@ export class InMemoryResidentRepository implements ResidentRepository {
     return cloneResident(persistedResident);
   }
 
+  async touchAudit(
+    residentId: Resident['id'],
+    actor: string,
+    organizationId?: Resident['organizationId'],
+  ): Promise<void> {
+    const residentIndex = this.residents.findIndex(
+      (candidate) =>
+        candidate.id === residentId &&
+        (organizationId ? candidate.organizationId === organizationId : true),
+    );
+
+    if (residentIndex === -1) {
+      return;
+    }
+
+    this.residents[residentIndex] = {
+      ...this.residents[residentIndex],
+      audit: {
+        ...this.residents[residentIndex].audit,
+        updatedAt: toIsoDateString(new Date()),
+        updatedBy: actor,
+      },
+    };
+  }
+
   async listEvents(
     organizationId?: Resident['organizationId'],
   ): Promise<ResidentEvent[]> {

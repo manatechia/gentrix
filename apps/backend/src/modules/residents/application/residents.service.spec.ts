@@ -19,6 +19,13 @@ class ResidentRepositoryStub implements ResidentRepository {
   private residentEvents: ResidentEvent[] = [];
   lastUpdatedResident: Resident | null = null;
   lastCreatedEvent: ResidentEventRecordInput | null = null;
+  lastTouchedAudit:
+    | {
+        residentId: Resident['id'];
+        actor: string;
+        organizationId?: Resident['organizationId'];
+      }
+    | null = null;
 
   constructor(resident: Resident) {
     this.resident = cloneResident(resident);
@@ -41,6 +48,26 @@ class ResidentRepositoryStub implements ResidentRepository {
     this.lastUpdatedResident = cloneResident(resident);
     this.resident = cloneResident(resident);
     return cloneResident(this.resident);
+  }
+
+  async touchAudit(
+    residentId: Resident['id'],
+    actor: string,
+    organizationId?: Resident['organizationId'],
+  ): Promise<void> {
+    this.lastTouchedAudit = {
+      residentId,
+      actor,
+      organizationId,
+    };
+    this.resident = {
+      ...this.resident,
+      audit: {
+        ...this.resident.audit,
+        updatedAt: '2026-03-25T21:00:00.000Z',
+        updatedBy: actor,
+      },
+    };
   }
 
   async listEvents(): Promise<ResidentEvent[]> {
@@ -225,6 +252,11 @@ describe('ResidentsService.createResidentEvent', () => {
       description: 'Se observa mejor adherencia con acompanamiento.',
       occurredAt: '2026-03-25T21:00:00.000Z',
       actor: 'coordinator-user',
+    });
+    expect(residents.lastTouchedAudit).toEqual({
+      residentId: resident.id,
+      actor: 'coordinator-user',
+      organizationId: resident.organizationId,
     });
   });
 

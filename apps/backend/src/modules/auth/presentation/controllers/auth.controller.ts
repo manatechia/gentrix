@@ -7,6 +7,7 @@ import {
   Req,
 } from '@nestjs/common';
 
+import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
 import { Public } from '../../../../common/auth/public.decorator';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { AuthService } from '../../application/auth.service';
@@ -37,9 +38,6 @@ export class AuthController {
 
   @Post('logout')
   logout(@Req() request: RequestWithSession) {
-    return this.authService.logout(
-      request.authSession!.token,
-      request.authSession!.user.email,
-    );
+    return this.authService.logout(request.authSession!.token, getAuditActorFromRequest(request));
   }
 }

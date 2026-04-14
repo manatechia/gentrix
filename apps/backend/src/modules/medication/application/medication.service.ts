@@ -167,6 +167,11 @@ export class MedicationService {
       actor,
     );
     const createdMedication = await this.medicationRepository.create(medication);
+    await this.residentsService.touchResidentAudit(
+      resident.id,
+      actor,
+      resident.organizationId,
+    );
 
     return toMedicationOverview(
       createdMedication,
@@ -202,6 +207,11 @@ export class MedicationService {
     const persistedMedication = await this.medicationRepository.update(
       updatedMedication,
     );
+    await this.residentsService.touchResidentAudit(
+      resident.id,
+      actor,
+      resident.organizationId,
+    );
 
     return toMedicationDetail(
       persistedMedication,
@@ -229,6 +239,11 @@ export class MedicationService {
     const execution = createMedicationExecutionFromInput(input, medication, actor);
     const createdExecution = await this.medicationExecutionRepository.create(
       execution,
+    );
+    await this.residentsService.touchResidentAudit(
+      medication.residentId,
+      actor,
+      medication.organizationId,
     );
 
     return toMedicationExecutionOverview(createdExecution, resident.fullName);
