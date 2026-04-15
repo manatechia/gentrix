@@ -2,6 +2,7 @@ import { Suspense, lazy, type ReactNode } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 
 import { AuthCheckingScreen } from '../features/auth/ui/auth-checking-screen';
+import { ForcePasswordGate } from '../features/auth/ui/force-password-gate';
 
 const LoginRoute = lazy(async () => {
   const module = await import('./routes/auth-routes');
@@ -63,9 +64,20 @@ const MedicationEditRoute = lazy(async () => {
 
   return { default: module.MedicationEditRoute };
 });
+const ForcePasswordChangeRoute = lazy(async () => {
+  const module = await import('./routes/password-routes');
+
+  return { default: module.ForcePasswordChangeRoute };
+});
 
 function renderRoute(element: ReactNode) {
   return <Suspense fallback={<AuthCheckingScreen />}>{element}</Suspense>;
+}
+
+// Wraps every authenticated route with the forced-change gate so a user that
+// must pick a new password can't bypass the screen by typing a URL.
+function gated(element: ReactNode) {
+  return <ForcePasswordGate>{element}</ForcePasswordGate>;
 }
 
 function MedicationPluralEditRedirect() {
@@ -83,30 +95,46 @@ export function AppRouter() {
     <Routes>
       <Route path="/" element={renderRoute(<RootRedirect />)} />
       <Route path="/login" element={renderRoute(<LoginRoute />)} />
-      <Route path="/dashboard" element={renderRoute(<DashboardRoute />)} />
-      <Route path="/handoff" element={renderRoute(<HandoffRoute />)} />
-      <Route path="/residentes" element={renderRoute(<ResidentsRoute />)} />
+      <Route
+        path="/cambiar-contrasena"
+        element={renderRoute(<ForcePasswordChangeRoute />)}
+      />
+      <Route
+        path="/dashboard"
+        element={renderRoute(gated(<DashboardRoute />))}
+      />
+      <Route path="/handoff" element={renderRoute(gated(<HandoffRoute />))} />
+      <Route
+        path="/residentes"
+        element={renderRoute(gated(<ResidentsRoute />))}
+      />
       <Route
         path="/residentes/nuevo"
-        element={renderRoute(<ResidentCreateRoute />)}
+        element={renderRoute(gated(<ResidentCreateRoute />))}
       />
       <Route
         path="/residentes/:residentId/editar"
-        element={renderRoute(<ResidentEditRoute />)}
+        element={renderRoute(gated(<ResidentEditRoute />))}
       />
       <Route
         path="/residentes/:residentId"
-        element={renderRoute(<ResidentDetailRoute />)}
+        element={renderRoute(gated(<ResidentDetailRoute />))}
       />
-      <Route path="/personal" element={renderRoute(<StaffSchedulesRoute />)} />
-      <Route path="/medicacion" element={renderRoute(<MedicationsRoute />)} />
+      <Route
+        path="/personal"
+        element={renderRoute(gated(<StaffSchedulesRoute />))}
+      />
+      <Route
+        path="/medicacion"
+        element={renderRoute(gated(<MedicationsRoute />))}
+      />
       <Route
         path="/medicacion/nueva"
-        element={renderRoute(<MedicationCreateRoute />)}
+        element={renderRoute(gated(<MedicationCreateRoute />))}
       />
       <Route
         path="/medicacion/:medicationId/editar"
-        element={renderRoute(<MedicationEditRoute />)}
+        element={renderRoute(gated(<MedicationEditRoute />))}
       />
       <Route
         path="/medicaciones"

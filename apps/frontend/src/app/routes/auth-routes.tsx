@@ -10,7 +10,16 @@ export function LoginRoute() {
   const auth = useAuthSession();
 
   if (auth.status === 'authenticated' && auth.session) {
-    return <Navigate to="/dashboard" replace />;
+    return (
+      <Navigate
+        to={
+          auth.session.user.forcePasswordChange
+            ? '/cambiar-contrasena'
+            : '/dashboard'
+        }
+        replace
+      />
+    );
   }
 
   if (auth.status === 'checking') {
@@ -61,5 +70,13 @@ export function RootRedirect() {
     return <AuthCheckingScreen />;
   }
 
-  return <Navigate to={auth.session ? '/dashboard' : '/login'} replace />;
+  if (!auth.session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (auth.session.user.forcePasswordChange) {
+    return <Navigate to="/cambiar-contrasena" replace />;
+  }
+
+  return <Navigate to="/dashboard" replace />;
 }

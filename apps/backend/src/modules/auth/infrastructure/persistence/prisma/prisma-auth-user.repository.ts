@@ -33,6 +33,8 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
       where: {
         email: normalizedEmail,
         deletedAt: null,
+        // Users in an inactive state must not be able to authenticate, even
+        // when they still have a forced password-change flag set.
         status: 'active',
       },
       include: {
@@ -109,9 +111,23 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
       email: user.email,
       password: user.password,
       role: normalizedRole,
+      forcePasswordChange: user.forcePasswordChange,
       activeOrganization,
       activeFacility,
     };
+  }
+
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.prisma.userAccount.update({
+      where: { id: userId },
+      data: {
+        password: passwordHash,
+        // Intentionally does NOT touch passwordChangedAt / forcePasswordChange:
+        // this is a storage-format migration, not a user-visible change.
+        updatedAt: new Date(),
+        updatedBy: 'system:password-hash-migration',
+      },
+    });
   }
 }
 

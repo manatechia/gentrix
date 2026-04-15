@@ -1,6 +1,22 @@
 import { pathToFileURL } from 'node:url';
+import { randomBytes, scrypt as scryptCb } from 'node:crypto';
 
 import { createPrismaClient } from './prisma-client.mjs';
+
+function scrypt(password, salt, keyLen) {
+  return new Promise((resolve, reject) => {
+    scryptCb(password, salt, keyLen, (err, derived) => {
+      if (err) reject(err);
+      else resolve(derived);
+    });
+  });
+}
+
+async function hashSeedPassword(plain) {
+  const salt = randomBytes(16);
+  const derived = await scrypt(plain, salt, 64);
+  return `scrypt$${salt.toString('hex')}$${derived.toString('hex')}`;
+}
 const ids = {
   organizations: {
     gentrixDemo: '91000000-0000-4000-8000-000000000001',
@@ -91,6 +107,9 @@ export async function seedDatabase(prisma) {
   await prisma.organization.deleteMany();
   await prisma.userAccount.deleteMany();
 
+  // All seed users share the demo password but must still be hashed.
+  const seedPasswordHash = await hashSeedPassword('gentrix123');
+
   await prisma.organization.create({
     data: {
       id: ids.organizations.gentrixDemo,
@@ -135,7 +154,7 @@ export async function seedDatabase(prisma) {
       id: ids.users.sofiaQuiroga,
       fullName: 'Sofia Quiroga',
       email: 'admin@gentrix.local',
-      password: 'gentrix123',
+      password: seedPasswordHash,
       role: 'admin',
       status: 'active',
       createdAt: new Date('2026-01-10T09:00:00.000Z'),
@@ -150,7 +169,7 @@ export async function seedDatabase(prisma) {
       id: ids.users.anaGomez,
       fullName: 'Ana Gomez',
       email: 'ana.gomez@gentrix.local',
-      password: 'gentrix123',
+      password: seedPasswordHash,
       role: 'nurse',
       status: 'active',
       createdAt: new Date('2026-01-10T09:00:00.000Z'),
@@ -165,7 +184,7 @@ export async function seedDatabase(prisma) {
       id: ids.users.mariaLopez,
       fullName: 'Maria Lopez',
       email: 'maria.lopez@gentrix.local',
-      password: 'gentrix123',
+      password: seedPasswordHash,
       role: 'health-director',
       status: 'active',
       createdAt: new Date('2026-01-10T09:00:00.000Z'),

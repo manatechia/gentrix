@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import type { UserCreateInput, UserOverview } from '@gentrix/shared-types';
+import type {
+  PasswordResetResponse,
+  UserCreateInput,
+  UserOverview,
+} from '@gentrix/shared-types';
 
 import { useAuthSession } from '../../auth/hooks/use-auth-session';
 import {
@@ -17,6 +21,9 @@ export function useUsersRoute() {
   const [users, setUsers] = useState<UserOverview[]>([]);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [isSavingUser, setIsSavingUser] = useState(false);
+  const [resettingUserId, setResettingUserId] = useState<string | null>(null);
+  const [lastResetResult, setLastResetResult] =
+    useState<PasswordResetResponse | null>(null);
   const [userNotice, setUserNotice] = useState<string | null>(null);
   const [userNoticeTone, setUserNoticeTone] = useState<'success' | 'error'>(
     'success',
@@ -102,15 +109,71 @@ export function useUsersRoute() {
     [logout, token],
   );
 
+  const handlePasswordReset = useCallback(
+    async (userId: string): Promise<PasswordResetResponse | null> => {
+      if (!token) {
+        await logout();
+        return null;
+      }
+
+      setResettingUserId(userId);
+      setUserNotice(null);
+
+      try {
+        const payload = await usersService.resetUserPassword(userId);
+        const result = unwrapEnvelope(payload);
+
+        setUsers((current) =>
+          current.map((user) =>
+            user.id === userId
+              ? {
+                  ...user,
+                  forcePasswordChange: true,
+                  passwordChangedAt: null,
+                }
+              : user,
+          ),
+        );
+        setLastResetResult(result);
+        setUserNoticeTone('success');
+        setUserNotice('Contraseña reiniciada correctamente.');
+        return result;
+      } catch (error) {
+        const message = getApiErrorMessage(
+          error,
+          'No pude reiniciar la contraseña.',
+        );
+        if (message === 'Unauthorized.') {
+          await logout();
+          return null;
+        }
+        setUserNoticeTone('error');
+        setUserNotice(message);
+        return null;
+      } finally {
+        setResettingUserId(null);
+      }
+    },
+    [logout, token],
+  );
+
+  const clearLastResetResult = useCallback((): void => {
+    setLastResetResult(null);
+  }, []);
+
   return {
     screenState,
     users,
     usersError,
     isSavingUser,
+    resettingUserId,
+    lastResetResult,
     userNotice,
     userNoticeTone,
     handleRetry: loadUsers,
     handleUserCreate,
+    handlePasswordReset,
+    clearLastResetResult,
   };
 }
 
