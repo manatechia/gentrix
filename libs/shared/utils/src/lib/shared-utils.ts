@@ -145,9 +145,9 @@ function extractLocalYmd(
     map[part.type] = part.value;
   }
   return {
-    year: Number.parseInt(map.year, 10),
-    month: Number.parseInt(map.month, 10),
-    day: Number.parseInt(map.day, 10),
+    year: Number.parseInt(map['year'] ?? '0', 10),
+    month: Number.parseInt(map['month'] ?? '0', 10),
+    day: Number.parseInt(map['day'] ?? '0', 10),
   };
 }
 
@@ -193,14 +193,14 @@ function timezoneOffsetMinutes(reference: Date, timeZone: string): number {
   }
   // `hour: 2-digit` con `hour12:false` puede devolver "24" a medianoche en
   // algunas implementaciones — normalizamos a 0.
-  const hour = Number.parseInt(map.hour, 10) % 24;
+  const hour = Number.parseInt(map['hour'] ?? '0', 10) % 24;
   const asUtc = Date.UTC(
-    Number.parseInt(map.year, 10),
-    Number.parseInt(map.month, 10) - 1,
-    Number.parseInt(map.day, 10),
+    Number.parseInt(map['year'] ?? '0', 10),
+    Number.parseInt(map['month'] ?? '0', 10) - 1,
+    Number.parseInt(map['day'] ?? '0', 10),
     hour,
-    Number.parseInt(map.minute, 10),
-    Number.parseInt(map.second, 10),
+    Number.parseInt(map['minute'] ?? '0', 10),
+    Number.parseInt(map['second'] ?? '0', 10),
   );
   return Math.round((asUtc - reference.getTime()) / 60_000);
 }

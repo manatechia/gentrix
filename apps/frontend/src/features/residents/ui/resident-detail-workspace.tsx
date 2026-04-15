@@ -3,8 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import type {
   AuthSession,
-  ClinicalHistoryEvent,
-  ClinicalHistoryEventCreateInput,
   ResidentAgendaEventCreateInput,
   ResidentAgendaEventUpdateInput,
   ResidentAgendaOccurrence,
@@ -15,10 +13,6 @@ import type {
   ResidentDetail,
   ResidentGeriatricAssessmentLevel,
   ResidentLiveProfile,
-  ResidentObservation,
-  ResidentObservationCreateInput,
-  ResidentObservationEntryCreateInput,
-  ResidentObservationResolveInput,
 } from '@gentrix/shared-types';
 
 import {
@@ -45,10 +39,8 @@ import { PageToolbar } from '../../../shared/ui/page-toolbar';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
-import { ClinicalHistoryPanel } from './clinical-history-panel';
 import { ResidentAgendaPanel } from './resident-agenda-panel';
 import { ResidentLiveProfilePanel } from './resident-live-profile-panel';
-import { ResidentObservationsPanel } from './resident-observations-panel';
 
 interface ResidentDetailWorkspaceProps {
   screenState: DashboardScreenState;
@@ -56,32 +48,9 @@ interface ResidentDetailWorkspaceProps {
   residentCount: number;
   resident: ResidentDetail | null;
   residentLiveProfile: ResidentLiveProfile | null;
-  clinicalHistory: ClinicalHistoryEvent[];
-  observations: ResidentObservation[];
   residentError: string | null;
-  isSavingClinicalHistoryEvent: boolean;
-  isSavingObservation: boolean;
-  activeObservationMutationId: string | null;
-  clinicalHistoryNoticeTone: 'success' | 'error';
-  clinicalHistoryNotice: string | null;
-  observationNoticeTone: 'success' | 'error';
-  observationNotice: string | null;
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
-  onClinicalHistoryCreate: (
-    input: ClinicalHistoryEventCreateInput,
-  ) => Promise<ClinicalHistoryEvent | null>;
-  onObservationCreate: (
-    input: ResidentObservationCreateInput,
-  ) => Promise<ResidentObservation | null>;
-  onObservationEntryCreate: (
-    observationId: string,
-    input: ResidentObservationEntryCreateInput,
-  ) => Promise<ResidentObservation | null>;
-  onObservationResolve: (
-    observationId: string,
-    input: ResidentObservationResolveInput,
-  ) => Promise<ResidentObservation | null>;
   isUpdatingCareStatus: boolean;
   careStatusNotice: string | null;
   careStatusNoticeTone: 'success' | 'error';
@@ -195,22 +164,9 @@ export function ResidentDetailWorkspace({
   residentCount,
   resident,
   residentLiveProfile,
-  clinicalHistory,
-  observations,
   residentError,
-  isSavingClinicalHistoryEvent,
-  isSavingObservation,
-  activeObservationMutationId,
-  clinicalHistoryNoticeTone,
-  clinicalHistoryNotice,
-  observationNoticeTone,
-  observationNotice,
   onLogout,
   onRetry,
-  onClinicalHistoryCreate,
-  onObservationCreate,
-  onObservationEntryCreate,
-  onObservationResolve,
   isUpdatingCareStatus,
   careStatusNotice,
   careStatusNoticeTone,
@@ -342,26 +298,6 @@ export function ResidentDetailWorkspace({
             onSeriesDelete={onAgendaSeriesDelete}
             onOccurrenceSkip={onAgendaOccurrenceSkip}
             onOccurrenceOverride={onAgendaOccurrenceOverride}
-          />
-
-          <ResidentObservationsPanel
-            observations={observations}
-            isSavingObservation={isSavingObservation}
-            activeObservationMutationId={activeObservationMutationId}
-            notice={observationNotice}
-            noticeTone={observationNoticeTone}
-            onCreate={onObservationCreate}
-            onCreateEntry={onObservationEntryCreate}
-            onResolve={onObservationResolve}
-          />
-
-          <ClinicalHistoryPanel
-            events={clinicalHistory}
-            isSavingEvent={isSavingClinicalHistoryEvent}
-            notice={clinicalHistoryNotice}
-            noticeTone={clinicalHistoryNoticeTone}
-            residentIsUnderObservation={resident.careStatus === 'en_observacion'}
-            onCreate={onClinicalHistoryCreate}
           />
 
           <ResidentLiveProfilePanel profile={residentLiveProfile} />
