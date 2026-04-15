@@ -13,6 +13,9 @@ import type {
   ResidentDetail,
   ResidentGeriatricAssessmentLevel,
   ResidentLiveProfile,
+  ResidentObservationNote,
+  ResidentObservationNoteCreateInput,
+  ResidentObservationNoteCreateResponse,
 } from '@gentrix/shared-types';
 
 import {
@@ -41,6 +44,7 @@ import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
 import { ResidentAgendaPanel } from './resident-agenda-panel';
 import { ResidentLiveProfilePanel } from './resident-live-profile-panel';
+import { ResidentObservationsPanel } from './resident-observations-panel';
 
 interface ResidentDetailWorkspaceProps {
   screenState: DashboardScreenState;
@@ -78,6 +82,15 @@ interface ResidentDetailWorkspaceProps {
     occurrenceDate: string,
     input: ResidentAgendaOccurrenceOverrideInput,
   ) => Promise<boolean>;
+  observationNotes: ResidentObservationNote[];
+  isSavingObservationNote: boolean;
+  activeObservationMutationId: string | null;
+  observationNotice: string | null;
+  observationNoticeTone: 'success' | 'error';
+  onObservationNoteCreate: (
+    input: ResidentObservationNoteCreateInput,
+  ) => Promise<ResidentObservationNoteCreateResponse | null>;
+  onObservationNoteDelete: (noteId: string) => Promise<boolean>;
 }
 
 interface DetailFieldProps {
@@ -184,6 +197,13 @@ export function ResidentDetailWorkspace({
   onAgendaSeriesDelete,
   onAgendaOccurrenceSkip,
   onAgendaOccurrenceOverride,
+  observationNotes,
+  isSavingObservationNote,
+  activeObservationMutationId,
+  observationNotice,
+  observationNoticeTone,
+  onObservationNoteCreate,
+  onObservationNoteDelete,
 }: ResidentDetailWorkspaceProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -298,6 +318,17 @@ export function ResidentDetailWorkspace({
             onSeriesDelete={onAgendaSeriesDelete}
             onOccurrenceSkip={onAgendaOccurrenceSkip}
             onOccurrenceOverride={onAgendaOccurrenceOverride}
+          />
+
+          <ResidentObservationsPanel
+            notes={observationNotes}
+            isUnderObservation={resident.careStatus === 'en_observacion'}
+            isSaving={isSavingObservationNote}
+            activeMutationId={activeObservationMutationId}
+            notice={observationNotice}
+            noticeTone={observationNoticeTone}
+            onCreate={onObservationNoteCreate}
+            onDelete={onObservationNoteDelete}
           />
 
           <ResidentLiveProfilePanel profile={residentLiveProfile} />

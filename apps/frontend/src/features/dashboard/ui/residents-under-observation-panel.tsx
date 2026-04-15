@@ -11,6 +11,29 @@ interface ResidentsUnderObservationPanelProps {
   residents: ResidentOverview[];
 }
 
+const relativeFormatter = new Intl.RelativeTimeFormat('es-AR', {
+  numeric: 'auto',
+});
+
+const dateFormatter = new Intl.DateTimeFormat('es-AR', {
+  day: '2-digit',
+  month: 'short',
+});
+
+function formatSinceLabel(changedAt: string): string {
+  const changed = new Date(changedAt).getTime();
+  const now = Date.now();
+  const diffMinutes = Math.round((changed - now) / (60 * 1000));
+  const absMin = Math.abs(diffMinutes);
+
+  if (absMin < 60) return relativeFormatter.format(diffMinutes, 'minute');
+  const diffHours = Math.round(diffMinutes / 60);
+  if (Math.abs(diffHours) < 24) return relativeFormatter.format(diffHours, 'hour');
+  const diffDays = Math.round(diffHours / 24);
+  if (Math.abs(diffDays) < 7) return relativeFormatter.format(diffDays, 'day');
+  return dateFormatter.format(new Date(changedAt));
+}
+
 /**
  * Widget del dashboard. Lista a los residentes que actualmente están en
  * observación dentro de la organización activa. Cada item linkea al perfil
@@ -67,7 +90,23 @@ export function ResidentsUnderObservationPanel({
                     {resident.fullName}
                   </strong>
                   <span className="text-[0.86rem] text-brand-text-secondary">
-                    Habitacion {resident.room}
+                    Habitación {resident.room}
+                    {resident.careStatusChangedAt && (
+                      <>
+                        {' · '}
+                        <span data-testid={`residents-under-observation-since-${resident.id}`}>
+                          en observación {formatSinceLabel(resident.careStatusChangedAt)}
+                        </span>
+                      </>
+                    )}
+                    {resident.careStatusChangedBy && (
+                      <>
+                        {' · '}
+                        <span className="text-brand-text-muted">
+                          por {resident.careStatusChangedBy}
+                        </span>
+                      </>
+                    )}
                   </span>
                 </span>
                 <span className="text-[0.86rem] font-semibold text-brand-primary">

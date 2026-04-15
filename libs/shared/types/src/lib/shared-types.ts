@@ -513,6 +513,38 @@ export interface ResidentAgendaOccurrenceWithResident
   residentRoom: string;
 }
 
+/**
+ * Observación simple del residente: una nota de texto libre que el staff
+ * registra durante el turno. El timestamp (createdAt) lo fija el backend.
+ * Orden natural de lectura: más recientes primero.
+ */
+export interface ResidentObservationNote {
+  id: EntityId;
+  residentId: EntityId;
+  note: string;
+  audit: AuditTrail;
+}
+
+export interface ResidentObservationNoteCreateInput {
+  note: string;
+  /**
+   * Si true, el servicio transiciona al residente a `en_observacion`
+   * (vía ResidentsService.setResidentCareStatus). No-op silencioso si
+   * ya estaba en ese estado.
+   */
+  putUnderObservation?: boolean;
+}
+
+/**
+ * Respuesta del endpoint POST de creación de observación. `careStatusChanged`
+ * es true solo si el cliente pidió `putUnderObservation` y la transición se
+ * aplicó efectivamente (residente pasó de `normal` a `en_observacion`).
+ */
+export interface ResidentObservationNoteCreateResponse {
+  note: ResidentObservationNote;
+  careStatusChanged: boolean;
+}
+
 export interface ResidentLiveProfileResident
   extends ResidentBaseProfile,
     ResidentCurrentState {

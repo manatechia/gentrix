@@ -5,6 +5,7 @@ import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MedicationModule } from './modules/medication/medication.module';
 import { ResidentAgendaModule } from './modules/resident-agenda/resident-agenda.module';
+import { ResidentObservationNotesModule } from './modules/resident-observation-notes/resident-observation-notes.module';
 import { ResidentsModule } from './modules/residents/residents.module';
 import { SchedulesModule } from './modules/schedules/schedules.module';
 import { StaffModule } from './modules/staff/staff.module';
@@ -21,6 +22,7 @@ import { UsersModule } from './modules/users/users.module';
     AuthModule,
     ResidentsModule,
     ResidentAgendaModule,
+    ResidentObservationNotesModule,
     StaffModule,
     SchedulesModule,
     MedicationModule,

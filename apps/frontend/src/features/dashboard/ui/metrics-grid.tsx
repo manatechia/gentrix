@@ -7,16 +7,6 @@ const metrics = [
     accent: 'bg-brand-primary',
   },
   {
-    label: 'Medicacion',
-    hint: 'medicaciones activas',
-    accent: 'bg-brand-secondary',
-  },
-  {
-    label: 'Alertas',
-    hint: 'incidencias operativas del dia',
-    accent: 'bg-brand-tertiary',
-  },
-  {
     label: 'Ocupacion',
     hint: 'ocupacion general',
     accent:
@@ -31,13 +21,11 @@ interface MetricsGridProps {
 export function MetricsGrid({ dashboard }: MetricsGridProps) {
   const values = [
     dashboard.summary.staffOnDuty,
-    dashboard.summary.activeMedicationCount,
-    dashboard.alerts.length,
     `${dashboard.summary.occupancyRate}%`,
   ];
 
   return (
-    <section className="grid gap-[18px] min-[1181px]:grid-cols-4">
+    <section className="grid gap-[18px] sm:grid-cols-2">
       {metrics.map((metric, index) => (
         <article
           key={metric.label}

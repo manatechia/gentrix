@@ -23,6 +23,7 @@ model Organization {
   clinicalEvents   ClinicalHistoryEvent[]
   agendaEvents     ResidentAgendaEvent[]
   agendaSeries     ResidentAgendaSeries[]
+  observationNotes ResidentObservationNote[]
   medicationExecutions MedicationExecution[]
   facilities       Facility[]
   medicationOrders MedicationOrder[]
@@ -53,6 +54,7 @@ model Facility {
   clinicalEvents   ClinicalHistoryEvent[]
   agendaEvents     ResidentAgendaEvent[]
   agendaSeries     ResidentAgendaSeries[]
+  observationNotes ResidentObservationNote[]
   medicationExecutions MedicationExecution[]
   medicationOrders MedicationOrder[]
   membershipScopes MembershipFacilityScope[]
@@ -222,6 +224,7 @@ model Resident {
   clinicalEvents         ClinicalHistoryEvent[]
   agendaEvents           ResidentAgendaEvent[]
   agendaSeries           ResidentAgendaSeries[]
+  observationNotes       ResidentObservationNote[]
   facility               Facility               @relation(fields: [facilityId], references: [id], onDelete: Restrict)
   medicationExecutions   MedicationExecution[]
   medications            MedicationOrder[]
@@ -480,5 +483,29 @@ model StaffSchedule {
 
   @@index([staffId])
   @@index([exceptionDate])
+  @@index([deletedAt])
+}
+
+/// Observación operativa simple del residente: nota de texto libre
+/// registrada por el staff (ej. "No comió", "No salió a caminar"). Timestamp
+/// automático (createdAt). Soft-delete para preservar auditoría.
+model ResidentObservationNote {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  facilityId     String?      @db.Uuid
+  residentId     String       @db.Uuid
+  note           String
+  createdAt      DateTime
+  createdBy      String
+  updatedAt      DateTime
+  updatedBy      String
+  deletedAt      DateTime?
+  deletedBy      String?
+  facility       Facility?    @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  resident       Resident     @relation(fields: [residentId], references: [id], onDelete: Restrict)
+
+  @@index([residentId, createdAt, deletedAt])
+  @@index([organizationId, deletedAt])
   @@index([deletedAt])
 }
