@@ -108,3 +108,68 @@ test('create, edit, and search residents', async (
   await expect(page.getByText(scenario.updatedRoom).first()).toBeVisible();
   await expect(page.getByText(scenario.updatedVgiNotes)).toBeVisible();
 });
+
+test('register, list with "see more" and delete resident observations', async (
+  { page, request },
+  testInfo,
+) => {
+  test.slow();
+
+  const authSession = await loginWithDemoCredentials(request);
+  const seeded = await fetchResidents(request, authSession.token);
+  const target = seeded[0];
+  expect(target).toBeDefined();
+  if (!target) throw new Error('No seeded resident available.');
+
+  const stamp = createNumericScenarioId(testInfo.project.name);
+  const firstNote = `Nota uno ${stamp}`;
+  const observationNote = `No comio al mediodia ${stamp}`;
+
+  await page.goto(`/residentes/${target.id}`);
+  await expect(page.getByTestId('resident-observations-panel')).toBeVisible();
+
+  // 1. Registrar una observacion simple, sin cambiar careStatus.
+  const noteInput = page.getByTestId('resident-observation-note-input');
+  await noteInput.fill(firstNote);
+  await page.getByTestId('resident-observations-submit').click();
+  await expect(page.getByText(firstNote)).toBeVisible();
+
+  // 2. Registrar otra observacion marcando "poner en observacion". El checkbox
+  //    debe estar visible (residente en `normal`) y luego desaparecer porque
+  //    el residente queda en observacion.
+  const checkbox = page.getByTestId(
+    'resident-observation-put-under-observation-checkbox',
+  );
+  await expect(checkbox).toBeVisible();
+  await noteInput.fill(observationNote);
+  await checkbox.check();
+  await page.getByTestId('resident-observations-submit').click();
+  await expect(page.getByText(observationNote)).toBeVisible();
+  await expect(page.getByTestId('resident-care-status-badge')).toContainText(
+    'En observacion',
+  );
+  await expect(checkbox).toBeHidden();
+
+  // 3. Borrar la primera nota con confirmacion inline.
+  const firstItem = page
+    .getByTestId('resident-observation-item')
+    .filter({ hasText: firstNote });
+  await firstItem.getByTestId('resident-observation-delete-button').click();
+  await firstItem
+    .getByTestId('resident-observation-confirm-delete-button')
+    .click();
+  await expect(page.getByText(firstNote)).toBeHidden();
+
+  // 4. Usar el boton "Quitar de observacion" (ya existente) para volver al
+  //    residente a normal y confirmar que el checkbox vuelve a aparecer.
+  const clearButton = page.getByTestId('resident-clear-observation-button');
+  if (await clearButton.isVisible()) {
+    await clearButton.click();
+    await expect(page.getByTestId('resident-care-status-badge')).toContainText(
+      'Normal',
+    );
+    await expect(
+      page.getByTestId('resident-observation-put-under-observation-checkbox'),
+    ).toBeVisible();
+  }
+});

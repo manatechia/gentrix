@@ -4,15 +4,12 @@ import type {
   ResidentAgendaOccurrenceWithResident,
 } from '@gentrix/shared-types';
 
+import { getDashboardVariant } from '../lib/dashboard-variant';
 import type { DashboardScreenState } from '../types/dashboard-screen-state';
-import { MetricsGrid } from './metrics-grid';
-import { ResidentsUnderObservationPanel } from './residents-under-observation-panel';
+import { ManagementDashboard } from './management-dashboard';
+import { OperationalDashboard } from './operational-dashboard';
 import { StatusNotice } from './status-notice';
-import { UpcomingAgendaPanel } from './upcoming-agenda-panel';
 import { WorkspaceShell } from './workspace-shell';
-import { AlertsPanel } from '../../alerts/ui/alerts-panel';
-import { MedicationPanel } from '../../medication/ui/medication-panel';
-import { StaffPanel } from '../../staff/ui/staff-panel';
 
 interface DashboardWorkspaceProps {
   screenState: DashboardScreenState;
@@ -20,7 +17,6 @@ interface DashboardWorkspaceProps {
   dashboard: DashboardSnapshot | null;
   authError: string | null;
   residentCount: number;
-  medications: DashboardSnapshot['medications'];
   upcomingAgendaOccurrences: ResidentAgendaOccurrenceWithResident[];
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
@@ -32,11 +28,12 @@ export function DashboardWorkspace({
   dashboard,
   authError,
   residentCount,
-  medications,
   upcomingAgendaOccurrences,
   onLogout,
   onRetry,
 }: DashboardWorkspaceProps) {
+  const variant = getDashboardVariant(session.user.role);
+
   return (
     <WorkspaceShell
       residentCount={residentCount}
@@ -66,20 +63,19 @@ export function DashboardWorkspace({
       )}
 
       {screenState === 'ready' && dashboard && (
-        <>
-          <MetricsGrid dashboard={dashboard} />
-
-          <section className="grid gap-[18px] min-[1181px]:grid-cols-[minmax(320px,1fr)_minmax(320px,1fr)]">
-            <ResidentsUnderObservationPanel residents={dashboard.residents} />
-            <UpcomingAgendaPanel occurrences={upcomingAgendaOccurrences} />
-          </section>
-
-          <section className="grid gap-[18px] min-[1181px]:grid-cols-[minmax(280px,0.95fr)_minmax(280px,0.95fr)_minmax(320px,1.1fr)]">
-            <StaffPanel staff={dashboard.staff} />
-            <MedicationPanel medications={medications} />
-            <AlertsPanel alerts={dashboard.alerts} />
-          </section>
-        </>
+        variant === 'operational' ? (
+          <OperationalDashboard
+            session={session}
+            dashboard={dashboard}
+            upcomingAgendaOccurrences={upcomingAgendaOccurrences}
+            onRefresh={onRetry}
+          />
+        ) : (
+          <ManagementDashboard
+            dashboard={dashboard}
+            upcomingAgendaOccurrences={upcomingAgendaOccurrences}
+          />
+        )
       )}
     </WorkspaceShell>
   );

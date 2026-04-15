@@ -5,6 +5,7 @@ import { AuthCheckingScreen } from '../../features/auth/ui/auth-checking-screen'
 import { useResidentAgenda } from '../../features/residents/hooks/use-resident-agenda';
 import { useResidentEditRoute } from '../../features/residents/hooks/use-resident-edit-route';
 import { useResidentDetailRoute } from '../../features/residents/hooks/use-resident-detail-route';
+import { useResidentObservations } from '../../features/residents/hooks/use-resident-observations';
 import { useResidentsRoute } from '../../features/residents/hooks/use-residents-route';
 import { ResidentCreateWorkspace } from '../../features/residents/ui/resident-create-workspace';
 import { ResidentDetailWorkspace } from '../../features/residents/ui/resident-detail-workspace';
@@ -81,6 +82,9 @@ export function ResidentDetailRoute() {
   const { residentId } = useParams();
   const detail = useResidentDetailRoute(residentId);
   const agenda = useResidentAgenda(residentId);
+  const observations = useResidentObservations(residentId, {
+    onCareStatusChanged: detail.handleRetry,
+  });
 
   if (auth.status === 'checking') {
     return <AuthCheckingScreen />;
@@ -117,6 +121,13 @@ export function ResidentDetailRoute() {
       onAgendaSeriesDelete={agenda.handleSeriesDelete}
       onAgendaOccurrenceSkip={agenda.handleOccurrenceSkip}
       onAgendaOccurrenceOverride={agenda.handleOccurrenceOverride}
+      observationNotes={observations.notes}
+      isSavingObservationNote={observations.isSaving}
+      activeObservationMutationId={observations.activeMutationId}
+      observationNotice={observations.notice}
+      observationNoticeTone={observations.noticeTone}
+      onObservationNoteCreate={observations.handleCreate}
+      onObservationNoteDelete={observations.handleDelete}
     />
   );
 }

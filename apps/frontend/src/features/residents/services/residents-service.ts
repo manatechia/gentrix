@@ -15,6 +15,9 @@ import type {
   ResidentCreateInput,
   ResidentDetail,
   ResidentLiveProfile,
+  ResidentObservationNote,
+  ResidentObservationNoteCreateInput,
+  ResidentObservationNoteCreateResponse,
   ResidentOverview,
   ResidentUpdateInput,
 } from '@gentrix/shared-types';
@@ -215,5 +218,35 @@ export async function clearResidentAgendaOccurrenceException(
 ): Promise<void> {
   await apiClient.delete(
     `/api/residents/${residentId}/agenda/series/${seriesId}/occurrences/${occurrenceDate}`,
+  );
+}
+
+export async function getResidentObservationNotes(
+  residentId: string,
+): Promise<ApiEnvelope<ResidentObservationNote[]>> {
+  const response = await apiClient.get<ApiEnvelope<ResidentObservationNote[]>>(
+    `/api/residents/${residentId}/observations`,
+  );
+
+  return response.data;
+}
+
+export async function createResidentObservationNote(
+  residentId: string,
+  input: ResidentObservationNoteCreateInput,
+): Promise<ApiEnvelope<ResidentObservationNoteCreateResponse>> {
+  const response = await apiClient.post<
+    ApiEnvelope<ResidentObservationNoteCreateResponse>
+  >(`/api/residents/${residentId}/observations`, input);
+
+  return response.data;
+}
+
+export async function deleteResidentObservationNote(
+  residentId: string,
+  noteId: string,
+): Promise<void> {
+  await apiClient.delete(
+    `/api/residents/${residentId}/observations/${noteId}`,
   );
 }
