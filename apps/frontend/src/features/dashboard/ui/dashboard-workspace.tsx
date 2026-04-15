@@ -1,9 +1,14 @@
-import type { AuthSession, DashboardSnapshot } from '@gentrix/shared-types';
+import type {
+  AuthSession,
+  DashboardSnapshot,
+  ResidentAgendaEventWithResident,
+} from '@gentrix/shared-types';
 
 import type { DashboardScreenState } from '../types/dashboard-screen-state';
 import { MetricsGrid } from './metrics-grid';
 import { ResidentsUnderObservationPanel } from './residents-under-observation-panel';
 import { StatusNotice } from './status-notice';
+import { UpcomingAgendaPanel } from './upcoming-agenda-panel';
 import { WorkspaceShell } from './workspace-shell';
 import { AlertsPanel } from '../../alerts/ui/alerts-panel';
 import { MedicationPanel } from '../../medication/ui/medication-panel';
@@ -16,6 +21,7 @@ interface DashboardWorkspaceProps {
   authError: string | null;
   residentCount: number;
   medications: DashboardSnapshot['medications'];
+  upcomingAgendaEvents: ResidentAgendaEventWithResident[];
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
 }
@@ -27,6 +33,7 @@ export function DashboardWorkspace({
   authError,
   residentCount,
   medications,
+  upcomingAgendaEvents,
   onLogout,
   onRetry,
 }: DashboardWorkspaceProps) {
@@ -62,7 +69,10 @@ export function DashboardWorkspace({
         <>
           <MetricsGrid dashboard={dashboard} />
 
-          <ResidentsUnderObservationPanel residents={dashboard.residents} />
+          <section className="grid gap-[18px] min-[1181px]:grid-cols-[minmax(320px,1fr)_minmax(320px,1fr)]">
+            <ResidentsUnderObservationPanel residents={dashboard.residents} />
+            <UpcomingAgendaPanel events={upcomingAgendaEvents} />
+          </section>
 
           <section className="grid gap-[18px] min-[1181px]:grid-cols-[minmax(280px,0.95fr)_minmax(280px,0.95fr)_minmax(320px,1.1fr)]">
             <StaffPanel staff={dashboard.staff} />

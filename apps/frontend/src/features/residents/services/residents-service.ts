@@ -3,6 +3,10 @@ import type {
   ClinicalHistoryEvent,
   ClinicalHistoryEventCreateInput,
   ClinicalHistoryEventCreateResponse,
+  ResidentAgendaEvent,
+  ResidentAgendaEventCreateInput,
+  ResidentAgendaEventUpdateInput,
+  ResidentAgendaEventWithResident,
   ResidentCareStatus,
   ResidentCareStatusChangeResponse,
   ResidentCareStatusUpdateInput,
@@ -144,6 +148,58 @@ export async function createResidentObservationEntry(
     `/api/residents/${residentId}/observations/${observationId}/entries`,
     input,
   );
+
+  return response.data;
+}
+
+export async function getResidentAgendaEvents(
+  residentId: string,
+): Promise<ApiEnvelope<ResidentAgendaEvent[]>> {
+  const response = await apiClient.get<ApiEnvelope<ResidentAgendaEvent[]>>(
+    `/api/residents/${residentId}/agenda`,
+  );
+
+  return response.data;
+}
+
+export async function createResidentAgendaEvent(
+  residentId: string,
+  input: ResidentAgendaEventCreateInput,
+): Promise<ApiEnvelope<ResidentAgendaEvent>> {
+  const response = await apiClient.post<ApiEnvelope<ResidentAgendaEvent>>(
+    `/api/residents/${residentId}/agenda`,
+    input,
+  );
+
+  return response.data;
+}
+
+export async function updateResidentAgendaEvent(
+  residentId: string,
+  eventId: string,
+  input: ResidentAgendaEventUpdateInput,
+): Promise<ApiEnvelope<ResidentAgendaEvent>> {
+  const response = await apiClient.patch<ApiEnvelope<ResidentAgendaEvent>>(
+    `/api/residents/${residentId}/agenda/${eventId}`,
+    input,
+  );
+
+  return response.data;
+}
+
+export async function deleteResidentAgendaEvent(
+  residentId: string,
+  eventId: string,
+): Promise<void> {
+  await apiClient.delete(`/api/residents/${residentId}/agenda/${eventId}`);
+}
+
+export async function getUpcomingAgendaEvents(
+  limit = 20,
+): Promise<ApiEnvelope<ResidentAgendaEventWithResident[]>> {
+  const response = await apiClient.get<
+    ApiEnvelope<ResidentAgendaEventWithResident[]>
+  >(`/api/agenda/upcoming?limit=${limit}`);
 
   return response.data;
 }

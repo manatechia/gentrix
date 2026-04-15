@@ -2,6 +2,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { useAuthSession } from '../../features/auth/hooks/use-auth-session';
 import { AuthCheckingScreen } from '../../features/auth/ui/auth-checking-screen';
+import { useResidentAgenda } from '../../features/residents/hooks/use-resident-agenda';
 import { useResidentEditRoute } from '../../features/residents/hooks/use-resident-edit-route';
 import { useResidentDetailRoute } from '../../features/residents/hooks/use-resident-detail-route';
 import { useResidentsRoute } from '../../features/residents/hooks/use-residents-route';
@@ -79,6 +80,7 @@ export function ResidentDetailRoute() {
   const residents = useResidentsRoute();
   const { residentId } = useParams();
   const detail = useResidentDetailRoute(residentId);
+  const agenda = useResidentAgenda(residentId);
 
   if (auth.status === 'checking') {
     return <AuthCheckingScreen />;
@@ -115,6 +117,14 @@ export function ResidentDetailRoute() {
       careStatusNotice={detail.careStatusNotice}
       careStatusNoticeTone={detail.careStatusNoticeTone}
       onCareStatusChange={detail.handleCareStatusChange}
+      agendaEvents={agenda.events}
+      isSavingAgendaEvent={agenda.isSaving}
+      activeAgendaMutationId={agenda.activeMutationId}
+      agendaNotice={agenda.notice}
+      agendaNoticeTone={agenda.noticeTone}
+      onAgendaCreate={agenda.handleCreate}
+      onAgendaUpdate={agenda.handleUpdate}
+      onAgendaDelete={agenda.handleDelete}
     />
   );
 }

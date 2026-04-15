@@ -5,6 +5,9 @@ import type {
   AuthSession,
   ClinicalHistoryEvent,
   ClinicalHistoryEventCreateInput,
+  ResidentAgendaEvent,
+  ResidentAgendaEventCreateInput,
+  ResidentAgendaEventUpdateInput,
   ResidentCareStatus,
   ResidentDetail,
   ResidentGeriatricAssessmentLevel,
@@ -40,6 +43,7 @@ import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
 import { ClinicalHistoryPanel } from './clinical-history-panel';
+import { ResidentAgendaPanel } from './resident-agenda-panel';
 import { ResidentLiveProfilePanel } from './resident-live-profile-panel';
 import { ResidentObservationsPanel } from './resident-observations-panel';
 
@@ -79,6 +83,19 @@ interface ResidentDetailWorkspaceProps {
   careStatusNotice: string | null;
   careStatusNoticeTone: 'success' | 'error';
   onCareStatusChange: (toStatus: ResidentCareStatus) => Promise<boolean>;
+  agendaEvents: ResidentAgendaEvent[];
+  isSavingAgendaEvent: boolean;
+  activeAgendaMutationId: string | null;
+  agendaNotice: string | null;
+  agendaNoticeTone: 'success' | 'error';
+  onAgendaCreate: (
+    input: ResidentAgendaEventCreateInput,
+  ) => Promise<ResidentAgendaEvent | null>;
+  onAgendaUpdate: (
+    eventId: string,
+    input: ResidentAgendaEventUpdateInput,
+  ) => Promise<ResidentAgendaEvent | null>;
+  onAgendaDelete: (eventId: string) => Promise<boolean>;
 }
 
 interface DetailFieldProps {
@@ -185,6 +202,14 @@ export function ResidentDetailWorkspace({
   careStatusNotice,
   careStatusNoticeTone,
   onCareStatusChange,
+  agendaEvents,
+  isSavingAgendaEvent,
+  activeAgendaMutationId,
+  agendaNotice,
+  agendaNoticeTone,
+  onAgendaCreate,
+  onAgendaUpdate,
+  onAgendaDelete,
 }: ResidentDetailWorkspaceProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -285,6 +310,17 @@ export function ResidentDetailWorkspace({
 
       {screenState === 'ready' && resident && (
         <>
+          <ResidentAgendaPanel
+            events={agendaEvents}
+            isSavingEvent={isSavingAgendaEvent}
+            activeMutationId={activeAgendaMutationId}
+            notice={agendaNotice}
+            noticeTone={agendaNoticeTone}
+            onCreate={onAgendaCreate}
+            onUpdate={onAgendaUpdate}
+            onDelete={onAgendaDelete}
+          />
+
           <ResidentObservationsPanel
             observations={observations}
             isSavingObservation={isSavingObservation}

@@ -4,6 +4,7 @@ import { useAuthSession } from '../../features/auth/hooks/use-auth-session';
 import { AuthCheckingScreen } from '../../features/auth/ui/auth-checking-screen';
 import { LoginScreen } from '../../features/auth/ui/login-screen';
 import { useDashboardRoute } from '../../features/dashboard/hooks/use-dashboard-route';
+import { useUpcomingAgenda } from '../../features/dashboard/hooks/use-upcoming-agenda';
 import { DashboardWorkspace } from '../../features/dashboard/ui/dashboard-workspace';
 
 export function LoginRoute() {
@@ -40,6 +41,7 @@ export function LoginRoute() {
 export function DashboardRoute() {
   const auth = useAuthSession();
   const dashboard = useDashboardRoute();
+  const upcomingAgenda = useUpcomingAgenda();
 
   if (auth.status === 'checking') {
     return <AuthCheckingScreen />;
@@ -57,6 +59,7 @@ export function DashboardRoute() {
       authError={dashboard.dashboardError}
       residentCount={dashboard.residentCount}
       medications={dashboard.medications}
+      upcomingAgendaEvents={upcomingAgenda.events}
       onLogout={auth.logout}
       onRetry={dashboard.handleRetry}
     />
