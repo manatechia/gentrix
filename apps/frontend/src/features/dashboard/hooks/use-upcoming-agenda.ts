@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ResidentAgendaEventWithResident } from '@gentrix/shared-types';
+import type { ResidentAgendaOccurrenceWithResident } from '@gentrix/shared-types';
 
 import {
   getApiErrorMessage,
@@ -10,24 +10,26 @@ import { useAuthSession } from '../../auth/hooks/use-auth-session';
 import * as residentsService from '../../residents/services/residents-service';
 
 /**
- * Carga los próximos eventos de agenda a nivel organización para el bloque
- * "Próximas tareas" del dashboard. Aislado en su propio hook para no
- * acoplarlo al snapshot estático del dashboard, que aún no incluye agenda.
+ * Ocurrencias del día a nivel organización para el bloque "Próximas tareas"
+ * del dashboard. Carga las mismas ocurrencias que ve el personal al abrir
+ * la ficha de cada residente, pero agregadas.
  */
-export function useUpcomingAgenda(limit = 20) {
+export function useUpcomingAgenda() {
   const { logout, status, token } = useAuthSession();
-  const [events, setEvents] = useState<ResidentAgendaEventWithResident[]>([]);
+  const [occurrences, setOccurrences] = useState<
+    ResidentAgendaOccurrenceWithResident[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
     if (!token) {
-      setEvents([]);
+      setOccurrences([]);
       return;
     }
     setError(null);
     try {
-      const payload = await residentsService.getUpcomingAgendaEvents(limit);
-      setEvents(unwrapEnvelope(payload));
+      const payload = await residentsService.getUpcomingAgendaOccurrences();
+      setOccurrences(unwrapEnvelope(payload));
     } catch (caught) {
       const message = getApiErrorMessage(
         caught,
@@ -39,15 +41,15 @@ export function useUpcomingAgenda(limit = 20) {
       }
       setError(message);
     }
-  }, [limit, logout, token]);
+  }, [logout, token]);
 
   useEffect(() => {
     if (status !== 'authenticated' || !token) {
-      setEvents([]);
+      setOccurrences([]);
       return;
     }
     void load();
   }, [load, status, token]);
 
-  return { events, error, reload: load };
+  return { occurrences, error, reload: load };
 }

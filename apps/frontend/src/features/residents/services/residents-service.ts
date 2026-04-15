@@ -3,7 +3,12 @@ import type {
   ResidentAgendaEvent,
   ResidentAgendaEventCreateInput,
   ResidentAgendaEventUpdateInput,
-  ResidentAgendaEventWithResident,
+  ResidentAgendaOccurrence,
+  ResidentAgendaOccurrenceOverrideInput,
+  ResidentAgendaOccurrenceWithResident,
+  ResidentAgendaSeries,
+  ResidentAgendaSeriesCreateInput,
+  ResidentAgendaSeriesUpdateInput,
   ResidentCareStatus,
   ResidentCareStatusChangeResponse,
   ResidentCareStatusUpdateInput,
@@ -89,10 +94,14 @@ export async function updateResidentCareStatus(
   return response.data;
 }
 
-export async function getResidentAgendaEvents(
+/**
+ * Ocurrencias del día actual del residente (mezcla eventos one-off +
+ * series expandidas con excepciones aplicadas).
+ */
+export async function getResidentAgendaOccurrences(
   residentId: string,
-): Promise<ApiEnvelope<ResidentAgendaEvent[]>> {
-  const response = await apiClient.get<ApiEnvelope<ResidentAgendaEvent[]>>(
+): Promise<ApiEnvelope<ResidentAgendaOccurrence[]>> {
+  const response = await apiClient.get<ApiEnvelope<ResidentAgendaOccurrence[]>>(
     `/api/residents/${residentId}/agenda`,
   );
 
@@ -131,12 +140,80 @@ export async function deleteResidentAgendaEvent(
   await apiClient.delete(`/api/residents/${residentId}/agenda/${eventId}`);
 }
 
-export async function getUpcomingAgendaEvents(
-  limit = 20,
-): Promise<ApiEnvelope<ResidentAgendaEventWithResident[]>> {
+/**
+ * Ocurrencias del día de toda la organización para el bloque
+ * "Próximas tareas" del dashboard.
+ */
+export async function getUpcomingAgendaOccurrences(): Promise<
+  ApiEnvelope<ResidentAgendaOccurrenceWithResident[]>
+> {
   const response = await apiClient.get<
-    ApiEnvelope<ResidentAgendaEventWithResident[]>
-  >(`/api/agenda/upcoming?limit=${limit}`);
+    ApiEnvelope<ResidentAgendaOccurrenceWithResident[]>
+  >(`/api/agenda/upcoming`);
 
   return response.data;
+}
+
+export async function createResidentAgendaSeries(
+  residentId: string,
+  input: ResidentAgendaSeriesCreateInput,
+): Promise<ApiEnvelope<ResidentAgendaSeries>> {
+  const response = await apiClient.post<ApiEnvelope<ResidentAgendaSeries>>(
+    `/api/residents/${residentId}/agenda/series`,
+    input,
+  );
+  return response.data;
+}
+
+export async function updateResidentAgendaSeries(
+  residentId: string,
+  seriesId: string,
+  input: ResidentAgendaSeriesUpdateInput,
+): Promise<ApiEnvelope<ResidentAgendaSeries>> {
+  const response = await apiClient.patch<ApiEnvelope<ResidentAgendaSeries>>(
+    `/api/residents/${residentId}/agenda/series/${seriesId}`,
+    input,
+  );
+  return response.data;
+}
+
+export async function deleteResidentAgendaSeries(
+  residentId: string,
+  seriesId: string,
+): Promise<void> {
+  await apiClient.delete(
+    `/api/residents/${residentId}/agenda/series/${seriesId}`,
+  );
+}
+
+export async function skipResidentAgendaOccurrence(
+  residentId: string,
+  seriesId: string,
+  occurrenceDate: string,
+): Promise<void> {
+  await apiClient.post(
+    `/api/residents/${residentId}/agenda/series/${seriesId}/occurrences/${occurrenceDate}/skip`,
+  );
+}
+
+export async function overrideResidentAgendaOccurrence(
+  residentId: string,
+  seriesId: string,
+  occurrenceDate: string,
+  input: ResidentAgendaOccurrenceOverrideInput,
+): Promise<void> {
+  await apiClient.patch(
+    `/api/residents/${residentId}/agenda/series/${seriesId}/occurrences/${occurrenceDate}`,
+    input,
+  );
+}
+
+export async function clearResidentAgendaOccurrenceException(
+  residentId: string,
+  seriesId: string,
+  occurrenceDate: string,
+): Promise<void> {
+  await apiClient.delete(
+    `/api/residents/${residentId}/agenda/series/${seriesId}/occurrences/${occurrenceDate}`,
+  );
 }

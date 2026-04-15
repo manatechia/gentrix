@@ -59,7 +59,7 @@ export function DashboardRoute() {
       authError={dashboard.dashboardError}
       residentCount={dashboard.residentCount}
       medications={dashboard.medications}
-      upcomingAgendaEvents={upcomingAgenda.events}
+      upcomingAgendaOccurrences={upcomingAgenda.occurrences}
       onLogout={auth.logout}
       onRetry={dashboard.handleRetry}
     />

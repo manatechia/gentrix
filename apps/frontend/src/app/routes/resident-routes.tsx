@@ -104,14 +104,19 @@ export function ResidentDetailRoute() {
       careStatusNotice={detail.careStatusNotice}
       careStatusNoticeTone={detail.careStatusNoticeTone}
       onCareStatusChange={detail.handleCareStatusChange}
-      agendaEvents={agenda.events}
+      agendaOccurrences={agenda.occurrences}
       isSavingAgendaEvent={agenda.isSaving}
       activeAgendaMutationId={agenda.activeMutationId}
       agendaNotice={agenda.notice}
       agendaNoticeTone={agenda.noticeTone}
-      onAgendaCreate={agenda.handleCreate}
-      onAgendaUpdate={agenda.handleUpdate}
-      onAgendaDelete={agenda.handleDelete}
+      onAgendaEventCreate={agenda.handleEventCreate}
+      onAgendaEventUpdate={agenda.handleEventUpdate}
+      onAgendaEventDelete={agenda.handleEventDelete}
+      onAgendaSeriesCreate={agenda.handleSeriesCreate}
+      onAgendaSeriesUpdate={agenda.handleSeriesUpdate}
+      onAgendaSeriesDelete={agenda.handleSeriesDelete}
+      onAgendaOccurrenceSkip={agenda.handleOccurrenceSkip}
+      onAgendaOccurrenceOverride={agenda.handleOccurrenceOverride}
     />
   );
 }

@@ -3,9 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import type {
   AuthSession,
-  ResidentAgendaEvent,
   ResidentAgendaEventCreateInput,
   ResidentAgendaEventUpdateInput,
+  ResidentAgendaOccurrence,
+  ResidentAgendaOccurrenceOverrideInput,
+  ResidentAgendaSeriesCreateInput,
+  ResidentAgendaSeriesUpdateInput,
   ResidentCareStatus,
   ResidentDetail,
   ResidentGeriatricAssessmentLevel,
@@ -52,19 +55,29 @@ interface ResidentDetailWorkspaceProps {
   careStatusNotice: string | null;
   careStatusNoticeTone: 'success' | 'error';
   onCareStatusChange: (toStatus: ResidentCareStatus) => Promise<boolean>;
-  agendaEvents: ResidentAgendaEvent[];
+  agendaOccurrences: ResidentAgendaOccurrence[];
   isSavingAgendaEvent: boolean;
   activeAgendaMutationId: string | null;
   agendaNotice: string | null;
   agendaNoticeTone: 'success' | 'error';
-  onAgendaCreate: (
-    input: ResidentAgendaEventCreateInput,
-  ) => Promise<ResidentAgendaEvent | null>;
-  onAgendaUpdate: (
+  onAgendaEventCreate: (input: ResidentAgendaEventCreateInput) => Promise<unknown>;
+  onAgendaEventUpdate: (
     eventId: string,
     input: ResidentAgendaEventUpdateInput,
-  ) => Promise<ResidentAgendaEvent | null>;
-  onAgendaDelete: (eventId: string) => Promise<boolean>;
+  ) => Promise<unknown>;
+  onAgendaEventDelete: (eventId: string) => Promise<boolean>;
+  onAgendaSeriesCreate: (input: ResidentAgendaSeriesCreateInput) => Promise<unknown>;
+  onAgendaSeriesUpdate: (
+    seriesId: string,
+    input: ResidentAgendaSeriesUpdateInput,
+  ) => Promise<unknown>;
+  onAgendaSeriesDelete: (seriesId: string) => Promise<boolean>;
+  onAgendaOccurrenceSkip: (seriesId: string, occurrenceDate: string) => Promise<boolean>;
+  onAgendaOccurrenceOverride: (
+    seriesId: string,
+    occurrenceDate: string,
+    input: ResidentAgendaOccurrenceOverrideInput,
+  ) => Promise<boolean>;
 }
 
 interface DetailFieldProps {
@@ -158,14 +171,19 @@ export function ResidentDetailWorkspace({
   careStatusNotice,
   careStatusNoticeTone,
   onCareStatusChange,
-  agendaEvents,
+  agendaOccurrences,
   isSavingAgendaEvent,
   activeAgendaMutationId,
   agendaNotice,
   agendaNoticeTone,
-  onAgendaCreate,
-  onAgendaUpdate,
-  onAgendaDelete,
+  onAgendaEventCreate,
+  onAgendaEventUpdate,
+  onAgendaEventDelete,
+  onAgendaSeriesCreate,
+  onAgendaSeriesUpdate,
+  onAgendaSeriesDelete,
+  onAgendaOccurrenceSkip,
+  onAgendaOccurrenceOverride,
 }: ResidentDetailWorkspaceProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -267,14 +285,19 @@ export function ResidentDetailWorkspace({
       {screenState === 'ready' && resident && (
         <>
           <ResidentAgendaPanel
-            events={agendaEvents}
+            occurrences={agendaOccurrences}
             isSavingEvent={isSavingAgendaEvent}
             activeMutationId={activeAgendaMutationId}
             notice={agendaNotice}
             noticeTone={agendaNoticeTone}
-            onCreate={onAgendaCreate}
-            onUpdate={onAgendaUpdate}
-            onDelete={onAgendaDelete}
+            onEventCreate={onAgendaEventCreate}
+            onEventUpdate={onAgendaEventUpdate}
+            onEventDelete={onAgendaEventDelete}
+            onSeriesCreate={onAgendaSeriesCreate}
+            onSeriesUpdate={onAgendaSeriesUpdate}
+            onSeriesDelete={onAgendaSeriesDelete}
+            onOccurrenceSkip={onAgendaOccurrenceSkip}
+            onOccurrenceOverride={onAgendaOccurrenceOverride}
           />
 
           <ResidentLiveProfilePanel profile={residentLiveProfile} />

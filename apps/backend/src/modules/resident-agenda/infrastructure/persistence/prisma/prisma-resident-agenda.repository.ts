@@ -89,6 +89,54 @@ export class PrismaResidentAgendaRepository implements ResidentAgendaRepository 
     }));
   }
 
+  async listByResidentInRange(
+    residentId: EntityId,
+    from: Date,
+    to: Date,
+    organizationId: EntityId,
+  ): Promise<ResidentAgendaEvent[]> {
+    const events = (await this.prisma.residentAgendaEvent.findMany({
+      where: {
+        residentId,
+        organizationId,
+        deletedAt: null,
+        scheduledAt: { gte: from, lt: to },
+      },
+      orderBy: [{ scheduledAt: 'asc' }],
+    })) as AgendaRow[];
+    return events.map(mapRowToAgendaEvent);
+  }
+
+  async listByOrganizationInRange(
+    organizationId: EntityId,
+    from: Date,
+    to: Date,
+  ): Promise<ResidentAgendaEventWithResident[]> {
+    const events = (await this.prisma.residentAgendaEvent.findMany({
+      where: {
+        organizationId,
+        deletedAt: null,
+        scheduledAt: { gte: from, lt: to },
+      },
+      orderBy: [{ scheduledAt: 'asc' }],
+      include: {
+        resident: {
+          select: { firstName: true, lastName: true, room: true },
+        },
+      },
+    })) as Array<
+      AgendaRow & {
+        resident: { firstName: string; lastName: string; room: string };
+      }
+    >;
+    return events.map((event) => ({
+      ...mapRowToAgendaEvent(event),
+      residentFullName:
+        `${event.resident.firstName} ${event.resident.lastName}`.trim(),
+      residentRoom: event.resident.room,
+    }));
+  }
+
   async findById(
     eventId: EntityId,
     organizationId?: EntityId,

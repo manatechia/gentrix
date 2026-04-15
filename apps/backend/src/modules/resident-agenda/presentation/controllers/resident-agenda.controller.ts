@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   Req,
 } from '@nestjs/common';
 
@@ -16,14 +15,20 @@ import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { ResidentAgendaService } from '../../application/resident-agenda.service';
 import { CreateResidentAgendaEventDto } from '../dto/create-resident-agenda-event.dto';
+import { CreateResidentAgendaSeriesDto } from '../dto/create-resident-agenda-series.dto';
+import { OverrideResidentAgendaOccurrenceDto } from '../dto/override-resident-agenda-occurrence.dto';
 import { UpdateResidentAgendaEventDto } from '../dto/update-resident-agenda-event.dto';
+import { UpdateResidentAgendaSeriesDto } from '../dto/update-resident-agenda-series.dto';
 
 /**
- * Agenda por residente (SDD RF-04/RF-05):
- *  - `/api/residents/:residentId/agenda`: próximos eventos del residente y
- *    operaciones CRUD asociadas.
- *  - `/api/agenda/upcoming`: próximos eventos de toda la organización activa
- *    para alimentar el bloque "Próximas tareas" del dashboard.
+ * Agenda por residente + recurrencia.
+ *
+ * `/agenda` devuelve ocurrencias del día actual (en la TZ de la organización),
+ * mezclando eventos one-off y series expandidas con excepciones aplicadas.
+ *
+ * Eventos one-off siguen usando `/agenda` para POST/PATCH/DELETE.
+ * Series usan `/agenda/series`. Excepciones de una ocurrencia puntual usan
+ * `/agenda/series/:id/occurrences/:YYYY-MM-DD`.
  */
 @Controller('api')
 export class ResidentAgendaController {
@@ -32,24 +37,35 @@ export class ResidentAgendaController {
     private readonly agendaService: ResidentAgendaService,
   ) {}
 
+  // ---------- Listados (ocurrencias del día) ----------
+
   @Get('residents/:residentId/agenda')
   listByResidentId(
     @Param('residentId') residentId: string,
     @Req() request: RequestWithSession,
   ) {
-    return this.agendaService.listUpcomingByResidentId(
+    return this.agendaService.listOccurrencesForResidentToday(
       residentId,
       request.authSession!.activeOrganization.id,
     );
   }
 
+  @Get('agenda/upcoming')
+  listUpcomingForDashboard(@Req() request: RequestWithSession) {
+    return this.agendaService.listOccurrencesForOrganizationToday(
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  // ---------- Eventos one-off (compat PR #10) ----------
+
   @Post('residents/:residentId/agenda')
-  create(
+  createEvent(
     @Param('residentId') residentId: string,
     @Body() body: CreateResidentAgendaEventDto,
     @Req() request: RequestWithSession,
   ) {
-    return this.agendaService.create(
+    return this.agendaService.createEvent(
       residentId,
       body,
       getAuditActorFromRequest(request),
@@ -58,13 +74,13 @@ export class ResidentAgendaController {
   }
 
   @Patch('residents/:residentId/agenda/:eventId')
-  update(
+  updateEvent(
     @Param('residentId') residentId: string,
     @Param('eventId') eventId: string,
     @Body() body: UpdateResidentAgendaEventDto,
     @Req() request: RequestWithSession,
   ) {
-    return this.agendaService.update(
+    return this.agendaService.updateEvent(
       residentId,
       eventId,
       body,
@@ -75,12 +91,12 @@ export class ResidentAgendaController {
 
   @Delete('residents/:residentId/agenda/:eventId')
   @HttpCode(204)
-  async delete(
+  async deleteEvent(
     @Param('residentId') residentId: string,
     @Param('eventId') eventId: string,
     @Req() request: RequestWithSession,
   ): Promise<void> {
-    await this.agendaService.delete(
+    await this.agendaService.deleteEvent(
       residentId,
       eventId,
       getAuditActorFromRequest(request),
@@ -88,14 +104,109 @@ export class ResidentAgendaController {
     );
   }
 
-  @Get('agenda/upcoming')
-  listUpcomingForDashboard(
+  // ---------- Series ----------
+
+  @Post('residents/:residentId/agenda/series')
+  createSeries(
+    @Param('residentId') residentId: string,
+    @Body() body: CreateResidentAgendaSeriesDto,
     @Req() request: RequestWithSession,
-    @Query('limit') limit?: string,
   ) {
-    return this.agendaService.listUpcomingByOrganization(
+    return this.agendaService.createSeries(
+      residentId,
+      body,
+      getAuditActorFromRequest(request),
       request.authSession!.activeOrganization.id,
-      limit ? Number.parseInt(limit, 10) : 20,
+    );
+  }
+
+  @Patch('residents/:residentId/agenda/series/:seriesId')
+  updateSeries(
+    @Param('residentId') residentId: string,
+    @Param('seriesId') seriesId: string,
+    @Body() body: UpdateResidentAgendaSeriesDto,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.agendaService.updateSeries(
+      residentId,
+      seriesId,
+      body,
+      getAuditActorFromRequest(request),
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  @Delete('residents/:residentId/agenda/series/:seriesId')
+  @HttpCode(204)
+  async deleteSeries(
+    @Param('residentId') residentId: string,
+    @Param('seriesId') seriesId: string,
+    @Req() request: RequestWithSession,
+  ): Promise<void> {
+    await this.agendaService.deleteSeries(
+      residentId,
+      seriesId,
+      getAuditActorFromRequest(request),
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  // ---------- Excepciones de una ocurrencia puntual ----------
+
+  @Post(
+    'residents/:residentId/agenda/series/:seriesId/occurrences/:occurrenceDate/skip',
+  )
+  skipOccurrence(
+    @Param('residentId') residentId: string,
+    @Param('seriesId') seriesId: string,
+    @Param('occurrenceDate') occurrenceDate: string,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.agendaService.skipOccurrence(
+      residentId,
+      seriesId,
+      occurrenceDate,
+      getAuditActorFromRequest(request),
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  @Patch(
+    'residents/:residentId/agenda/series/:seriesId/occurrences/:occurrenceDate',
+  )
+  overrideOccurrence(
+    @Param('residentId') residentId: string,
+    @Param('seriesId') seriesId: string,
+    @Param('occurrenceDate') occurrenceDate: string,
+    @Body() body: OverrideResidentAgendaOccurrenceDto,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.agendaService.overrideOccurrence(
+      residentId,
+      seriesId,
+      occurrenceDate,
+      body,
+      getAuditActorFromRequest(request),
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  @Delete(
+    'residents/:residentId/agenda/series/:seriesId/occurrences/:occurrenceDate',
+  )
+  @HttpCode(204)
+  async clearOccurrenceException(
+    @Param('residentId') residentId: string,
+    @Param('seriesId') seriesId: string,
+    @Param('occurrenceDate') occurrenceDate: string,
+    @Req() request: RequestWithSession,
+  ): Promise<void> {
+    await this.agendaService.clearOccurrenceException(
+      residentId,
+      seriesId,
+      occurrenceDate,
+      getAuditActorFromRequest(request),
+      request.authSession!.activeOrganization.id,
     );
   }
 }

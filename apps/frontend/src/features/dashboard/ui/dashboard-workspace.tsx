@@ -1,7 +1,7 @@
 import type {
   AuthSession,
   DashboardSnapshot,
-  ResidentAgendaEventWithResident,
+  ResidentAgendaOccurrenceWithResident,
 } from '@gentrix/shared-types';
 
 import type { DashboardScreenState } from '../types/dashboard-screen-state';
@@ -21,7 +21,7 @@ interface DashboardWorkspaceProps {
   authError: string | null;
   residentCount: number;
   medications: DashboardSnapshot['medications'];
-  upcomingAgendaEvents: ResidentAgendaEventWithResident[];
+  upcomingAgendaOccurrences: ResidentAgendaOccurrenceWithResident[];
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
 }
@@ -33,7 +33,7 @@ export function DashboardWorkspace({
   authError,
   residentCount,
   medications,
-  upcomingAgendaEvents,
+  upcomingAgendaOccurrences,
   onLogout,
   onRetry,
 }: DashboardWorkspaceProps) {
@@ -71,7 +71,7 @@ export function DashboardWorkspace({
 
           <section className="grid gap-[18px] min-[1181px]:grid-cols-[minmax(320px,1fr)_minmax(320px,1fr)]">
             <ResidentsUnderObservationPanel residents={dashboard.residents} />
-            <UpcomingAgendaPanel events={upcomingAgendaEvents} />
+            <UpcomingAgendaPanel occurrences={upcomingAgendaOccurrences} />
           </section>
 
           <section className="grid gap-[18px] min-[1181px]:grid-cols-[minmax(280px,0.95fr)_minmax(280px,0.95fr)_minmax(320px,1.1fr)]">

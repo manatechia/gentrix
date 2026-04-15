@@ -22,6 +22,27 @@ export interface ResidentAgendaRepository {
   ): Promise<ResidentAgendaEvent[]>;
 
   /**
+   * Eventos one-off de un residente que caen en el rango [from, to).
+   * Usado para expansión del día actual.
+   */
+  listByResidentInRange(
+    residentId: EntityId,
+    from: Date,
+    to: Date,
+    organizationId: EntityId,
+  ): Promise<ResidentAgendaEvent[]>;
+
+  /**
+   * Eventos one-off de toda la organización en el rango [from, to), con
+   * metadata del residente. Usado para el bloque "Próximas tareas".
+   */
+  listByOrganizationInRange(
+    organizationId: EntityId,
+    from: Date,
+    to: Date,
+  ): Promise<ResidentAgendaEventWithResident[]>;
+
+  /**
    * Próximos eventos de toda la organización, con los datos mínimos del
    * residente adjuntos para poder renderizar "Próximas tareas" en el dashboard
    * sin resolver nombres en el cliente.

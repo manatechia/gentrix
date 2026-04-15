@@ -1,3 +1,5 @@
+import type { ResidentAgendaOccurrence } from '@gentrix/shared-types';
+
 /**
  * Helpers específicos de la agenda del residente.
  *
@@ -119,6 +121,80 @@ export function formatAgendaDateInput(value: string): string {
     return `${digits.slice(0, 2)}/${digits.slice(2)}`;
   }
   return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+/**
+ * Label corto para el badge de recurrencia en la UI.
+ *   daily → "diario"
+ *   weekly [1,3,5] → "lun · mie · vie"
+ *   monthly (startsOn=2026-01-15) → "mensual día 15"
+ *   yearly (startsOn=2026-09-21) → "anual 21/09"
+ */
+export function formatAgendaRecurrenceBadge(
+  recurrence: NonNullable<ResidentAgendaOccurrence['recurrence']> | undefined,
+  startsOn?: string,
+): string | null {
+  if (!recurrence) return null;
+  switch (recurrence.type) {
+    case 'daily':
+      return 'diario';
+    case 'weekly': {
+      const days = recurrence.daysOfWeek
+        .slice()
+        .sort((a, b) => a - b)
+        .map((n) => WEEKDAY_SHORT_LABEL[n] ?? '?');
+      return days.length === 0 ? 'semanal' : days.join(' · ');
+    }
+    case 'monthly': {
+      const day = startsOn ? startsOn.slice(8, 10) : '?';
+      return `mensual dia ${Number.parseInt(day, 10)}`;
+    }
+    case 'yearly': {
+      const month = startsOn ? startsOn.slice(5, 7) : '?';
+      const day = startsOn ? startsOn.slice(8, 10) : '?';
+      return `anual ${day}/${month}`;
+    }
+    default:
+      return null;
+  }
+}
+
+const WEEKDAY_SHORT_LABEL: Record<number, string> = {
+  0: 'dom',
+  1: 'lun',
+  2: 'mar',
+  3: 'mie',
+  4: 'jue',
+  5: 'vie',
+  6: 'sab',
+};
+
+export const WEEKDAY_LABELS: Array<{ value: number; short: string; long: string }> =
+  [
+    { value: 1, short: 'Lun', long: 'Lunes' },
+    { value: 2, short: 'Mar', long: 'Martes' },
+    { value: 3, short: 'Mie', long: 'Miercoles' },
+    { value: 4, short: 'Jue', long: 'Jueves' },
+    { value: 5, short: 'Vie', long: 'Viernes' },
+    { value: 6, short: 'Sab', long: 'Sabado' },
+    { value: 0, short: 'Dom', long: 'Domingo' },
+  ];
+
+/**
+ * Convierte 'DD/MM/YYYY' → 'YYYY-MM-DD'. Devuelve null si el formato no matchea.
+ */
+export function agendaInputDateToYmd(value: string): string | null {
+  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!match) return null;
+  const [, day, month, year] = match;
+  return `${year}-${month}-${day}`;
+}
+
+export function ymdToAgendaInputDate(value: string | undefined): string {
+  if (!value) return '';
+  const ymd = value.slice(0, 10);
+  const [year, month, day] = ymd.split('-');
+  return `${day}/${month}/${year}`;
 }
 
 /**
