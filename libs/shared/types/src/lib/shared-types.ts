@@ -480,6 +480,51 @@ export interface ResidentObservationResolveInput {
   summary: string;
 }
 
+/**
+ * Evento de agenda del residente: actividad futura asociada al residente
+ * (dar medicación, llevar a una clase, recordatorio de turno, etc.).
+ *
+ * No tiene duración ni fin: es un recordatorio puntual. La ejecución o
+ * seguimiento de la actividad vive en otros contratos (ClinicalHistoryEvent,
+ * MedicationExecution). La agenda sólo apoya la pregunta operativa
+ * "qué sigue para este residente".
+ */
+export interface ResidentAgendaEvent {
+  id: EntityId;
+  residentId: EntityId;
+  title: string;
+  description?: string;
+  /**
+   * Fecha y hora programada del evento como ISO 8601. Combina fecha y hora
+   * del SDD en un único timestamp para permitir orden cronológico trivial
+   * y evitar ambigüedades de zona horaria.
+   */
+  scheduledAt: IsoDateString;
+  audit: AuditTrail;
+}
+
+/**
+ * Evento de agenda con la identidad mínima del residente adjunta. Lo usamos
+ * en el bloque "Próximas tareas" del dashboard, donde cada fila linkea a la
+ * ficha del residente y conviene no tener que resolver el nombre en el cliente.
+ */
+export interface ResidentAgendaEventWithResident extends ResidentAgendaEvent {
+  residentFullName: string;
+  residentRoom: string;
+}
+
+export interface ResidentAgendaEventCreateInput {
+  title: string;
+  description?: string;
+  scheduledAt: IsoDateString;
+}
+
+export interface ResidentAgendaEventUpdateInput {
+  title: string;
+  description?: string;
+  scheduledAt: IsoDateString;
+}
+
 export interface ResidentLiveProfileResident
   extends ResidentBaseProfile,
     ResidentCurrentState {
