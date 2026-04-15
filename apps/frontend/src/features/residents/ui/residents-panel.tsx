@@ -6,14 +6,20 @@ import {
   formatEntityStatus,
   formatResidentCareLevel,
 } from '../../../shared/lib/display-labels';
-import { badgeBaseClassName, surfaceCardClassName } from '../../../shared/ui/class-names';
+import {
+  badgeBaseClassName,
+  surfaceCardClassName,
+} from '../../../shared/ui/class-names';
 
 interface ResidentsPanelProps {
   residents: ResidentOverview[];
   residentBasePath?: string;
 }
 
-export function ResidentsPanel({ residents, residentBasePath }: ResidentsPanelProps) {
+export function ResidentsPanel({
+  residents,
+  residentBasePath,
+}: ResidentsPanelProps) {
   return (
     <div
       data-testid="residents-grid"
@@ -38,7 +44,7 @@ export function ResidentsPanel({ residents, residentBasePath }: ResidentsPanelPr
               </span>
             </div>
             <p className="mt-2 leading-[1.65] text-brand-text-secondary">
-              Habitacion {resident.room} / {resident.age} anios
+              Habitacion {resident.room} / {resident.age} años
             </p>
             <div className="mt-4 grid gap-2">
               <span className="h-[5px] w-[74%] rounded-full bg-brand-primary" />

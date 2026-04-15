@@ -63,34 +63,53 @@ export function CriticalTasksPanel({
         new Date(b.occurrence.scheduledAt).getTime(),
     );
 
+  if (critical.length === 0) {
+    return (
+      <section
+        data-testid="critical-tasks-panel"
+        className={`${surfaceCardClassName} flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4`}
+      >
+        <span className="flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[rgb(25,95,70)] sm:text-[0.76rem] sm:tracking-[0.16em]">
+          <span
+            className="inline-block h-2 w-2 rounded-full bg-[rgb(25,95,70)]"
+            aria-hidden="true"
+          />
+          Tareas críticas
+          <span className="ml-1 font-normal normal-case tracking-normal text-brand-text-secondary">
+            · todo al día
+          </span>
+        </span>
+        <span
+          className={`${badgeBaseClassName} bg-[rgba(34,124,94,0.14)] text-[rgb(25,95,70)]`}
+        >
+          0
+        </span>
+      </section>
+    );
+  }
+
   return (
     <section
       data-testid="critical-tasks-panel"
-      className={`${surfaceCardClassName} grid gap-4`}
+      className={`${surfaceCardClassName} grid gap-3 sm:gap-4`}
     >
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="grid gap-1">
-          <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-brand-primary sm:text-[0.76rem] sm:tracking-[0.16em]">
             Tareas críticas
           </span>
-          <p className="max-w-[60ch] leading-[1.55] text-brand-text-secondary">
+          <p className="hidden max-w-[60ch] text-[0.86rem] leading-[1.45] text-brand-text-secondary sm:block sm:text-base sm:leading-[1.55]">
             Vencidas + medicaciones y traslados médicos en las próximas 2 horas.
           </p>
         </div>
         <span
-          className={`${badgeBaseClassName} ${critical.length > 0 ? 'bg-[rgba(168,43,17,0.12)] text-[rgb(130,44,25)]' : 'bg-[rgba(34,124,94,0.14)] text-[rgb(25,95,70)]'}`}
+          className={`${badgeBaseClassName} bg-[rgba(168,43,17,0.12)] text-[rgb(130,44,25)]`}
         >
           {critical.length}
         </span>
       </header>
 
-      {critical.length === 0 ? (
-        <article className="rounded-[22px] border border-dashed border-[rgba(0,102,132,0.22)] bg-white/70 px-4 py-4 text-brand-text-secondary">
-          Sin tareas críticas ahora. Ver la agenda completa en la ficha de cada
-          residente.
-        </article>
-      ) : (
-        <ul className="grid gap-2">
+      <ul className="grid gap-2">
           {critical.map(({ occurrence, kind, bucket }) => {
             const key = `${occurrence.sourceType}:${occurrence.sourceId}:${occurrence.occurrenceDate ?? 'one'}`;
             const isOverdue = bucket === 'past';
@@ -140,8 +159,7 @@ export function CriticalTasksPanel({
               </li>
             );
           })}
-        </ul>
-      )}
+      </ul>
     </section>
   );
 }
