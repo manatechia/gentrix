@@ -7,6 +7,7 @@ import { json, urlencoded } from 'express';
 import { AuthService } from './modules/auth/application/auth.service';
 import { ApiExceptionFilter } from './common/http/api-exception.filter';
 import { ApiEnvelopeInterceptor } from './common/http/api-envelope.interceptor';
+import { ForcePasswordChangeGuard } from './common/auth/force-password-change.guard';
 import { SessionGuard } from './common/auth/session.guard';
 import { AppModule } from './app.module';
 
@@ -31,7 +32,11 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new ApiExceptionFilter());
   app.useGlobalInterceptors(new ApiEnvelopeInterceptor());
-  app.useGlobalGuards(new SessionGuard(app.get(Reflector), app.get(AuthService)));
+  const reflector = app.get(Reflector);
+  app.useGlobalGuards(
+    new SessionGuard(reflector, app.get(AuthService)),
+    new ForcePasswordChangeGuard(reflector),
+  );
 
   const port = Number(process.env.PORT ?? 3333);
   await app.listen(port);

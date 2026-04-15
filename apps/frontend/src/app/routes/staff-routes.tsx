@@ -32,9 +32,13 @@ export function StaffSchedulesRoute() {
       users={users.users}
       usersError={users.usersError}
       isSavingUser={users.isSavingUser}
+      resettingUserId={users.resettingUserId}
+      lastResetResult={users.lastResetResult}
       userNotice={users.userNotice}
       userNoticeTone={users.userNoticeTone}
       onUserCreate={users.handleUserCreate}
+      onPasswordReset={users.handlePasswordReset}
+      onClearResetResult={users.clearLastResetResult}
       onLogout={auth.logout}
       onRetry={users.handleRetry}
     />

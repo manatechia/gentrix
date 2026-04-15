@@ -231,6 +231,11 @@ export interface AuthUser {
   fullName: string;
   email: string;
   role: AuthRole;
+  /**
+   * When true the user can authenticate but must be forced to the
+   * password-change screen until they pick a new password that meets policy.
+   */
+  forcePasswordChange: boolean;
 }
 
 export interface AuthOrganization {
@@ -256,6 +261,31 @@ export interface UserOverview {
   email: string;
   role: AuthRole;
   status: EntityStatus;
+  forcePasswordChange: boolean;
+  passwordChangedAt: IsoDateString | null;
+}
+
+/**
+ * Response returned to an admin that just reset another user's password.
+ * The temporary password is shown to the admin only once so they can relay
+ * it to the affected user through an out-of-band channel.
+ */
+export interface PasswordResetResponse {
+  userId: EntityId;
+  temporaryPassword: string;
+  forcePasswordChange: true;
+  resetAt: IsoDateString;
+}
+
+/**
+ * Payload submitted by a user that is on the forced password-change screen.
+ * The server enforces the full password policy, so the client only needs to
+ * send the raw new password and a confirmation.
+ */
+export interface ForcedPasswordChangeInput {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface UserCreateInput {

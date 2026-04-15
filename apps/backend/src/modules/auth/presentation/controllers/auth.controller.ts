@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 
 import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
+import { AllowDuringForcedChange } from '../../../../common/auth/force-password-change.guard';
 import { Public } from '../../../../common/auth/public.decorator';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { AuthService } from '../../application/auth.service';
@@ -26,6 +27,7 @@ export class AuthController {
     return this.authService.login(body);
   }
 
+  @AllowDuringForcedChange()
   @Get('session')
   getSession(@Req() request: RequestWithSession) {
     return {
@@ -36,6 +38,7 @@ export class AuthController {
     };
   }
 
+  @AllowDuringForcedChange()
   @Post('logout')
   logout(@Req() request: RequestWithSession) {
     return this.authService.logout(request.authSession!.token, getAuditActorFromRequest(request));

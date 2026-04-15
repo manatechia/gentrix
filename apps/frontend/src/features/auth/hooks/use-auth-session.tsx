@@ -31,6 +31,7 @@ interface AuthSessionContextValue {
   isSubmitting: boolean;
   login: (credentials: AuthLoginRequest) => Promise<void>;
   logout: () => Promise<void>;
+  refreshSession: () => Promise<void>;
   clearAuthError: () => void;
 }
 
@@ -181,6 +182,16 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     }
   }, []);
 
+  const refreshSession = useCallback(async (): Promise<void> => {
+    try {
+      const payload = await authService.getSession();
+      setSession(unwrapEnvelope(payload));
+      setStatus('authenticated');
+    } catch {
+      resetSession();
+    }
+  }, []);
+
   const logout = useCallback(async (): Promise<void> => {
     if (import.meta.env.DEV) {
       console.debug('[gentrix] auth logout:start');
@@ -206,9 +217,19 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       isSubmitting,
       login,
       logout,
+      refreshSession,
       clearAuthError: () => setAuthError(null),
     }),
-    [authError, isSubmitting, login, logout, session, status, token],
+    [
+      authError,
+      isSubmitting,
+      login,
+      logout,
+      refreshSession,
+      session,
+      status,
+      token,
+    ],
   );
 
   return (

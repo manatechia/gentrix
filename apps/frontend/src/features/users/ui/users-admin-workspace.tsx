@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import type {
   AuthSession,
+  PasswordResetResponse,
   UserCreateRole,
   UserCreateInput,
   UserOverview,
@@ -30,9 +31,13 @@ interface UsersAdminWorkspaceProps {
   users: UserOverview[];
   usersError: string | null;
   isSavingUser: boolean;
+  resettingUserId: string | null;
+  lastResetResult: PasswordResetResponse | null;
   userNotice: string | null;
   userNoticeTone: 'success' | 'error';
   onUserCreate: (input: UserCreateInput) => Promise<UserOverview | null>;
+  onPasswordReset: (userId: string) => Promise<PasswordResetResponse | null>;
+  onClearResetResult: () => void;
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
 }
@@ -67,9 +72,13 @@ export function UsersAdminWorkspace({
   users,
   usersError,
   isSavingUser,
+  resettingUserId,
+  lastResetResult,
   userNotice,
   userNoticeTone,
   onUserCreate,
+  onPasswordReset,
+  onClearResetResult,
   onLogout,
   onRetry,
 }: UsersAdminWorkspaceProps) {
@@ -78,6 +87,29 @@ export function UsersAdminWorkspace({
     createInitialUserFormState,
   );
   const [formError, setFormError] = useState<string | null>(null);
+  const [pendingResetUser, setPendingResetUser] = useState<UserOverview | null>(
+    null,
+  );
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+
+  async function handleResetConfirmed(userId: string): Promise<void> {
+    const result = await onPasswordReset(userId);
+    setPendingResetUser(null);
+    // The temporary password is rendered once by the notice; we don't need
+    // additional state here, but keep a local copy-feedback flag clean.
+    if (result) {
+      setCopyFeedback(null);
+    }
+  }
+
+  async function handleCopyTemporaryPassword(password: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(password);
+      setCopyFeedback('Copiada al portapapeles.');
+    } catch {
+      setCopyFeedback('No pude copiarla automáticamente. Copiala manualmente.');
+    }
+  }
 
   async function handleSubmit(): Promise<void> {
     const fullName = formState.fullName.trim();
@@ -302,12 +334,132 @@ export function UsersAdminWorkspace({
                     <span className="text-[0.9rem] text-brand-text-muted">
                       Estado: {formatEntityStatus(user.status)}
                     </span>
+                    {user.forcePasswordChange && (
+                      <span
+                        className={`${badgeBaseClassName} w-max bg-[rgba(168,108,17,0.12)] text-[rgb(130,77,25)]`}
+                        data-testid={`user-row-${user.id}-force-flag`}
+                      >
+                        Pendiente de cambio de contraseña
+                      </span>
+                    )}
+                    <div className="mt-1 flex flex-wrap justify-end gap-2">
+                      <button
+                        type="button"
+                        data-testid={`user-row-${user.id}-reset-button`}
+                        className={secondaryButtonClassName}
+                        disabled={resettingUserId === user.id}
+                        onClick={() => {
+                          setPendingResetUser(user);
+                          setCopyFeedback(null);
+                          onClearResetResult();
+                        }}
+                      >
+                        {resettingUserId === user.id
+                          ? 'Reiniciando…'
+                          : 'Reiniciar contraseña'}
+                      </button>
+                    </div>
                   </article>
                 ))
               )}
             </div>
           </article>
         </section>
+      )}
+
+      {pendingResetUser && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          data-testid="users-reset-confirm-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(9,16,28,0.55)] px-4"
+        >
+          <div className="grid w-full max-w-[440px] gap-4 rounded-[28px] bg-white px-6 py-6 shadow-panel">
+            <h3 className="text-[1.2rem] font-bold tracking-[-0.03em] text-brand-text">
+              ¿Reiniciar la contraseña de {pendingResetUser.fullName}?
+            </h3>
+            <p className="text-brand-text-secondary">
+              Se generará una contraseña temporal. El usuario deberá
+              establecer una nueva al iniciar sesión.
+            </p>
+            <div className="flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                className={secondaryButtonClassName}
+                onClick={() => setPendingResetUser(null)}
+                disabled={resettingUserId === pendingResetUser.id}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                data-testid="users-reset-confirm-button"
+                className={primaryButtonClassName}
+                disabled={resettingUserId === pendingResetUser.id}
+                onClick={() => {
+                  void handleResetConfirmed(pendingResetUser.id);
+                }}
+              >
+                {resettingUserId === pendingResetUser.id
+                  ? 'Reiniciando…'
+                  : 'Confirmar reinicio'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {lastResetResult && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          data-testid="users-reset-result-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(9,16,28,0.55)] px-4"
+        >
+          <div className="grid w-full max-w-[480px] gap-4 rounded-[28px] bg-white px-6 py-6 shadow-panel">
+            <h3 className="text-[1.2rem] font-bold tracking-[-0.03em] text-brand-text">
+              Contraseña temporal generada
+            </h3>
+            <p className="text-brand-text-secondary">
+              Compartila con el usuario por un canal seguro. Sólo podrás verla
+              ahora. Deberá cambiarla al iniciar sesión.
+            </p>
+            <code
+              data-testid="users-reset-temporary-password"
+              className="rounded-[16px] bg-brand-neutral px-4 py-3 text-[1.05rem] tracking-[0.06em] text-brand-text"
+            >
+              {lastResetResult.temporaryPassword}
+            </code>
+            {copyFeedback && (
+              <span className="text-[0.9rem] text-brand-text-muted">
+                {copyFeedback}
+              </span>
+            )}
+            <div className="flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                className={secondaryButtonClassName}
+                onClick={() => {
+                  void handleCopyTemporaryPassword(
+                    lastResetResult.temporaryPassword,
+                  );
+                }}
+              >
+                Copiar
+              </button>
+              <button
+                type="button"
+                className={primaryButtonClassName}
+                onClick={() => {
+                  setCopyFeedback(null);
+                  onClearResetResult();
+                }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </WorkspaceShell>
   );

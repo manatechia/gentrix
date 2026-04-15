@@ -13,6 +13,11 @@ import type {
 } from '@gentrix/shared-types';
 import { toIsoDateString } from '@gentrix/shared-utils';
 
+import {
+  hashPassword,
+  verifyPassword,
+} from '../../../common/auth/password-hash';
+
 import type { LoginDto } from '../presentation/dto/login.dto';
 import {
   AUTH_SESSION_REPOSITORY,
@@ -38,8 +43,29 @@ export class AuthService {
   async login(credentials: LoginDto): Promise<AuthLoginResponse> {
     const user = await this.users.findByEmail(credentials.email);
 
-    if (!user || user.password !== credentials.password) {
+    if (!user) {
       throw new UnauthorizedException('Invalid email or password.');
+    }
+
+    const verification = await verifyPassword(
+      credentials.password,
+      user.password,
+    );
+
+    if (!verification.matches) {
+      throw new UnauthorizedException('Invalid email or password.');
+    }
+
+    if (verification.needsRehash) {
+      // The stored row is still in legacy plaintext form. Migrate it now so
+      // subsequent logins use the hashed path. Failures here must not block
+      // login — worst case we'll migrate on the next login.
+      try {
+        const rehashed = await hashPassword(credentials.password);
+        await this.users.updatePasswordHash(user.id, rehashed);
+      } catch {
+        // Swallow intentionally.
+      }
     }
 
     const session: AuthSessionWithToken = {
@@ -49,6 +75,7 @@ export class AuthService {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        forcePasswordChange: user.forcePasswordChange,
       },
       activeOrganization: user.activeOrganization,
       activeFacility: user.activeFacility,

@@ -65,23 +65,49 @@ model Facility {
 }
 
 model UserAccount {
-  id          String                   @id @default(uuid()) @db.Uuid
-  fullName    String
-  email       String                   @unique
-  password    String
-  role        String
-  status      String                   @default("active")
-  createdAt   DateTime
-  createdBy   String
-  updatedAt   DateTime
-  updatedBy   String
-  deletedAt   DateTime?
-  deletedBy   String?
-  memberships OrganizationMembership[]
-  sessions    AuthSession[]
+  id                    String                   @id @default(uuid()) @db.Uuid
+  fullName              String
+  email                 String                   @unique
+  password              String
+  role                  String
+  status                String                   @default("active")
+  forcePasswordChange   Boolean                  @default(false)
+  passwordChangedAt     DateTime?
+  createdAt             DateTime
+  createdBy             String
+  updatedAt             DateTime
+  updatedBy             String
+  deletedAt             DateTime?
+  deletedBy             String?
+  memberships           OrganizationMembership[]
+  sessions              AuthSession[]
+  passwordResetsMade    PasswordResetAudit[]     @relation("PasswordResetAdmin")
+  passwordResetsReceived PasswordResetAudit[]    @relation("PasswordResetTarget")
 
   @@index([deletedAt])
   @@map("User")
+}
+
+/// Tracks every admin-triggered password reset and every forced password change
+/// completion. Source of truth for the "who reset whose password and when"
+/// security audit.
+model PasswordResetAudit {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @db.Uuid
+  adminUserId    String?     @db.Uuid
+  targetUserId   String      @db.Uuid
+  action         String
+  result         String
+  reason         String?
+  occurredAt     DateTime
+  ipAddress      String?
+  userAgent      String?
+  admin          UserAccount? @relation("PasswordResetAdmin", fields: [adminUserId], references: [id], onDelete: SetNull)
+  target         UserAccount  @relation("PasswordResetTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, occurredAt])
+  @@index([targetUserId, occurredAt])
+  @@index([adminUserId, occurredAt])
 }
 
 model AuthSession {

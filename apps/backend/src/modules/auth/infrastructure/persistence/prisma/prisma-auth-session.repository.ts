@@ -98,6 +98,9 @@ export class PrismaAuthSessionRepository implements AuthSessionRepository {
         fullName: session.user.fullName,
         email: session.user.email,
         role: normalizedRole,
+        // Always pull the current value from the user row so a freshly
+        // completed forced-change clears the flag on the next request.
+        forcePasswordChange: session.user.forcePasswordChange,
       },
       activeOrganization: {
         id: session.activeOrganization
