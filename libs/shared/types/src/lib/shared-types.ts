@@ -384,109 +384,12 @@ export interface ResidentBaseUpdateInput
 export type ResidentUpdateInput = ResidentBaseUpdateInput;
 
 /**
- * ResidentEvent is the stable API/domain contract for the resident timeline.
- * It currently sits on top of the persisted ClinicalHistoryEvent model.
- */
-export type ResidentEventType =
-  | 'medical-history'
-  | 'admission-note'
-  | 'follow-up';
-
-export type ResidentEventCreatableType = Exclude<
-  ResidentEventType,
-  'medical-history'
->;
-
-export interface ResidentEvent {
-  id: EntityId;
-  residentId: EntityId;
-  eventType: ResidentEventType;
-  title: string;
-  description: string;
-  occurredAt: IsoDateString;
-  actor: string;
-  audit: AuditTrail;
-}
-
-export interface ResidentEventCreateInput {
-  eventType: ResidentEventCreatableType;
-  title: string;
-  description: string;
-  occurredAt: IsoDateString;
-}
-
-export type ResidentObservationSeverity = 'warning' | 'critical';
-
-export type ResidentObservationStatus = 'active' | 'resolved';
-
-export type ResidentObservationEntryType =
-  | 'follow-up'
-  | 'action'
-  | 'resolution';
-
-export type ResidentObservationEntryCreatableType = Exclude<
-  ResidentObservationEntryType,
-  'resolution'
->;
-
-export type ResidentObservationResolutionType =
-  | 'completed'
-  | 'phone-call'
-  | 'medical-visit';
-
-export interface ResidentObservationEntry {
-  id: EntityId;
-  observationId: EntityId;
-  residentId: EntityId;
-  entryType: ResidentObservationEntryType;
-  title: string;
-  description: string;
-  occurredAt: IsoDateString;
-  actor: string;
-  audit: AuditTrail;
-}
-
-export interface ResidentObservation {
-  id: EntityId;
-  residentId: EntityId;
-  status: ResidentObservationStatus;
-  severity: ResidentObservationSeverity;
-  title: string;
-  description: string;
-  openedAt: IsoDateString;
-  openedBy: string;
-  resolvedAt?: IsoDateString;
-  resolvedBy?: string;
-  resolutionType?: ResidentObservationResolutionType;
-  resolutionSummary?: string;
-  entries: ResidentObservationEntry[];
-  audit: AuditTrail;
-}
-
-export interface ResidentObservationCreateInput {
-  severity: ResidentObservationSeverity;
-  title: string;
-  description: string;
-}
-
-export interface ResidentObservationEntryCreateInput {
-  entryType: ResidentObservationEntryCreatableType;
-  title: string;
-  description: string;
-}
-
-export interface ResidentObservationResolveInput {
-  resolutionType: ResidentObservationResolutionType;
-  summary: string;
-}
-
-/**
  * Evento de agenda del residente: actividad futura asociada al residente
  * (dar medicación, llevar a una clase, recordatorio de turno, etc.).
  *
  * No tiene duración ni fin: es un recordatorio puntual. La ejecución o
- * seguimiento de la actividad vive en otros contratos (ClinicalHistoryEvent,
- * MedicationExecution). La agenda sólo apoya la pregunta operativa
+ * seguimiento de la actividad vive en otros contratos (MedicationExecution).
+ * La agenda sólo apoya la pregunta operativa
  * "qué sigue para este residente".
  */
 export interface ResidentAgendaEvent {
@@ -538,7 +441,6 @@ export interface ResidentLiveProfileResident
 export interface ResidentLiveProfile {
   resident: ResidentLiveProfileResident;
   activeMedications: MedicationOverview[];
-  recentEvents: ResidentEvent[];
 }
 
 export interface StaffOverview {
@@ -650,50 +552,12 @@ export interface MedicationCreateInput {
  */
 export type MedicationUpdateInput = MedicationCreateInput;
 
-export interface ClinicalHistoryEvent {
-  id: EntityId;
-  residentId: EntityId;
-  eventType: string;
-  title: string;
-  description: string;
-  occurredAt: IsoDateString;
-  audit: AuditTrail;
-}
-
-export interface ClinicalHistoryEventCreateInput {
-  eventType: string;
-  title: string;
-  description: string;
-  occurredAt: IsoDateString;
-  /**
-   * Si es true, además de crear el evento se intentará mover al residente al
-   * estado `en_observacion`. Se ignora silenciosamente si el residente ya
-   * estaba en observación (no se devuelve error, no se duplica auditoría).
-   */
-  putUnderObservation?: boolean;
-}
-
 /**
  * Payload para cambiar manualmente el estado clínico del residente
  * (ej.: el botón "Quitar de observación" en la ficha del residente).
  */
 export interface ResidentCareStatusUpdateInput {
   toStatus: ResidentCareStatus;
-}
-
-/**
- * Respuesta del endpoint que crea un evento clínico. `careStatus` solo viene
- * poblado cuando el cliente envió `putUnderObservation: true` y el backend
- * intentó la transición. `changed: false` significa que el residente ya
- * estaba en el estado destino — se considera no-op silencioso.
- */
-export interface ClinicalHistoryEventCreateResponse {
-  event: ClinicalHistoryEvent;
-  careStatus: {
-    changed: boolean;
-    fromStatus: ResidentCareStatus;
-    toStatus: ResidentCareStatus;
-  } | null;
 }
 
 /**
@@ -730,7 +594,6 @@ export type DashboardAlertSeverity = 'info' | 'warning' | 'critical';
 
 export type DashboardAlertSource =
   | 'resident-care-level'
-  | 'resident-event'
   | 'medication-order'
   | 'medication-execution';
 
@@ -775,33 +638,18 @@ export interface HandoffMedicationIssue {
   actor?: string;
 }
 
-export interface HandoffObservation {
-  id: EntityId;
-  severity: ResidentObservationSeverity;
-  title: string;
-  description: string;
-  openedAt: IsoDateString;
-  openedBy: string;
-  latestEntryAt?: IsoDateString;
-  latestEntrySummary?: string;
-}
-
 export interface HandoffResident {
   residentId: EntityId;
   fullName: string;
   room: string;
   careLevel: ResidentCareLevel;
   priority: DashboardAlertSeverity;
-  observations: HandoffObservation[];
-  recentEvents: ResidentEvent[];
   medicationIssues: HandoffMedicationIssue[];
 }
 
 export interface HandoffSummary {
   residentCount: number;
   relevantResidentCount: number;
-  activeObservationCount: number;
-  recentEventCount: number;
   pendingMedicationCount: number;
   omittedMedicationCount: number;
   rejectedMedicationCount: number;

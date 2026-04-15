@@ -6,7 +6,6 @@ import type {
   MedicationOverview,
   MedicationRoute,
   ResidentCareLevel,
-  ResidentEvent,
   ResidentOverview,
 } from '@gentrix/shared-types';
 
@@ -14,8 +13,6 @@ const dashboardAlertLimit = 6;
 const medicationExecutionAlertLimit = 2;
 const residentCareAlertLimit = 2;
 const medicationOrderAlertLimit = 1;
-const residentEventAlertLimit = 1;
-const residentEventWindowMs = 1000 * 60 * 60 * 24 * 21;
 const medicationExecutionWindowMs = 1000 * 60 * 60 * 48;
 
 const residentCareLevelLabels: Record<ResidentCareLevel, string> = {
@@ -41,7 +38,6 @@ const medicationExecutionLabels: Record<MedicationExecutionResult, string> = {
 interface DeriveDashboardAlertsInput {
   residents: ResidentOverview[];
   medications: MedicationOverview[];
-  residentEvents: ResidentEvent[];
   medicationExecutions: MedicationExecution[];
   referenceDate?: Date;
 }
@@ -49,7 +45,6 @@ interface DeriveDashboardAlertsInput {
 export function deriveDashboardAlerts({
   residents,
   medications,
-  residentEvents,
   medicationExecutions,
   referenceDate = new Date(),
 }: DeriveDashboardAlertsInput): DashboardAlert[] {
@@ -71,11 +66,6 @@ export function deriveDashboardAlerts({
       0,
       medicationOrderAlertLimit,
     ),
-    ...buildResidentEventAlerts(
-      residentEvents,
-      residentsById,
-      referenceDate,
-    ).slice(0, residentEventAlertLimit),
   ];
 
   return alerts.sort(compareDashboardAlerts).slice(0, dashboardAlertLimit);
@@ -183,41 +173,6 @@ function buildMedicationOrderAlerts(
     .sort(compareDashboardAlerts);
 }
 
-function buildResidentEventAlerts(
-  residentEvents: ResidentEvent[],
-  residentsById: Map<ResidentOverview['id'], ResidentOverview>,
-  referenceDate: Date,
-): DashboardAlert[] {
-  const referenceTime = referenceDate.getTime();
-
-  return residentEvents
-    .filter((event) => event.eventType !== 'medical-history')
-    .filter((event) => {
-      const occurredAt = new Date(event.occurredAt).getTime();
-      return (
-        Number.isFinite(occurredAt) &&
-        occurredAt <= referenceTime &&
-        referenceTime - occurredAt <= residentEventWindowMs
-      );
-    })
-    .map((event) => {
-      const resident = residentsById.get(event.residentId);
-      const residentName = resident?.fullName ?? 'Residente no identificado';
-
-      return {
-        id: createEntityId('dashboard-alert', `${event.id}-${event.eventType}`),
-        severity: 'info',
-        source: 'resident-event',
-        title: 'Evento reciente del residente',
-        message: `${residentName}: ${event.title}. ${truncateText(event.description, 96)}`,
-        residentId: resident?.id,
-        residentName: resident?.fullName,
-        occurredAt: event.occurredAt,
-      } satisfies DashboardAlert;
-    })
-    .sort(compareDashboardAlerts);
-}
-
 function compareDashboardAlerts(
   left: DashboardAlert,
   right: DashboardAlert,
@@ -261,14 +216,4 @@ function formatScheduleTimes(scheduleTimes: string[]): string {
   return scheduleTimes.length > 0
     ? scheduleTimes.join(', ')
     : 'horario a confirmar';
-}
-
-function truncateText(value: string, maxLength: number): string {
-  const trimmedValue = value.trim();
-
-  if (trimmedValue.length <= maxLength) {
-    return trimmedValue;
-  }
-
-  return `${trimmedValue.slice(0, maxLength - 3).trimEnd()}...`;
 }

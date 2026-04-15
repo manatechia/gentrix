@@ -6,7 +6,6 @@ import {
   formatDashboardAlertSeverity,
   formatHandoffMedicationStatus,
   formatResidentCareLevel,
-  formatResidentObservationSeverity,
   formatShiftLabel,
 } from '../../../shared/lib/display-labels';
 import {
@@ -65,16 +64,6 @@ const medicationIssueBadgeClassNames: Record<
     'border border-[rgba(143,38,38,0.2)] bg-[rgba(255,223,223,0.86)] text-[rgb(127,28,28)]',
 };
 
-const observationBadgeClassNames: Record<
-  HandoffSnapshot['residents'][number]['observations'][number]['severity'],
-  string
-> = {
-  warning:
-    'border border-[rgba(166,89,42,0.2)] bg-[rgba(255,236,214,0.76)] text-[rgb(138,72,36)]',
-  critical:
-    'border border-[rgba(143,38,38,0.2)] bg-[rgba(255,223,223,0.86)] text-[rgb(127,28,28)]',
-};
-
 function SummaryTile({
   label,
   value,
@@ -127,9 +116,8 @@ export function HandoffWorkspace({
               Pase minimo de turno
             </h1>
             <p className="max-w-[64ch] leading-[1.65] text-brand-text-secondary">
-              Resume que residentes necesitan seguimiento, que eventos recientes
-              impactan la operacion y que medicacion sigue pendiente, omitida o
-              rechazada antes del proximo relevo.
+              Resume que medicacion sigue pendiente, omitida o rechazada antes
+              del proximo relevo.
             </p>
           </div>
 
@@ -195,18 +183,10 @@ export function HandoffWorkspace({
               </div>
             </div>
 
-            <div className="grid gap-3 min-[860px]:grid-cols-6">
+            <div className="grid gap-3 min-[860px]:grid-cols-4">
               <SummaryTile
                 label="Residentes"
                 value={handoff.summary.relevantResidentCount}
-              />
-              <SummaryTile
-                label="Observaciones"
-                value={handoff.summary.activeObservationCount}
-              />
-              <SummaryTile
-                label="Eventos recientes"
-                value={handoff.summary.recentEventCount}
               />
               <SummaryTile
                 label="Pendientes"
@@ -270,200 +250,77 @@ export function HandoffWorkspace({
                     </Link>
                   </div>
 
-                  <div className="mt-5 grid gap-4 min-[1180px]:grid-cols-3">
-                    <section className="grid gap-3 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/50 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                          Observaciones activas
-                        </span>
-                        <span className="text-[0.9rem] text-brand-text-secondary">
-                          {resident.observations.length === 0
-                            ? 'Sin novedades'
-                            : `${resident.observations.length} activa${resident.observations.length === 1 ? '' : 's'}`}
-                        </span>
+                  <section className="mt-5 grid gap-3 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/50 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                        Medicacion del turno
+                      </span>
+                      <span className="text-[0.9rem] text-brand-text-secondary">
+                        {resident.medicationIssues.length === 0
+                          ? 'Sin novedades'
+                          : `${resident.medicationIssues.length} incidencia${resident.medicationIssues.length === 1 ? '' : 's'}`}
+                      </span>
+                    </div>
+
+                    {resident.medicationIssues.length === 0 ? (
+                      <div className="rounded-[20px] border border-dashed border-[rgba(0,102,132,0.18)] bg-white/65 px-4 py-4 text-brand-text-secondary">
+                        No hay medicacion pendiente, omitida o rechazada para
+                        este residente en el turno actual.
                       </div>
-
-                      {resident.observations.length === 0 ? (
-                        <div className="rounded-[20px] border border-dashed border-[rgba(0,102,132,0.18)] bg-white/65 px-4 py-4 text-brand-text-secondary">
-                          No hay observaciones abiertas para sumar al pase de
-                          turno de este residente.
-                        </div>
-                      ) : (
-                        <div className="grid gap-2.5">
-                          {resident.observations.map((observation) => (
-                            <article
-                              key={observation.id}
-                              className="rounded-[20px] border border-[rgba(0,102,132,0.08)] bg-white/78 px-4 py-4"
-                            >
-                              <div className="flex flex-wrap items-start justify-between gap-3">
-                                <div className="grid gap-1.5">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <span
-                                      className={[
-                                        badgeBaseClassName,
-                                        observationBadgeClassNames[
-                                          observation.severity
-                                        ],
-                                      ].join(' ')}
-                                    >
-                                      {formatResidentObservationSeverity(
-                                        observation.severity,
-                                      )}
-                                    </span>
-                                    <strong className="text-brand-text">
-                                      {observation.title}
-                                    </strong>
-                                  </div>
-                                  <p className="leading-[1.55] text-brand-text-secondary">
-                                    {observation.description}
-                                  </p>
-                                  {observation.latestEntrySummary && (
-                                    <span className="text-[0.92rem] text-brand-text-secondary">
-                                      Ultimo movimiento:{' '}
-                                      {observation.latestEntrySummary}
-                                    </span>
-                                  )}
-                                </div>
-
-                                <div className="grid gap-1 text-right text-brand-text-secondary">
-                                  <span>
-                                    {formatShiftDateTime(
-                                      observation.latestEntryAt ??
-                                        observation.openedAt,
+                    ) : (
+                      <div className="grid gap-2.5">
+                        {resident.medicationIssues.map((issue) => (
+                          <article
+                            key={issue.id}
+                            className="rounded-[20px] border border-[rgba(0,102,132,0.08)] bg-white/78 px-4 py-4"
+                          >
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div className="grid gap-1.5">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span
+                                    className={[
+                                      badgeBaseClassName,
+                                      medicationIssueBadgeClassNames[
+                                        issue.status
+                                      ],
+                                    ].join(' ')}
+                                  >
+                                    {formatHandoffMedicationStatus(
+                                      issue.status,
                                     )}
                                   </span>
                                   <strong className="text-brand-text">
-                                    {observation.openedBy}
+                                    {issue.medicationName}
                                   </strong>
                                 </div>
+                                <span className="leading-[1.55] text-brand-text-secondary">
+                                  Programada para las{' '}
+                                  {formatShiftTime(issue.scheduledFor)}
+                                </span>
                               </div>
-                            </article>
-                          ))}
-                        </div>
-                      )}
-                    </section>
 
-                    <section className="grid gap-3 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/50 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                          Medicacion del turno
-                        </span>
-                        <span className="text-[0.9rem] text-brand-text-secondary">
-                          {resident.medicationIssues.length === 0
-                            ? 'Sin novedades'
-                            : `${resident.medicationIssues.length} incidencia${resident.medicationIssues.length === 1 ? '' : 's'}`}
-                        </span>
-                      </div>
-
-                      {resident.medicationIssues.length === 0 ? (
-                        <div className="rounded-[20px] border border-dashed border-[rgba(0,102,132,0.18)] bg-white/65 px-4 py-4 text-brand-text-secondary">
-                          No hay medicacion pendiente, omitida o rechazada para
-                          este residente en el turno actual.
-                        </div>
-                      ) : (
-                        <div className="grid gap-2.5">
-                          {resident.medicationIssues.map((issue) => (
-                            <article
-                              key={issue.id}
-                              className="rounded-[20px] border border-[rgba(0,102,132,0.08)] bg-white/78 px-4 py-4"
-                            >
-                              <div className="flex flex-wrap items-start justify-between gap-3">
-                                <div className="grid gap-1.5">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <span
-                                      className={[
-                                        badgeBaseClassName,
-                                        medicationIssueBadgeClassNames[
-                                          issue.status
-                                        ],
-                                      ].join(' ')}
-                                    >
-                                      {formatHandoffMedicationStatus(
-                                        issue.status,
-                                      )}
+                              <div className="grid gap-1 text-right text-brand-text-secondary">
+                                {issue.occurredAt ? (
+                                  <>
+                                    <span>
+                                      {formatShiftDateTime(issue.occurredAt)}
                                     </span>
                                     <strong className="text-brand-text">
-                                      {issue.medicationName}
+                                      {issue.actor ?? 'actor no identificado'}
                                     </strong>
-                                  </div>
-                                  <span className="leading-[1.55] text-brand-text-secondary">
-                                    Programada para las{' '}
-                                    {formatShiftTime(issue.scheduledFor)}
+                                  </>
+                                ) : (
+                                  <span className="font-medium text-brand-text">
+                                    Sin registro de ejecucion
                                   </span>
-                                </div>
-
-                                <div className="grid gap-1 text-right text-brand-text-secondary">
-                                  {issue.occurredAt ? (
-                                    <>
-                                      <span>
-                                        {formatShiftDateTime(issue.occurredAt)}
-                                      </span>
-                                      <strong className="text-brand-text">
-                                        {issue.actor ?? 'actor no identificado'}
-                                      </strong>
-                                    </>
-                                  ) : (
-                                    <span className="font-medium text-brand-text">
-                                      Sin registro de ejecucion
-                                    </span>
-                                  )}
-                                </div>
+                                )}
                               </div>
-                            </article>
-                          ))}
-                        </div>
-                      )}
-                    </section>
-
-                    <section className="grid gap-3 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/50 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                          Eventos recientes
-                        </span>
-                        <span className="text-[0.9rem] text-brand-text-secondary">
-                          {resident.recentEvents.length === 0
-                            ? 'Sin novedades'
-                            : `${resident.recentEvents.length} evento${resident.recentEvents.length === 1 ? '' : 's'}`}
-                        </span>
+                            </div>
+                          </article>
+                        ))}
                       </div>
-
-                      {resident.recentEvents.length === 0 ? (
-                        <div className="rounded-[20px] border border-dashed border-[rgba(0,102,132,0.18)] bg-white/65 px-4 py-4 text-brand-text-secondary">
-                          No hay eventos recientes para incorporar al pase de
-                          turno de este residente.
-                        </div>
-                      ) : (
-                        <div className="grid gap-2.5">
-                          {resident.recentEvents.map((event) => (
-                            <article
-                              key={event.id}
-                              className="rounded-[20px] border border-[rgba(0,102,132,0.08)] bg-white/78 px-4 py-4"
-                            >
-                              <div className="flex flex-wrap items-start justify-between gap-3">
-                                <div className="grid gap-1">
-                                  <strong className="text-brand-text">
-                                    {event.title}
-                                  </strong>
-                                  <p className="leading-[1.55] text-brand-text-secondary">
-                                    {event.description}
-                                  </p>
-                                </div>
-
-                                <div className="grid gap-1 text-right text-brand-text-secondary">
-                                  <span>
-                                    {formatShiftDateTime(event.occurredAt)}
-                                  </span>
-                                  <strong className="text-brand-text">
-                                    {event.actor}
-                                  </strong>
-                                </div>
-                              </div>
-                            </article>
-                          ))}
-                        </div>
-                      )}
-                    </section>
-                  </div>
+                    )}
+                  </section>
                 </article>
               ))}
             </section>

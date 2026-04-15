@@ -50,8 +50,6 @@ Package manager oficial del repo: `pnpm`.
 - `GET /api/residents/:residentId`: detalle del residente.
 - `POST /api/residents`: alta de residentes persistida en PostgreSQL via Prisma.
 - `PUT /api/residents/:residentId`: actualizacion del perfil vigente del residente.
-- `GET /api/residents/:residentId/clinical-history`: timeline clinico append-only.
-- `POST /api/residents/:residentId/clinical-history`: agrega un evento clinico.
 - `GET /api/staff`: personal resumido.
 - `GET /api/staff/:staffId/schedules`: horarios por miembro del equipo.
 - `POST /api/staff/:staffId/schedules`: agrega una guardia o cobertura.

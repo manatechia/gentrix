@@ -1,8 +1,5 @@
 import type {
   ApiEnvelope,
-  ClinicalHistoryEvent,
-  ClinicalHistoryEventCreateInput,
-  ClinicalHistoryEventCreateResponse,
   ResidentAgendaEvent,
   ResidentAgendaEventCreateInput,
   ResidentAgendaEventUpdateInput,
@@ -13,10 +10,6 @@ import type {
   ResidentCreateInput,
   ResidentDetail,
   ResidentLiveProfile,
-  ResidentObservation,
-  ResidentObservationCreateInput,
-  ResidentObservationEntryCreateInput,
-  ResidentObservationResolveInput,
   ResidentOverview,
   ResidentUpdateInput,
 } from '@gentrix/shared-types';
@@ -74,27 +67,6 @@ export async function updateResident(
   return response.data;
 }
 
-export async function getClinicalHistoryEvents(
-  residentId: string,
-): Promise<ApiEnvelope<ClinicalHistoryEvent[]>> {
-  const response = await apiClient.get<ApiEnvelope<ClinicalHistoryEvent[]>>(
-    `/api/residents/${residentId}/clinical-history`,
-  );
-
-  return response.data;
-}
-
-export async function createClinicalHistoryEvent(
-  residentId: string,
-  input: ClinicalHistoryEventCreateInput,
-): Promise<ApiEnvelope<ClinicalHistoryEventCreateResponse>> {
-  const response = await apiClient.post<
-    ApiEnvelope<ClinicalHistoryEventCreateResponse>
-  >(`/api/residents/${residentId}/clinical-history`, input);
-
-  return response.data;
-}
-
 export async function getResidentsUnderObservation(): Promise<
   ApiEnvelope<ResidentOverview[]>
 > {
@@ -113,41 +85,6 @@ export async function updateResidentCareStatus(
   const response = await apiClient.patch<
     ApiEnvelope<ResidentCareStatusChangeResponse>
   >(`/api/residents/${residentId}/care-status`, payload);
-
-  return response.data;
-}
-
-export async function getResidentObservations(
-  residentId: string,
-): Promise<ApiEnvelope<ResidentObservation[]>> {
-  const response = await apiClient.get<ApiEnvelope<ResidentObservation[]>>(
-    `/api/residents/${residentId}/observations`,
-  );
-
-  return response.data;
-}
-
-export async function createResidentObservation(
-  residentId: string,
-  input: ResidentObservationCreateInput,
-): Promise<ApiEnvelope<ResidentObservation>> {
-  const response = await apiClient.post<ApiEnvelope<ResidentObservation>>(
-    `/api/residents/${residentId}/observations`,
-    input,
-  );
-
-  return response.data;
-}
-
-export async function createResidentObservationEntry(
-  residentId: string,
-  observationId: string,
-  input: ResidentObservationEntryCreateInput,
-): Promise<ApiEnvelope<ResidentObservation>> {
-  const response = await apiClient.post<ApiEnvelope<ResidentObservation>>(
-    `/api/residents/${residentId}/observations/${observationId}/entries`,
-    input,
-  );
 
   return response.data;
 }
@@ -200,19 +137,6 @@ export async function getUpcomingAgendaEvents(
   const response = await apiClient.get<
     ApiEnvelope<ResidentAgendaEventWithResident[]>
   >(`/api/agenda/upcoming?limit=${limit}`);
-
-  return response.data;
-}
-
-export async function resolveResidentObservation(
-  residentId: string,
-  observationId: string,
-  input: ResidentObservationResolveInput,
-): Promise<ApiEnvelope<ResidentObservation>> {
-  const response = await apiClient.post<ApiEnvelope<ResidentObservation>>(
-    `/api/residents/${residentId}/observations/${observationId}/resolve`,
-    input,
-  );
 
   return response.data;
 }

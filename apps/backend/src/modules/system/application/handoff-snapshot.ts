@@ -3,26 +3,19 @@ import { createEntityId, toIsoDateString } from '@gentrix/shared-utils';
 import type {
   DashboardAlertSeverity,
   HandoffMedicationIssue,
-  HandoffObservation,
   HandoffResident,
   HandoffShift,
   HandoffSnapshot,
   MedicationOverview,
-  ResidentEvent,
-  ResidentObservation,
   ResidentOverview,
 } from '@gentrix/shared-types';
 
-const recentResidentEventWindowMs = 1000 * 60 * 60 * 24 * 21;
-const residentRecentEventsLimit = 2;
 const medicationExecutionMatchWindowMs = 1000 * 60 * 60 * 2;
 const facilityUtcOffsetMinutes = -180;
 
 interface DeriveHandoffSnapshotInput {
   residents: ResidentOverview[];
   medications: MedicationOverview[];
-  residentEvents: ResidentEvent[];
-  residentObservations: ResidentObservation[];
   medicationExecutions: MedicationExecution[];
   referenceDate?: Date;
 }
@@ -38,60 +31,32 @@ interface HandoffShiftContext {
 export function deriveHandoffSnapshot({
   residents,
   medications,
-  residentEvents,
-  residentObservations,
   medicationExecutions,
   referenceDate = new Date(),
 }: DeriveHandoffSnapshotInput): HandoffSnapshot {
   const shiftContext = resolveHandoffShiftContext(referenceDate);
-  const recentEventsByResidentId = buildRecentEventsByResidentId(
-    residentEvents,
-    shiftContext.referenceDate,
-  );
   const medicationIssuesByResidentId = buildMedicationIssuesByResidentId(
     medications.filter((medication) => medication.active),
     medicationExecutions,
     shiftContext,
   );
-  const activeObservationsByResidentId = buildActiveObservationsByResidentId(
-    residentObservations,
-  );
   const relevantResidents = residents
     .filter((resident) => {
       const medicationIssues =
         medicationIssuesByResidentId.get(resident.id) ?? [];
-      const recentResidentEvents =
-        recentEventsByResidentId.get(resident.id) ?? [];
-      const activeObservations =
-        activeObservationsByResidentId.get(resident.id) ?? [];
 
-      return (
-        medicationIssues.length > 0 ||
-        recentResidentEvents.length > 0 ||
-        activeObservations.length > 0
-      );
+      return medicationIssues.length > 0;
     })
     .map((resident) => {
       const medicationIssues =
         medicationIssuesByResidentId.get(resident.id) ?? [];
-      const recentResidentEvents =
-        recentEventsByResidentId.get(resident.id) ?? [];
-      const activeObservations =
-        activeObservationsByResidentId.get(resident.id) ?? [];
 
       return {
         residentId: resident.id,
         fullName: resident.fullName,
         room: resident.room,
         careLevel: resident.careLevel,
-        priority: resolveResidentPriority(
-          resident,
-          activeObservations,
-          medicationIssues,
-          recentResidentEvents,
-        ),
-        observations: activeObservations,
-        recentEvents: recentResidentEvents,
+        priority: resolveResidentPriority(resident, medicationIssues),
         medicationIssues,
       } satisfies HandoffResident;
     })
@@ -106,14 +71,6 @@ export function deriveHandoffSnapshot({
     summary: {
       residentCount: residents.length,
       relevantResidentCount: relevantResidents.length,
-      activeObservationCount: relevantResidents.reduce(
-        (total, resident) => total + resident.observations.length,
-        0,
-      ),
-      recentEventCount: relevantResidents.reduce(
-        (total, resident) => total + resident.recentEvents.length,
-        0,
-      ),
       pendingMedicationCount: countMedicationIssuesByStatus(
         relevantResidents,
         'pending',
@@ -129,88 +86,6 @@ export function deriveHandoffSnapshot({
     },
     residents: relevantResidents,
   };
-}
-
-function buildActiveObservationsByResidentId(
-  residentObservations: ResidentObservation[],
-): Map<ResidentOverview['id'], HandoffObservation[]> {
-  const groupedObservations = new Map<ResidentOverview['id'], HandoffObservation[]>();
-
-  for (const observation of residentObservations) {
-    if (observation.status !== 'active') {
-      continue;
-    }
-
-    const residentObservationsGroup =
-      groupedObservations.get(observation.residentId) ?? [];
-    const latestEntry = observation.entries[0];
-
-    residentObservationsGroup.push({
-      id: observation.id,
-      severity: observation.severity,
-      title: observation.title,
-      description: observation.description,
-      openedAt: observation.openedAt,
-      openedBy: observation.openedBy,
-      latestEntryAt: latestEntry?.occurredAt,
-      latestEntrySummary: latestEntry
-        ? `${latestEntry.title}: ${latestEntry.description}`
-        : undefined,
-    });
-    groupedObservations.set(observation.residentId, residentObservationsGroup);
-  }
-
-  return new Map(
-    [...groupedObservations.entries()].map(([residentId, observations]) => [
-      residentId,
-      [...observations].sort(
-        (left, right) =>
-          resolveObservationActivityTime(right) -
-          resolveObservationActivityTime(left),
-      ),
-    ]),
-  );
-}
-
-function buildRecentEventsByResidentId(
-  residentEvents: ResidentEvent[],
-  referenceDate: Date,
-): Map<ResidentOverview['id'], ResidentEvent[]> {
-  const referenceTime = referenceDate.getTime();
-  const groupedEvents = new Map<ResidentOverview['id'], ResidentEvent[]>();
-
-  for (const event of residentEvents) {
-    if (event.eventType === 'medical-history') {
-      continue;
-    }
-
-    const occurredAt = new Date(event.occurredAt).getTime();
-
-    if (
-      !Number.isFinite(occurredAt) ||
-      occurredAt > referenceTime ||
-      referenceTime - occurredAt > recentResidentEventWindowMs
-    ) {
-      continue;
-    }
-
-    const residentEventsGroup = groupedEvents.get(event.residentId) ?? [];
-    residentEventsGroup.push(event);
-    groupedEvents.set(event.residentId, residentEventsGroup);
-  }
-
-  return new Map(
-    [...groupedEvents.entries()].map(([residentId, events]) => [
-      residentId,
-      [...events]
-        .sort(
-          (left, right) =>
-            new Date(right.occurredAt).getTime() -
-            new Date(left.occurredAt).getTime(),
-        )
-        .slice(0, residentRecentEventsLimit),
-    ]),
-  );
 }
 
 function buildMedicationIssuesByResidentId(
@@ -450,23 +325,16 @@ function compareHandoffResidents(
 
 function resolveResidentPriority(
   resident: ResidentOverview,
-  observations: HandoffObservation[],
   medicationIssues: HandoffMedicationIssue[],
-  recentEvents: ResidentEvent[],
 ): DashboardAlertSeverity {
   if (
-    observations.some((observation) => observation.severity === 'critical') ||
     medicationIssues.some((issue) => issue.status === 'rejected') ||
     (resident.careLevel === 'high-dependency' && medicationIssues.length > 0)
   ) {
     return 'critical';
   }
 
-  if (
-    observations.length > 0 ||
-    medicationIssues.length > 0 ||
-    (resident.careLevel === 'memory-care' && recentEvents.length > 0)
-  ) {
+  if (medicationIssues.length > 0) {
     return 'warning';
   }
 
@@ -480,14 +348,8 @@ function resolveLatestResidentActivity(resident: HandoffResident): number {
           resident.medicationIssues[0].scheduledFor,
       ).getTime()
     : Number.NEGATIVE_INFINITY;
-  const latestEvent = resident.recentEvents[0]
-    ? new Date(resident.recentEvents[0].occurredAt).getTime()
-    : Number.NEGATIVE_INFINITY;
-  const latestObservation = resident.observations[0]
-    ? resolveObservationActivityTime(resident.observations[0])
-    : Number.NEGATIVE_INFINITY;
 
-  return Math.max(latestMedicationIssue, latestEvent, latestObservation);
+  return latestMedicationIssue;
 }
 
 function countMedicationIssuesByStatus(
@@ -525,10 +387,6 @@ function getResidentPriorityRank(priority: DashboardAlertSeverity): number {
     default:
       return 2;
   }
-}
-
-function resolveObservationActivityTime(observation: HandoffObservation): number {
-  return new Date(observation.latestEntryAt ?? observation.openedAt).getTime();
 }
 
 function resolveHandoffShiftContext(referenceDate: Date): HandoffShiftContext {
