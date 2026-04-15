@@ -10,6 +10,7 @@ import { createEntityId, toIsoDateString } from '@gentrix/shared-utils';
 
 import { seedResidents } from '../../../../../common/persistence/in-memory-seed';
 import type {
+  ResidentCareStatusUpdateRecordInput,
   ResidentEventRecordInput,
   ResidentObservationEntryRecordInput,
   ResidentObservationRecordInput,
@@ -297,6 +298,36 @@ export class InMemoryResidentRepository implements ResidentRepository {
 
     this.residentObservations.splice(observationIndex, 1, updatedObservation);
     return cloneResidentObservation(updatedObservation);
+  }
+
+  async setCareStatus(
+    input: ResidentCareStatusUpdateRecordInput,
+  ): Promise<Resident> {
+    const residentIndex = this.residents.findIndex(
+      (candidate) =>
+        candidate.id === input.residentId &&
+        candidate.organizationId === input.organizationId,
+    );
+
+    if (residentIndex === -1) {
+      throw new Error(`Resident ${input.residentId} not found.`);
+    }
+
+    const current = this.residents[residentIndex];
+    const updated: Resident = {
+      ...current,
+      careStatus: input.toStatus,
+      careStatusChangedAt: input.changedAt,
+      careStatusChangedBy: input.actor,
+      audit: {
+        ...current.audit,
+        updatedAt: input.changedAt,
+        updatedBy: input.actor,
+      },
+    };
+
+    this.residents.splice(residentIndex, 1, updated);
+    return cloneResident(updated);
   }
 
   async resolveObservation(

@@ -5,6 +5,7 @@ import {
   Inject,
   UnauthorizedException,
   Param,
+  Patch,
   Post,
   Put,
   Req,
@@ -20,6 +21,7 @@ import { CreateResidentObservationDto } from '../dto/create-resident-observation
 import { CreateResidentDto } from '../dto/create-resident.dto';
 import { CreateResidentEventDto } from '../dto/create-resident-event.dto';
 import { ResolveResidentObservationDto } from '../dto/resolve-resident-observation.dto';
+import { UpdateResidentCareStatusDto } from '../dto/update-resident-care-status.dto';
 import { UpdateResidentDto } from '../dto/update-resident.dto';
 
 @Controller('api/residents')
@@ -34,6 +36,18 @@ export class ResidentsController {
   @Get()
   getResidents(@Req() request: RequestWithSession) {
     return this.residentsService.getResidents(
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  /**
+   * Listado consumido por el widget del dashboard. Devuelve solo los residentes
+   * que actualmente están en observación dentro de la organización activa.
+   */
+  @Get('under-observation')
+  getResidentsUnderObservation(@Req() request: RequestWithSession) {
+    return this.residentsService.getResidentsByCareStatus(
+      'en_observacion',
       request.authSession!.activeOrganization.id,
     );
   }
@@ -103,6 +117,21 @@ export class ResidentsController {
     return this.residentsService.updateResident(
       residentId,
       body,
+      getAuditActorFromRequest(request),
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  @Patch(':residentId/care-status')
+  updateResidentCareStatus(
+    @Param('residentId') residentId: string,
+    @Body() body: UpdateResidentCareStatusDto,
+    @Req() request: RequestWithSession,
+  ) {
+    assertCanManageResidentRecords(request.authSession!.user.role);
+    return this.residentsService.setResidentCareStatus(
+      residentId,
+      body.toStatus,
       getAuditActorFromRequest(request),
       request.authSession!.activeOrganization.id,
     );

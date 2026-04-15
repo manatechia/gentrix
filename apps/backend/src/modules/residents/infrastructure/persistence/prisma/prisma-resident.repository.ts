@@ -12,6 +12,7 @@ import type {
   EntityStatus,
   ResidentAttachment,
   ResidentBelongings,
+  ResidentCareStatus,
   ResidentClinicalProfile,
   ResidentDischargeInfo,
   ResidentEvent,
@@ -25,10 +26,13 @@ import type {
   ResidentTransferInfo,
 } from '@gentrix/shared-types';
 import { isResidentCareLevel, type Resident } from '@gentrix/domain-residents';
+
+import { isResidentCareStatus } from '../../../domain/policies/care-status.policy';
 import { toIsoDateString } from '@gentrix/shared-utils';
 
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
 import type {
+  ResidentCareStatusUpdateRecordInput,
   ResidentEventRecordInput,
   ResidentObservationEntryRecordInput,
   ResidentObservationRecordInput,
@@ -134,6 +138,11 @@ export class PrismaResidentRepository implements ResidentRepository {
         facilityId: resident.facilityId,
         internalNumber: resident.internalNumber,
         status: resident.status,
+        careStatus: resident.careStatus,
+        careStatusChangedAt: resident.careStatusChangedAt
+          ? new Date(resident.careStatusChangedAt)
+          : null,
+        careStatusChangedBy: resident.careStatusChangedBy ?? null,
         ...toResidentPersistenceData(resident),
         createdAt: new Date(resident.audit.createdAt),
         createdBy: resident.audit.createdBy,
@@ -366,6 +375,33 @@ export class PrismaResidentRepository implements ResidentRepository {
     return mapResidentObservationRecord(updated);
   }
 
+  async setCareStatus(
+    input: ResidentCareStatusUpdateRecordInput,
+  ): Promise<Resident> {
+    const changedAt = new Date(input.changedAt);
+    const updated = await this.prisma.resident.update({
+      where: { id: input.residentId },
+      data: {
+        careStatus: input.toStatus,
+        careStatusChangedAt: changedAt,
+        careStatusChangedBy: input.actor,
+        // Convención del módulo: cambio de estado clínico también refresca
+        // updatedAt/updatedBy del residente — la auditoría dedicada quedó como
+        // deuda técnica (ver docs/tech-debt/resident-care-status-audit.md).
+        updatedAt: changedAt,
+        updatedBy: input.actor,
+      },
+      include: {
+        clinicalEvents: {
+          where: { deletedAt: null },
+          orderBy: { occurredAt: 'desc' },
+        },
+      },
+    });
+
+    return mapResidentRecord(updated);
+  }
+
   async resolveObservation(
     resolution: ResidentObservationResolveRecordInput,
   ): Promise<ResidentObservation> {
@@ -445,6 +481,11 @@ function mapResidentRecord(record: ResidentRecord): Resident {
       ? record.careLevel
       : 'assisted',
     status: normalizeResidentStatus(record.status),
+    careStatus: normalizeResidentCareStatus(record.careStatus),
+    careStatusChangedAt: record.careStatusChangedAt
+      ? toIsoDateString(record.careStatusChangedAt)
+      : undefined,
+    careStatusChangedBy: record.careStatusChangedBy ?? undefined,
     medicalHistory: medicalHistoryEvents.map((event) => ({
       id: event.id as Resident['medicalHistory'][number]['id'],
       recordedAt: toIsoDateString(event.occurredAt),
@@ -676,6 +717,12 @@ function normalizeResidentStatus(value: string): EntityStatus {
   return residentStatuses.has(value as EntityStatus)
     ? (value as EntityStatus)
     : 'active';
+}
+
+function normalizeResidentCareStatus(value: string): ResidentCareStatus {
+  // Si en el futuro alguien escribe a mano un valor inválido en la BD,
+  // degradamos silenciosamente a 'normal' en vez de romper toda la lectura.
+  return isResidentCareStatus(value) ? value : 'normal';
 }
 
 function buildResolutionTitle(

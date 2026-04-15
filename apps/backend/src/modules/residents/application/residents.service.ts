@@ -14,6 +14,7 @@ import {
   type Resident,
 } from '@gentrix/domain-residents';
 import type {
+  ResidentCareStatus,
   ResidentCreateInput,
   ResidentDetail,
   ResidentDischargeInfo,
@@ -30,6 +31,7 @@ import type {
 } from '@gentrix/shared-types';
 import { toIsoDateString } from '@gentrix/shared-utils';
 
+import { assertTransition } from '../domain/policies/care-status.policy';
 import {
   RESIDENT_REPOSITORY,
   type ResidentEventRecordInput,
@@ -38,6 +40,19 @@ import {
   type ResidentObservationResolveRecordInput,
   type ResidentRepository,
 } from '../domain/repositories/resident.repository';
+
+/**
+ * Resultado del cambio de estado clínico operativo. `changed` indica si la
+ * transición efectivamente ocurrió. Pasamos `false` cuando el residente ya se
+ * encontraba en el estado destino — caso modelado como no-op silencioso para
+ * que el flujo "crear evento + poner en observación" sea idempotente.
+ */
+export interface ResidentCareStatusChangeResult {
+  resident: ResidentDetail;
+  changed: boolean;
+  fromStatus: ResidentCareStatus;
+  toStatus: ResidentCareStatus;
+}
 
 @Injectable()
 export class ResidentsService {
@@ -124,6 +139,68 @@ export class ResidentsService {
   ): Promise<void> {
     const resident = await this.getResidentEntityById(residentId, organizationId);
     await this.residents.touchAudit(resident.id, actor, resident.organizationId);
+  }
+
+  /**
+   * Cambia el estado clínico operativo del residente.
+   *
+   * Reglas de negocio:
+   *  - Si la transición coincide con el estado actual: no-op silencioso
+   *    (`changed: false`). No se toca auditoría ni se devuelve error.
+   *  - Si la transición no está declarada en `RESIDENT_CARE_STATUS_TRANSITIONS`
+   *    se lanza BadRequestException antes de tocar el repositorio.
+   *  - Caso contrario, se actualiza el residente y su auditoría
+   *    (`updatedAt`/`updatedBy`) en una sola operación.
+   *
+   * Auditoría dedicada: por ahora reutilizamos `updatedBy/updatedAt` del
+   * residente. La tabla de auditoría histórica de transiciones quedó como
+   * deuda técnica documentada en
+   * docs/tech-debt/resident-care-status-audit.md
+   */
+  async setResidentCareStatus(
+    residentId: string,
+    toStatus: ResidentCareStatus,
+    actor: string,
+    organizationId?: Resident['organizationId'],
+  ): Promise<ResidentCareStatusChangeResult> {
+    const resident = await this.getResidentEntityById(residentId, organizationId);
+    const fromStatus = resident.careStatus;
+
+    if (fromStatus === toStatus) {
+      return {
+        resident: toResidentDetail(resident),
+        changed: false,
+        fromStatus,
+        toStatus,
+      };
+    }
+
+    assertTransition(fromStatus, toStatus);
+
+    const persisted = await this.residents.setCareStatus({
+      residentId: resident.id,
+      organizationId: resident.organizationId,
+      toStatus,
+      actor,
+      changedAt: toIsoDateString(new Date()),
+    });
+
+    return {
+      resident: toResidentDetail(persisted),
+      changed: true,
+      fromStatus,
+      toStatus,
+    };
+  }
+
+  async getResidentsByCareStatus(
+    careStatus: ResidentCareStatus,
+    organizationId?: Resident['organizationId'],
+  ): Promise<ResidentOverview[]> {
+    const residents = await this.residents.list(organizationId);
+    return residents
+      .filter((resident) => resident.careStatus === careStatus)
+      .map(toResidentCard);
   }
 
   async createResidentEvent(

@@ -5,6 +5,7 @@ import type {
   AuthSession,
   ClinicalHistoryEvent,
   ClinicalHistoryEventCreateInput,
+  ResidentCareStatus,
   ResidentDetail,
   ResidentGeriatricAssessmentLevel,
   ResidentLiveProfile,
@@ -22,6 +23,7 @@ import {
   formatEntityStatus,
   formatResidentAttachmentKind,
   formatResidentCareLevel,
+  formatResidentCareStatus,
   formatResidentDocumentType,
   formatResidentGeriatricAssessmentLevel,
   formatResidentSex,
@@ -73,6 +75,10 @@ interface ResidentDetailWorkspaceProps {
     observationId: string,
     input: ResidentObservationResolveInput,
   ) => Promise<ResidentObservation | null>;
+  isUpdatingCareStatus: boolean;
+  careStatusNotice: string | null;
+  careStatusNoticeTone: 'success' | 'error';
+  onCareStatusChange: (toStatus: ResidentCareStatus) => Promise<boolean>;
 }
 
 interface DetailFieldProps {
@@ -175,6 +181,10 @@ export function ResidentDetailWorkspace({
   onObservationCreate,
   onObservationEntryCreate,
   onObservationResolve,
+  isUpdatingCareStatus,
+  careStatusNotice,
+  careStatusNoticeTone,
+  onCareStatusChange,
 }: ResidentDetailWorkspaceProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -291,6 +301,7 @@ export function ResidentDetailWorkspace({
             isSavingEvent={isSavingClinicalHistoryEvent}
             notice={clinicalHistoryNotice}
             noticeTone={clinicalHistoryNoticeTone}
+            residentIsUnderObservation={resident.careStatus === 'en_observacion'}
             onCreate={onClinicalHistoryCreate}
           />
 
@@ -300,11 +311,51 @@ export function ResidentDetailWorkspace({
             className={`${surfaceCardClassName} grid gap-5 min-[980px]:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)]`}
           >
             <div className="grid gap-4">
-              <span
-                className={`${badgeBaseClassName} w-fit bg-brand-primary/12 text-brand-primary`}
-              >
-                {formatEntityStatus(resident.status)}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`${badgeBaseClassName} w-fit bg-brand-primary/12 text-brand-primary`}
+                >
+                  {formatEntityStatus(resident.status)}
+                </span>
+                <span
+                  data-testid="resident-care-status-badge"
+                  className={`${badgeBaseClassName} w-fit ${
+                    resident.careStatus === 'en_observacion'
+                      ? 'bg-[rgba(212,140,18,0.16)] text-[rgb(150,90,10)]'
+                      : 'bg-brand-neutral text-brand-text-secondary'
+                  }`}
+                >
+                  {formatResidentCareStatus(resident.careStatus)}
+                </span>
+                {resident.careStatus === 'en_observacion' &&
+                  canManageRecords && (
+                    <button
+                      type="button"
+                      data-testid="resident-clear-observation-button"
+                      className={secondaryButtonClassName}
+                      disabled={isUpdatingCareStatus}
+                      onClick={() => {
+                        void onCareStatusChange('normal');
+                      }}
+                    >
+                      {isUpdatingCareStatus
+                        ? 'Actualizando...'
+                        : 'Quitar de observacion'}
+                    </button>
+                  )}
+              </div>
+              {careStatusNotice && (
+                <div
+                  data-testid="resident-care-status-notice"
+                  className={`rounded-[18px] px-4 py-3 text-[0.92rem] leading-[1.5] ${
+                    careStatusNoticeTone === 'error'
+                      ? 'border border-[rgba(168,43,17,0.16)] bg-[rgba(168,43,17,0.08)] text-[rgb(130,44,25)]'
+                      : 'border border-[rgba(0,102,132,0.14)] bg-[rgba(0,102,132,0.08)] text-brand-secondary'
+                  }`}
+                >
+                  {careStatusNotice}
+                </div>
+              )}
               <div className="grid gap-3 min-[680px]:grid-cols-3">
                 {overviewDetails.map((detail) => (
                   <article

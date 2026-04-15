@@ -75,6 +75,10 @@ class ResidentRepositoryStub implements ResidentRepository {
   async resolveObservation(): Promise<ResidentObservation> {
     throw new Error('Not implemented in query tests.');
   }
+
+  async setCareStatus(): Promise<Resident> {
+    throw new Error('Not implemented in query tests.');
+  }
 }
 
 class MedicationRepositoryStub implements MedicationRepository {

@@ -10,6 +10,7 @@ import type {
   ResidentBaseProfile,
   ResidentBelongings,
   ResidentCareLevel,
+  ResidentCareStatus,
   ResidentClinicalProfile,
   ResidentCreateInput,
   ResidentCurrentState,
@@ -53,6 +54,9 @@ export interface ResidentCard {
   room: string;
   careLevel: CareLevel;
   status: EntityStatus;
+  careStatus: ResidentCareStatus;
+  careStatusChangedAt?: IsoDateString;
+  careStatusChangedBy?: string;
 }
 
 const baseAddress: Address = {
@@ -246,6 +250,7 @@ export function createResidentSeed(
     room: 'A-101',
     careLevel: 'assisted',
     status: 'active',
+    careStatus: 'normal',
     medicalHistory: defaultMedicalHistory,
     attachments: [],
     insurance: { ...baseInsurance },
@@ -315,6 +320,7 @@ export function createResidentFromIntake(
     organizationId,
     facilityId,
     status: 'active',
+    careStatus: 'normal',
     ...editableFields,
     address: {
       street: '',
@@ -365,6 +371,9 @@ export function toResidentCard(resident: Resident): ResidentCard {
     room: resident.room,
     careLevel: resident.careLevel,
     status: resident.status,
+    careStatus: resident.careStatus,
+    careStatusChangedAt: resident.careStatusChangedAt,
+    careStatusChangedBy: resident.careStatusChangedBy,
   };
 }
 
@@ -392,6 +401,9 @@ export function toResidentDetail(resident: Resident): ResidentDetail {
     room: resident.room,
     careLevel: resident.careLevel,
     status: resident.status,
+    careStatus: resident.careStatus,
+    careStatusChangedAt: resident.careStatusChangedAt,
+    careStatusChangedBy: resident.careStatusChangedBy,
     medicalHistory: resident.medicalHistory.map((entry) => ({ ...entry })),
     attachments: resident.attachments.map((attachment) => ({ ...attachment })),
     insurance: { ...resident.insurance },

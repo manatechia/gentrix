@@ -197,6 +197,9 @@ model Resident {
   room                   String
   careLevel              String
   status                 String
+  careStatus             String                 @default("normal")
+  careStatusChangedAt    DateTime?
+  careStatusChangedBy    String?
   attachments            Json?
   insurance              Json?
   transfer               Json?
@@ -225,6 +228,7 @@ model Resident {
   @@index([organizationId, deletedAt])
   @@index([organizationId, facilityId, deletedAt])
   @@index([deletedAt])
+  @@index([organizationId, careStatus, deletedAt])
 }
 
 model StaffMember {
