@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type {
   ClinicalHistoryEvent,
   ClinicalHistoryEventCreateInput,
+  ResidentCareStatus,
   ResidentDetail,
   ResidentLiveProfile,
   ResidentObservation,
@@ -142,15 +143,33 @@ export function useResidentDetailRoute(residentId: string | undefined) {
           residentId,
           input,
         );
-        const createdEvent = unwrapEnvelope(payload);
+        const result = unwrapEnvelope(payload);
+        const createdEvent = result.event;
 
         setClinicalHistory((current) =>
           [createdEvent, ...current].sort((left, right) =>
             right.occurredAt.localeCompare(left.occurredAt),
           ),
         );
+        // Refrescamos el residente para que el badge "En observacion" y el
+        // bloque de auditoria reflejen el nuevo estado al instante.
+        await refreshResidentAudit();
+
         setClinicalHistoryNoticeTone('success');
-        setClinicalHistoryNotice('Evento clinico agregado correctamente.');
+        if (result.careStatus?.changed) {
+          setClinicalHistoryNotice(
+            'Evento clinico agregado y residente puesto en observacion.',
+          );
+        } else if (
+          result.careStatus !== null &&
+          result.careStatus.changed === false
+        ) {
+          setClinicalHistoryNotice(
+            'Evento clinico agregado. El residente ya se encontraba en observacion.',
+          );
+        } else {
+          setClinicalHistoryNotice('Evento clinico agregado correctamente.');
+        }
 
         return createdEvent;
       } catch (error) {
@@ -169,6 +188,72 @@ export function useResidentDetailRoute(residentId: string | undefined) {
         return null;
       } finally {
         setIsSavingClinicalHistoryEvent(false);
+      }
+    },
+    [logout, refreshResidentAudit, residentId, token],
+  );
+
+  const [isUpdatingCareStatus, setIsUpdatingCareStatus] = useState(false);
+  const [careStatusNotice, setCareStatusNotice] = useState<string | null>(null);
+  const [careStatusNoticeTone, setCareStatusNoticeTone] = useState<
+    'success' | 'error'
+  >('success');
+
+  const handleCareStatusChange = useCallback(
+    async (toStatus: ResidentCareStatus): Promise<boolean> => {
+      if (!residentId) {
+        setCareStatusNoticeTone('error');
+        setCareStatusNotice('No encontre el residente solicitado.');
+        return false;
+      }
+
+      if (!token) {
+        await logout();
+        return false;
+      }
+
+      setIsUpdatingCareStatus(true);
+      setCareStatusNotice(null);
+
+      try {
+        const payload = await residentsService.updateResidentCareStatus(
+          residentId,
+          toStatus,
+        );
+        const result = unwrapEnvelope(payload);
+
+        setResident(result.resident);
+
+        setCareStatusNoticeTone('success');
+        if (result.changed) {
+          setCareStatusNotice(
+            toStatus === 'normal'
+              ? 'Residente quitado de observacion.'
+              : 'Residente puesto en observacion.',
+          );
+        } else {
+          // El backend devuelve `changed: false` solo cuando from === to, lo
+          // que ya no debería ocurrir desde la UI (el botón se oculta), pero
+          // mantenemos un mensaje seguro por si acaso.
+          setCareStatusNotice('El residente ya se encontraba en ese estado.');
+        }
+        return true;
+      } catch (error) {
+        const message = getApiErrorMessage(
+          error,
+          'No pude actualizar el estado del residente.',
+        );
+
+        if (message === 'Unauthorized.') {
+          await logout();
+          return false;
+        }
+
+        setCareStatusNoticeTone('error');
+        setCareStatusNotice(message);
+        return false;
+      } finally {
+        setIsUpdatingCareStatus(false);
       }
     },
     [logout, residentId, token],
@@ -383,11 +468,15 @@ export function useResidentDetailRoute(residentId: string | undefined) {
     clinicalHistoryNoticeTone,
     observationNotice,
     observationNoticeTone,
+    isUpdatingCareStatus,
+    careStatusNotice,
+    careStatusNoticeTone,
     handleRetry: loadResidentDetail,
     handleClinicalHistoryCreate,
     handleObservationCreate,
     handleObservationEntryCreate,
     handleObservationResolve,
+    handleCareStatusChange,
   };
 }
 

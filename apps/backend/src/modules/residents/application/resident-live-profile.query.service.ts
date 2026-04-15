@@ -90,6 +90,9 @@ function toResidentLiveProfileResident(
     room: resident.room,
     careLevel: resident.careLevel,
     status: resident.status,
+    careStatus: resident.careStatus,
+    careStatusChangedAt: resident.careStatusChangedAt,
+    careStatusChangedBy: resident.careStatusChangedBy,
   };
 }
 

@@ -2,6 +2,10 @@ import type {
   ApiEnvelope,
   ClinicalHistoryEvent,
   ClinicalHistoryEventCreateInput,
+  ClinicalHistoryEventCreateResponse,
+  ResidentCareStatus,
+  ResidentCareStatusChangeResponse,
+  ResidentCareStatusUpdateInput,
   ResidentCreateInput,
   ResidentDetail,
   ResidentLiveProfile,
@@ -79,11 +83,32 @@ export async function getClinicalHistoryEvents(
 export async function createClinicalHistoryEvent(
   residentId: string,
   input: ClinicalHistoryEventCreateInput,
-): Promise<ApiEnvelope<ClinicalHistoryEvent>> {
-  const response = await apiClient.post<ApiEnvelope<ClinicalHistoryEvent>>(
-    `/api/residents/${residentId}/clinical-history`,
-    input,
+): Promise<ApiEnvelope<ClinicalHistoryEventCreateResponse>> {
+  const response = await apiClient.post<
+    ApiEnvelope<ClinicalHistoryEventCreateResponse>
+  >(`/api/residents/${residentId}/clinical-history`, input);
+
+  return response.data;
+}
+
+export async function getResidentsUnderObservation(): Promise<
+  ApiEnvelope<ResidentOverview[]>
+> {
+  const response = await apiClient.get<ApiEnvelope<ResidentOverview[]>>(
+    '/api/residents/under-observation',
   );
+
+  return response.data;
+}
+
+export async function updateResidentCareStatus(
+  residentId: string,
+  toStatus: ResidentCareStatus,
+): Promise<ApiEnvelope<ResidentCareStatusChangeResponse>> {
+  const payload: ResidentCareStatusUpdateInput = { toStatus };
+  const response = await apiClient.patch<
+    ApiEnvelope<ResidentCareStatusChangeResponse>
+  >(`/api/residents/${residentId}/care-status`, payload);
 
   return response.data;
 }

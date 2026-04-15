@@ -23,6 +23,8 @@ export class ClinicalHistoryController {
     @Body() body: CreateClinicalHistoryEventDto,
     @Req() request: RequestWithSession,
   ) {
+    // El service devuelve { event, careStatus }. La envolvente API agrega
+    // `data`, así que el frontend recibe `data.event` y `data.careStatus`.
     return this.clinicalHistoryService.create(
       residentId,
       body,

@@ -2,6 +2,7 @@ import type { AuthSession, DashboardSnapshot } from '@gentrix/shared-types';
 
 import type { DashboardScreenState } from '../types/dashboard-screen-state';
 import { MetricsGrid } from './metrics-grid';
+import { ResidentsUnderObservationPanel } from './residents-under-observation-panel';
 import { StatusNotice } from './status-notice';
 import { WorkspaceShell } from './workspace-shell';
 import { AlertsPanel } from '../../alerts/ui/alerts-panel';
@@ -60,6 +61,8 @@ export function DashboardWorkspace({
       {screenState === 'ready' && dashboard && (
         <>
           <MetricsGrid dashboard={dashboard} />
+
+          <ResidentsUnderObservationPanel residents={dashboard.residents} />
 
           <section className="grid gap-[18px] min-[1181px]:grid-cols-[minmax(280px,0.95fr)_minmax(280px,0.95fr)_minmax(320px,1.1fr)]">
             <StaffPanel staff={dashboard.staff} />

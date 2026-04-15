@@ -111,6 +111,10 @@ export function ResidentDetailRoute() {
       onObservationCreate={detail.handleObservationCreate}
       onObservationEntryCreate={detail.handleObservationEntryCreate}
       onObservationResolve={detail.handleObservationResolve}
+      isUpdatingCareStatus={detail.isUpdatingCareStatus}
+      careStatusNotice={detail.careStatusNotice}
+      careStatusNoticeTone={detail.careStatusNoticeTone}
+      onCareStatusChange={detail.handleCareStatusChange}
     />
   );
 }

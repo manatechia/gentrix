@@ -9,6 +9,7 @@ import type {
   MedicationRoute,
   ResidentAttachmentKind,
   ResidentCareLevel,
+  ResidentCareStatus,
   ResidentDocumentType,
   ResidentGeriatricAssessmentLevel,
   ResidentObservationEntryType,
@@ -29,6 +30,11 @@ const residentCareLevelLabels: Record<ResidentCareLevel, string> = {
   assisted: 'Asistido',
   'high-dependency': 'Alta dependencia',
   'memory-care': 'Cuidado de memoria',
+};
+
+const residentCareStatusLabels: Record<ResidentCareStatus, string> = {
+  normal: 'Normal',
+  en_observacion: 'En observacion',
 };
 
 const residentDocumentTypeLabels: Record<ResidentDocumentType, string> = {
@@ -160,6 +166,10 @@ export function formatEntityStatus(status: EntityStatus): string {
 
 export function formatResidentCareLevel(level: ResidentCareLevel): string {
   return residentCareLevelLabels[level] ?? level;
+}
+
+export function formatResidentCareStatus(status: ResidentCareStatus): string {
+  return residentCareStatusLabels[status] ?? status;
 }
 
 export function formatResidentDocumentType(

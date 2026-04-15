@@ -24,6 +24,11 @@ interface ClinicalHistoryPanelProps {
   isSavingEvent: boolean;
   notice: string | null;
   noticeTone: 'success' | 'error';
+  /**
+   * Estado clínico actual del residente. Si ya está en observación, el
+   * checkbox queda marcado y deshabilitado para evitar acciones sin efecto.
+   */
+  residentIsUnderObservation: boolean;
   onCreate: (
     input: ClinicalHistoryEventCreateInput,
   ) => Promise<ClinicalHistoryEvent | null>;
@@ -34,6 +39,7 @@ interface ClinicalHistoryFormState {
   title: string;
   occurredAt: string;
   description: string;
+  putUnderObservation: boolean;
 }
 
 const clinicalHistoryEventTypeOptions = [
@@ -58,6 +64,7 @@ function createInitialFormState(): ClinicalHistoryFormState {
     title: '',
     occurredAt: formatCurrentDateForResidentInput(),
     description: '',
+    putUnderObservation: false,
   };
 }
 
@@ -74,6 +81,7 @@ export function ClinicalHistoryPanel({
   isSavingEvent,
   notice,
   noticeTone,
+  residentIsUnderObservation,
   onCreate,
 }: ClinicalHistoryPanelProps) {
   const [formState, setFormState] = useState<ClinicalHistoryFormState>(
@@ -118,6 +126,10 @@ export function ClinicalHistoryPanel({
       title,
       description,
       occurredAt,
+      // El backend ignora el flag si el residente ya estaba en observación,
+      // pero igual evitamos enviarlo cuando el checkbox está deshabilitado.
+      putUnderObservation:
+        !residentIsUnderObservation && formState.putUnderObservation,
     });
 
     if (!createdEvent) {
@@ -251,6 +263,35 @@ export function ClinicalHistoryPanel({
               }));
             }}
           />
+        </label>
+
+        <label
+          className="mt-[14px] flex cursor-pointer items-start gap-3 rounded-[18px] border border-[rgba(0,102,132,0.14)] bg-white/80 px-4 py-3"
+          data-testid="clinical-history-observation-toggle"
+        >
+          <input
+            type="checkbox"
+            data-testid="clinical-history-observation-checkbox"
+            className="mt-1 h-[18px] w-[18px] cursor-pointer accent-brand-primary disabled:cursor-not-allowed"
+            checked={
+              residentIsUnderObservation || formState.putUnderObservation
+            }
+            disabled={residentIsUnderObservation}
+            onChange={(event) => {
+              setFormState((current) => ({
+                ...current,
+                putUnderObservation: event.target.checked,
+              }));
+            }}
+          />
+          <span className="grid gap-1 text-[0.95rem] leading-[1.5] text-brand-text">
+            <strong>Poner al residente en observacion</strong>
+            <span className="text-[0.86rem] text-brand-text-secondary">
+              {residentIsUnderObservation
+                ? 'El residente ya se encuentra en observacion. Quitalo desde la ficha si querés volverlo al estado normal.'
+                : 'Si lo marcas, este evento queda guardado igual y ademas se actualiza el estado clinico del residente.'}
+            </span>
+          </span>
         </label>
       </article>
 

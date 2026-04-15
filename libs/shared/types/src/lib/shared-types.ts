@@ -194,7 +194,43 @@ export interface ResidentCurrentStateInput {
 
 export interface ResidentCurrentState extends ResidentCurrentStateInput {
   status: EntityStatus;
+  /**
+   * Estado clínico operativo del residente. Este campo es independiente de
+   * `status` (ciclo de vida administrativo de la entidad) y modela situaciones
+   * que requieren atención reforzada del equipo, como la observación.
+   *
+   * Se diseñó como string-union extensible para poder sumar más estados
+   * (`en_aislamiento`, `cuidados_paliativos`, etc.) sin migración rompiendo.
+   */
+  careStatus: ResidentCareStatus;
+  careStatusChangedAt?: IsoDateString;
+  careStatusChangedBy?: string;
 }
+
+/**
+ * Estados clínicos operativos del residente. Extender este tipo unión cuando
+ * aparezcan nuevos estados, y declarar las transiciones permitidas en
+ * `RESIDENT_CARE_STATUS_TRANSITIONS`.
+ */
+export type ResidentCareStatus = 'normal' | 'en_observacion';
+
+export const RESIDENT_CARE_STATUSES: readonly ResidentCareStatus[] = [
+  'normal',
+  'en_observacion',
+] as const;
+
+/**
+ * Tabla de transiciones permitidas. La política de dominio
+ * (`care-status.policy.ts`) consume esta tabla. Para sumar reglas
+ * (ej.: limitar quién puede revertir), envolver con un guard adicional.
+ */
+export const RESIDENT_CARE_STATUS_TRANSITIONS: Record<
+  ResidentCareStatus,
+  readonly ResidentCareStatus[]
+> = {
+  normal: ['en_observacion'],
+  en_observacion: ['normal'],
+} as const;
 
 /**
  * These records are captured around admission/intake today, but they are not
@@ -584,6 +620,46 @@ export interface ClinicalHistoryEventCreateInput {
   title: string;
   description: string;
   occurredAt: IsoDateString;
+  /**
+   * Si es true, además de crear el evento se intentará mover al residente al
+   * estado `en_observacion`. Se ignora silenciosamente si el residente ya
+   * estaba en observación (no se devuelve error, no se duplica auditoría).
+   */
+  putUnderObservation?: boolean;
+}
+
+/**
+ * Payload para cambiar manualmente el estado clínico del residente
+ * (ej.: el botón "Quitar de observación" en la ficha del residente).
+ */
+export interface ResidentCareStatusUpdateInput {
+  toStatus: ResidentCareStatus;
+}
+
+/**
+ * Respuesta del endpoint que crea un evento clínico. `careStatus` solo viene
+ * poblado cuando el cliente envió `putUnderObservation: true` y el backend
+ * intentó la transición. `changed: false` significa que el residente ya
+ * estaba en el estado destino — se considera no-op silencioso.
+ */
+export interface ClinicalHistoryEventCreateResponse {
+  event: ClinicalHistoryEvent;
+  careStatus: {
+    changed: boolean;
+    fromStatus: ResidentCareStatus;
+    toStatus: ResidentCareStatus;
+  } | null;
+}
+
+/**
+ * Respuesta del endpoint que cambia el estado clínico operativo del residente
+ * directamente (ej.: botón "Quitar de observación").
+ */
+export interface ResidentCareStatusChangeResponse {
+  resident: ResidentDetail;
+  changed: boolean;
+  fromStatus: ResidentCareStatus;
+  toStatus: ResidentCareStatus;
 }
 
 export type MedicationExecutionResult = 'administered' | 'omitted' | 'rejected';
