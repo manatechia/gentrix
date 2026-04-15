@@ -1,7 +1,4 @@
-import type {
-  ResidentEvent,
-  ResidentLiveProfile,
-} from '@gentrix/shared-types';
+import type { ResidentLiveProfile } from '@gentrix/shared-types';
 
 import {
   formatEntityStatus,
@@ -23,11 +20,6 @@ const dateFormatter = new Intl.DateTimeFormat('es-AR', {
   dateStyle: 'long',
 });
 
-const dateTimeFormatter = new Intl.DateTimeFormat('es-AR', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
-
 function showValue(value: string | undefined): string {
   if (!value || !value.trim()) {
     return 'No informado';
@@ -38,23 +30,6 @@ function showValue(value: string | undefined): string {
 
 function formatDate(value: string): string {
   return dateFormatter.format(new Date(value));
-}
-
-function formatDateTime(value: string): string {
-  return dateTimeFormatter.format(new Date(value));
-}
-
-function formatResidentEventType(eventType: ResidentEvent['eventType']): string {
-  switch (eventType) {
-    case 'medical-history':
-      return 'Historial medico';
-    case 'admission-note':
-      return 'Nota de ingreso';
-    case 'follow-up':
-      return 'Seguimiento';
-    default:
-      return eventType;
-  }
 }
 
 export function ResidentLiveProfilePanel({
@@ -69,8 +44,7 @@ export function ResidentLiveProfilePanel({
               Ficha viva minima
             </span>
             <p className="max-w-[62ch] leading-[1.65] text-brand-text-secondary">
-              Lectura agregada del residente con perfil base, medicacion activa y
-              eventos recientes desde un contrato dedicado.
+              Lectura agregada del residente con perfil base y medicacion activa.
             </p>
           </div>
           {profile && (
@@ -116,113 +90,60 @@ export function ResidentLiveProfilePanel({
         )}
       </section>
 
-      <section className="grid gap-[18px] min-[1100px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <article className={surfaceCardClassName}>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="grid gap-1.5">
-              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                Medicacion activa
-              </span>
-              <p className="leading-[1.6] text-brand-text-secondary">
-                Ordenes vigentes para la operacion diaria del residente.
-              </p>
-            </div>
-            {profile && (
-              <span className={badgeBaseClassName}>
-                {profile.activeMedications.length} activas
-              </span>
-            )}
-          </div>
-
-          {!profile || profile.activeMedications.length === 0 ? (
-            <p className="mt-4 leading-[1.65] text-brand-text-secondary">
-              No hay medicacion activa para este residente.
+      <section className={surfaceCardClassName}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="grid gap-1.5">
+            <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+              Medicacion activa
+            </span>
+            <p className="leading-[1.6] text-brand-text-secondary">
+              Ordenes vigentes para la operacion diaria del residente.
             </p>
-          ) : (
-            <div className="mt-4 grid gap-3">
-              {profile.activeMedications.map((medication) => (
-                <article
-                  key={medication.id}
-                  className="rounded-[22px] bg-brand-neutral px-4 py-4"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <strong className="text-brand-text">
-                      {medication.medicationName}
-                    </strong>
-                    <span className="text-[0.88rem] text-brand-text-secondary">
-                      {medication.dose}
-                    </span>
-                  </div>
-                  <div className="mt-2 grid gap-2 text-[0.95rem] text-brand-text-secondary">
-                    <span>
-                      {formatMedicationRoute(medication.route)} |{' '}
-                      {formatMedicationFrequency(medication.frequency)}
-                    </span>
-                    <span>{medication.schedule}</span>
-                    <span>Prescripta por {medication.prescribedBy}</span>
-                    <span>
-                      Vigencia desde {formatDate(medication.startDate)}
-                      {medication.endDate
-                        ? ` hasta ${formatDate(medication.endDate)}`
-                        : ''}
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </div>
+          </div>
+          {profile && (
+            <span className={badgeBaseClassName}>
+              {profile.activeMedications.length} activas
+            </span>
           )}
-        </article>
+        </div>
 
-        <article className={surfaceCardClassName}>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="grid gap-1.5">
-              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                Eventos recientes
-              </span>
-              <p className="leading-[1.6] text-brand-text-secondary">
-                Ultimos eventos visibles del timeline clinico y operativo.
-              </p>
-            </div>
-            {profile && (
-              <span className={badgeBaseClassName}>
-                {profile.recentEvents.length} recientes
-              </span>
-            )}
-          </div>
-
-          {!profile || profile.recentEvents.length === 0 ? (
-            <p className="mt-4 leading-[1.65] text-brand-text-secondary">
-              No hay eventos recientes cargados para este residente.
-            </p>
-          ) : (
-            <div className="mt-4 grid gap-3">
-              {profile.recentEvents.map((event) => (
-                <article
-                  key={event.id}
-                  className="rounded-[22px] bg-brand-neutral px-4 py-4"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                      {formatResidentEventType(event.eventType)}
-                    </span>
-                    <span className="text-[0.88rem] text-brand-text-secondary">
-                      {formatDateTime(event.occurredAt)}
-                    </span>
-                  </div>
-                  <strong className="mt-2 block text-brand-text">
-                    {event.title}
+        {!profile || profile.activeMedications.length === 0 ? (
+          <p className="mt-4 leading-[1.65] text-brand-text-secondary">
+            No hay medicacion activa para este residente.
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-3">
+            {profile.activeMedications.map((medication) => (
+              <article
+                key={medication.id}
+                className="rounded-[22px] bg-brand-neutral px-4 py-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong className="text-brand-text">
+                    {medication.medicationName}
                   </strong>
-                  <p className="mt-2 leading-[1.6] text-brand-text-secondary">
-                    {event.description}
-                  </p>
-                  <span className="mt-3 block text-[0.9rem] text-brand-text-secondary">
-                    Registrado por {event.actor}
+                  <span className="text-[0.88rem] text-brand-text-secondary">
+                    {medication.dose}
                   </span>
-                </article>
-              ))}
-            </div>
-          )}
-        </article>
+                </div>
+                <div className="mt-2 grid gap-2 text-[0.95rem] text-brand-text-secondary">
+                  <span>
+                    {formatMedicationRoute(medication.route)} |{' '}
+                    {formatMedicationFrequency(medication.frequency)}
+                  </span>
+                  <span>{medication.schedule}</span>
+                  <span>Prescripta por {medication.prescribedBy}</span>
+                  <span>
+                    Vigencia desde {formatDate(medication.startDate)}
+                    {medication.endDate
+                      ? ` hasta ${formatDate(medication.endDate)}`
+                      : ''}
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </>
   );

@@ -10,7 +10,6 @@ import {
 } from '@gentrix/domain-residents';
 import type {
   ResidentDetail,
-  ResidentEvent,
   ResidentLiveProfile,
   ResidentLiveProfileResident,
 } from '@gentrix/shared-types';
@@ -23,8 +22,6 @@ import {
   RESIDENT_REPOSITORY,
   type ResidentRepository,
 } from '../domain/repositories/resident.repository';
-
-const recentResidentEventsLimit = 5;
 
 @Injectable()
 export class ResidentLiveProfileQueryService {
@@ -46,20 +43,16 @@ export class ResidentLiveProfileQueryService {
     }
 
     const residentDetail = toResidentDetail(resident);
-    const [residentEvents, residentMedications] = await Promise.all([
-      this.residents.listEventsByResidentId(resident.id, resident.organizationId),
-      this.medications.listByResidentId(resident.id, resident.organizationId),
-    ]);
+    const residentMedications = await this.medications.listByResidentId(
+      resident.id,
+      resident.organizationId,
+    );
 
     return {
       resident: toResidentLiveProfileResident(residentDetail),
       activeMedications: residentMedications
         .filter((order) => isMedicationActive(order))
         .map((order) => toMedicationOverview(order, residentDetail.fullName)),
-      recentEvents: sortResidentEventsDesc(residentEvents).slice(
-        0,
-        recentResidentEventsLimit,
-      ),
     };
   }
 }
@@ -94,11 +87,4 @@ function toResidentLiveProfileResident(
     careStatusChangedAt: resident.careStatusChangedAt,
     careStatusChangedBy: resident.careStatusChangedBy,
   };
-}
-
-function sortResidentEventsDesc(events: ResidentEvent[]): ResidentEvent[] {
-  return [...events].sort(
-    (left, right) =>
-      new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime(),
-  );
 }

@@ -15,10 +15,6 @@ import {
   type MedicationExecutionRepository,
 } from '../../medication/domain/repositories/medication-execution.repository';
 import { ResidentsService } from '../../residents/application/residents.service';
-import {
-  RESIDENT_REPOSITORY,
-  type ResidentRepository,
-} from '../../residents/domain/repositories/resident.repository';
 import { StaffService } from '../../staff/application/staff.service';
 import { deriveDashboardAlerts } from './dashboard-alerts';
 import { deriveHandoffSnapshot } from './handoff-snapshot';
@@ -30,8 +26,6 @@ export class SystemService {
   constructor(
     @Inject(ResidentsService)
     private readonly residentsService: ResidentsService,
-    @Inject(RESIDENT_REPOSITORY)
-    private readonly residentRepository: ResidentRepository,
     @Inject(StaffService)
     private readonly staffService: StaffService,
     @Inject(MedicationService)
@@ -80,14 +74,8 @@ export class SystemService {
   async getDashboardSnapshot(
     organizationId?: AuthOrganization['id'],
   ): Promise<DashboardSnapshot> {
-    const {
-      residents,
-      staff,
-      medications,
-      residentEvents,
-      residentObservations,
-      medicationExecutions,
-    } = await this.getOperationalContext(organizationId);
+    const { residents, staff, medications, medicationExecutions } =
+      await this.getOperationalContext(organizationId);
 
     return {
       summary: {
@@ -106,7 +94,6 @@ export class SystemService {
       alerts: deriveDashboardAlerts({
         residents,
         medications,
-        residentEvents,
         medicationExecutions,
       }),
     };
@@ -115,47 +102,29 @@ export class SystemService {
   async getHandoffSnapshot(
     organizationId?: AuthOrganization['id'],
   ): Promise<HandoffSnapshot> {
-    const {
-      residents,
-      medications,
-      residentEvents,
-      residentObservations,
-      medicationExecutions,
-    } =
+    const { residents, medications, medicationExecutions } =
       await this.getOperationalContext(organizationId);
 
     return deriveHandoffSnapshot({
       residents,
       medications,
-      residentEvents,
-      residentObservations,
       medicationExecutions,
     });
   }
 
   private async getOperationalContext(organizationId?: AuthOrganization['id']) {
-    const [
-      residents,
-      staff,
-      medications,
-      residentEvents,
-      residentObservations,
-      medicationExecutions,
-    ] = await Promise.all([
-      this.residentsService.getResidents(organizationId),
-      this.staffService.getStaff(organizationId),
-      this.medicationService.getMedications(organizationId),
-      this.residentRepository.listEvents(organizationId),
-      this.residentRepository.listObservations(organizationId),
-      this.medicationExecutionRepository.list(organizationId),
-    ]);
+    const [residents, staff, medications, medicationExecutions] =
+      await Promise.all([
+        this.residentsService.getResidents(organizationId),
+        this.staffService.getStaff(organizationId),
+        this.medicationService.getMedications(organizationId),
+        this.medicationExecutionRepository.list(organizationId),
+      ]);
 
     return {
       residents,
       staff,
       medications,
-      residentEvents,
-      residentObservations,
       medicationExecutions,
     };
   }

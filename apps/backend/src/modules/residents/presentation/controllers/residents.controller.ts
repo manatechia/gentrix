@@ -16,11 +16,7 @@ import { assertCanManageResidentRecords } from '../../../../common/auth/role-acc
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { ResidentLiveProfileQueryService } from '../../application/resident-live-profile.query.service';
 import { ResidentsService } from '../../application/residents.service';
-import { CreateResidentObservationEntryDto } from '../dto/create-resident-observation-entry.dto';
-import { CreateResidentObservationDto } from '../dto/create-resident-observation.dto';
 import { CreateResidentDto } from '../dto/create-resident.dto';
-import { CreateResidentEventDto } from '../dto/create-resident-event.dto';
-import { ResolveResidentObservationDto } from '../dto/resolve-resident-observation.dto';
 import { UpdateResidentCareStatusDto } from '../dto/update-resident-care-status.dto';
 import { UpdateResidentDto } from '../dto/update-resident.dto';
 
@@ -74,17 +70,6 @@ export class ResidentsController {
     );
   }
 
-  @Get(':residentId/events')
-  getResidentEvents(
-    @Param('residentId') residentId: string,
-    @Req() request: RequestWithSession,
-  ) {
-    return this.residentsService.getResidentEvents(
-      residentId,
-      request.authSession!.activeOrganization.id,
-    );
-  }
-
   @Post()
   createResident(
     @Body() body: CreateResidentDto,
@@ -132,77 +117,6 @@ export class ResidentsController {
     return this.residentsService.setResidentCareStatus(
       residentId,
       body.toStatus,
-      getAuditActorFromRequest(request),
-      request.authSession!.activeOrganization.id,
-    );
-  }
-
-  @Post(':residentId/events')
-  createResidentEvent(
-    @Param('residentId') residentId: string,
-    @Body() body: CreateResidentEventDto,
-    @Req() request: RequestWithSession,
-  ) {
-    return this.residentsService.createResidentEvent(
-      residentId,
-      body,
-      getAuditActorFromRequest(request),
-      request.authSession!.activeOrganization.id,
-    );
-  }
-
-  @Get(':residentId/observations')
-  getResidentObservations(
-    @Param('residentId') residentId: string,
-    @Req() request: RequestWithSession,
-  ) {
-    return this.residentsService.getResidentObservations(
-      residentId,
-      request.authSession!.activeOrganization.id,
-    );
-  }
-
-  @Post(':residentId/observations')
-  createResidentObservation(
-    @Param('residentId') residentId: string,
-    @Body() body: CreateResidentObservationDto,
-    @Req() request: RequestWithSession,
-  ) {
-    return this.residentsService.createResidentObservation(
-      residentId,
-      body,
-      getAuditActorFromRequest(request),
-      request.authSession!.activeOrganization.id,
-    );
-  }
-
-  @Post(':residentId/observations/:observationId/entries')
-  createResidentObservationEntry(
-    @Param('residentId') residentId: string,
-    @Param('observationId') observationId: string,
-    @Body() body: CreateResidentObservationEntryDto,
-    @Req() request: RequestWithSession,
-  ) {
-    return this.residentsService.createResidentObservationEntry(
-      residentId,
-      observationId,
-      body,
-      getAuditActorFromRequest(request),
-      request.authSession!.activeOrganization.id,
-    );
-  }
-
-  @Post(':residentId/observations/:observationId/resolve')
-  resolveResidentObservation(
-    @Param('residentId') residentId: string,
-    @Param('observationId') observationId: string,
-    @Body() body: ResolveResidentObservationDto,
-    @Req() request: RequestWithSession,
-  ) {
-    return this.residentsService.resolveResidentObservation(
-      residentId,
-      observationId,
-      body,
       getAuditActorFromRequest(request),
       request.authSession!.activeOrganization.id,
     );

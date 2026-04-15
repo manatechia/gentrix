@@ -1,10 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  Prisma,
-  type ClinicalHistoryEvent,
-  type ResidentObservation as PrismaResidentObservation,
-  type ResidentObservationEntry as PrismaResidentObservationEntry,
-} from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import type {
   Address,
@@ -15,10 +10,7 @@ import type {
   ResidentCareStatus,
   ResidentClinicalProfile,
   ResidentDischargeInfo,
-  ResidentEvent,
   ResidentGeriatricAssessment,
-  ResidentObservation,
-  ResidentObservationEntry,
   ResidentFamilyContact,
   ResidentInsuranceInfo,
   ResidentPsychiatricCareInfo,
@@ -33,10 +25,6 @@ import { toIsoDateString } from '@gentrix/shared-utils';
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
 import type {
   ResidentCareStatusUpdateRecordInput,
-  ResidentEventRecordInput,
-  ResidentObservationEntryRecordInput,
-  ResidentObservationRecordInput,
-  ResidentObservationResolveRecordInput,
   ResidentRepository,
 } from '../../../domain/repositories/resident.repository';
 
@@ -45,18 +33,7 @@ type ResidentRecord = Prisma.ResidentGetPayload<{
     clinicalEvents: true;
   };
 }>;
-const residentObservationInclude = {
-  entries: {
-    where: {
-      deletedAt: null,
-    },
-    orderBy: [{ occurredAt: 'desc' }, { createdAt: 'desc' }],
-  },
-} satisfies Prisma.ResidentObservationInclude;
 
-type ResidentObservationRecord = Prisma.ResidentObservationGetPayload<{
-  include: typeof residentObservationInclude;
-}>;
 const residentMedicalHistoryEventType = 'medical-history';
 
 const residentDocumentTypes = new Set([
@@ -220,161 +197,6 @@ export class PrismaResidentRepository implements ResidentRepository {
     });
   }
 
-  async listEvents(
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentEvent[]> {
-    const events = await this.prisma.clinicalHistoryEvent.findMany({
-      where: {
-        deletedAt: null,
-        organizationId: organizationId ?? undefined,
-      },
-      orderBy: [{ occurredAt: 'desc' }, { createdAt: 'desc' }],
-    });
-
-    return events.map(mapResidentEventRecord);
-  }
-
-  async listEventsByResidentId(
-    residentId: Resident['id'],
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentEvent[]> {
-    const events = await this.prisma.clinicalHistoryEvent.findMany({
-      where: {
-        residentId,
-        deletedAt: null,
-        organizationId: organizationId ?? undefined,
-      },
-      orderBy: [{ occurredAt: 'desc' }, { createdAt: 'desc' }],
-    });
-
-    return events.map(mapResidentEventRecord);
-  }
-
-  async createEvent(event: ResidentEventRecordInput): Promise<ResidentEvent> {
-    const created = await this.prisma.clinicalHistoryEvent.create({
-      data: {
-        organizationId: event.organizationId,
-        facilityId: event.facilityId ?? null,
-        residentId: event.residentId,
-        eventType: event.eventType,
-        title: event.title,
-        description: event.description,
-        occurredAt: new Date(event.occurredAt),
-        createdAt: new Date(event.createdAt),
-        createdBy: event.actor,
-        updatedAt: new Date(event.createdAt),
-        updatedBy: event.actor,
-      },
-    });
-
-    return mapResidentEventRecord(created);
-  }
-
-  async listObservations(
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentObservation[]> {
-    const observations = await this.prisma.residentObservation.findMany({
-      where: {
-        deletedAt: null,
-        organizationId: organizationId ?? undefined,
-      },
-      include: residentObservationInclude,
-      orderBy: [{ openedAt: 'desc' }, { createdAt: 'desc' }],
-    });
-
-    return observations.map(mapResidentObservationRecord);
-  }
-
-  async listObservationsByResidentId(
-    residentId: Resident['id'],
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentObservation[]> {
-    const observations = await this.prisma.residentObservation.findMany({
-      where: {
-        residentId,
-        deletedAt: null,
-        organizationId: organizationId ?? undefined,
-      },
-      include: residentObservationInclude,
-      orderBy: [{ openedAt: 'desc' }, { createdAt: 'desc' }],
-    });
-
-    return observations.map(mapResidentObservationRecord);
-  }
-
-  async findObservationById(
-    observationId: ResidentObservation['id'],
-    residentId: Resident['id'],
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentObservation | null> {
-    const observation = await this.prisma.residentObservation.findFirst({
-      where: {
-        id: observationId,
-        residentId,
-        deletedAt: null,
-        organizationId: organizationId ?? undefined,
-      },
-      include: residentObservationInclude,
-    });
-
-    return observation ? mapResidentObservationRecord(observation) : null;
-  }
-
-  async createObservation(
-    observation: ResidentObservationRecordInput,
-  ): Promise<ResidentObservation> {
-    const created = await this.prisma.residentObservation.create({
-      data: {
-        organizationId: observation.organizationId,
-        residentId: observation.residentId,
-        status: 'active',
-        severity: observation.severity,
-        title: observation.title,
-        description: observation.description,
-        openedAt: new Date(observation.openedAt),
-        openedBy: observation.actor,
-        createdAt: new Date(observation.openedAt),
-        createdBy: observation.actor,
-        updatedAt: new Date(observation.openedAt),
-        updatedBy: observation.actor,
-      },
-      include: residentObservationInclude,
-    });
-
-    return mapResidentObservationRecord(created);
-  }
-
-  async createObservationEntry(
-    entry: ResidentObservationEntryRecordInput,
-  ): Promise<ResidentObservation> {
-    const updated = await this.prisma.residentObservation.update({
-      where: {
-        id: entry.observationId,
-      },
-      data: {
-        updatedAt: new Date(entry.occurredAt),
-        updatedBy: entry.actor,
-        entries: {
-          create: {
-            organizationId: entry.organizationId,
-            residentId: entry.residentId,
-            entryType: entry.entryType,
-            title: entry.title,
-            description: entry.description,
-            occurredAt: new Date(entry.occurredAt),
-            createdAt: new Date(entry.occurredAt),
-            createdBy: entry.actor,
-            updatedAt: new Date(entry.occurredAt),
-            updatedBy: entry.actor,
-          },
-        },
-      },
-      include: residentObservationInclude,
-    });
-
-    return mapResidentObservationRecord(updated);
-  }
-
   async setCareStatus(
     input: ResidentCareStatusUpdateRecordInput,
   ): Promise<Resident> {
@@ -386,8 +208,7 @@ export class PrismaResidentRepository implements ResidentRepository {
         careStatusChangedAt: changedAt,
         careStatusChangedBy: input.actor,
         // Convención del módulo: cambio de estado clínico también refresca
-        // updatedAt/updatedBy del residente — la auditoría dedicada quedó como
-        // deuda técnica (ver docs/tech-debt/resident-care-status-audit.md).
+        // updatedAt/updatedBy del residente.
         updatedAt: changedAt,
         updatedBy: input.actor,
       },
@@ -400,42 +221,6 @@ export class PrismaResidentRepository implements ResidentRepository {
     });
 
     return mapResidentRecord(updated);
-  }
-
-  async resolveObservation(
-    resolution: ResidentObservationResolveRecordInput,
-  ): Promise<ResidentObservation> {
-    const updated = await this.prisma.residentObservation.update({
-      where: {
-        id: resolution.observationId,
-      },
-      data: {
-        status: 'resolved',
-        resolvedAt: new Date(resolution.resolvedAt),
-        resolvedBy: resolution.actor,
-        resolutionType: resolution.resolutionType,
-        resolutionSummary: resolution.summary,
-        updatedAt: new Date(resolution.resolvedAt),
-        updatedBy: resolution.actor,
-        entries: {
-          create: {
-            organizationId: resolution.organizationId,
-            residentId: resolution.residentId,
-            entryType: 'resolution',
-            title: buildResolutionTitle(resolution.resolutionType),
-            description: resolution.summary,
-            occurredAt: new Date(resolution.resolvedAt),
-            createdAt: new Date(resolution.resolvedAt),
-            createdBy: resolution.actor,
-            updatedAt: new Date(resolution.resolvedAt),
-            updatedBy: resolution.actor,
-          },
-        },
-      },
-      include: residentObservationInclude,
-    });
-
-    return mapResidentObservationRecord(updated);
   }
 }
 
@@ -521,87 +306,6 @@ function mapResidentRecord(record: ResidentRecord): Resident {
       room: address.room ?? record.room,
     },
     emergencyContact,
-    audit: {
-      createdAt: toIsoDateString(record.createdAt),
-      updatedAt: toIsoDateString(record.updatedAt),
-      createdBy: record.createdBy,
-      updatedBy: record.updatedBy,
-      deletedAt: record.deletedAt
-        ? toIsoDateString(record.deletedAt)
-        : undefined,
-      deletedBy: record.deletedBy ?? undefined,
-    },
-  };
-}
-
-function mapResidentEventRecord(record: ClinicalHistoryEvent): ResidentEvent {
-  return {
-    id: record.id as ResidentEvent['id'],
-    residentId: record.residentId as ResidentEvent['residentId'],
-    eventType: record.eventType as ResidentEvent['eventType'],
-    title: record.title,
-    description: record.description,
-    occurredAt: toIsoDateString(record.occurredAt),
-    actor: record.createdBy,
-    audit: {
-      createdAt: toIsoDateString(record.createdAt),
-      updatedAt: toIsoDateString(record.updatedAt),
-      createdBy: record.createdBy,
-      updatedBy: record.updatedBy,
-      deletedAt: record.deletedAt
-        ? toIsoDateString(record.deletedAt)
-        : undefined,
-      deletedBy: record.deletedBy ?? undefined,
-    },
-  };
-}
-
-function mapResidentObservationRecord(
-  record: ResidentObservationRecord,
-): ResidentObservation {
-  return {
-    id: record.id as ResidentObservation['id'],
-    residentId: record.residentId as ResidentObservation['residentId'],
-    status: record.status as ResidentObservation['status'],
-    severity: record.severity as ResidentObservation['severity'],
-    title: record.title,
-    description: record.description,
-    openedAt: toIsoDateString(record.openedAt),
-    openedBy: record.openedBy,
-    resolvedAt: record.resolvedAt
-      ? toIsoDateString(record.resolvedAt)
-      : undefined,
-    resolvedBy: record.resolvedBy ?? undefined,
-    resolutionType:
-      (record.resolutionType as ResidentObservation['resolutionType']) ??
-      undefined,
-    resolutionSummary: record.resolutionSummary ?? undefined,
-    entries: record.entries.map(mapResidentObservationEntryRecord),
-    audit: {
-      createdAt: toIsoDateString(record.createdAt),
-      updatedAt: toIsoDateString(record.updatedAt),
-      createdBy: record.createdBy,
-      updatedBy: record.updatedBy,
-      deletedAt: record.deletedAt
-        ? toIsoDateString(record.deletedAt)
-        : undefined,
-      deletedBy: record.deletedBy ?? undefined,
-    },
-  };
-}
-
-function mapResidentObservationEntryRecord(
-  record: PrismaResidentObservationEntry,
-): ResidentObservationEntry {
-  return {
-    id: record.id as ResidentObservationEntry['id'],
-    observationId: record.observationId as ResidentObservationEntry['observationId'],
-    residentId: record.residentId as ResidentObservationEntry['residentId'],
-    entryType: record.entryType as ResidentObservationEntry['entryType'],
-    title: record.title,
-    description: record.description,
-    occurredAt: toIsoDateString(record.occurredAt),
-    actor: record.createdBy,
     audit: {
       createdAt: toIsoDateString(record.createdAt),
       updatedAt: toIsoDateString(record.updatedAt),
@@ -720,20 +424,5 @@ function normalizeResidentStatus(value: string): EntityStatus {
 }
 
 function normalizeResidentCareStatus(value: string): ResidentCareStatus {
-  // Si en el futuro alguien escribe a mano un valor inválido en la BD,
-  // degradamos silenciosamente a 'normal' en vez de romper toda la lectura.
   return isResidentCareStatus(value) ? value : 'normal';
-}
-
-function buildResolutionTitle(
-  resolutionType: ResidentObservation['resolutionType'],
-): string {
-  switch (resolutionType) {
-    case 'medical-visit':
-      return 'Derivacion medica';
-    case 'phone-call':
-      return 'Llamado realizado';
-    default:
-      return 'Observacion cerrada';
-  }
 }

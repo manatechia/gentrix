@@ -18,13 +18,7 @@ import type {
   ResidentCreateInput,
   ResidentDetail,
   ResidentDischargeInfo,
-  ResidentEvent,
-  ResidentEventCreateInput,
   ResidentGeriatricAssessment,
-  ResidentObservation,
-  ResidentObservationCreateInput,
-  ResidentObservationEntryCreateInput,
-  ResidentObservationResolveInput,
   ResidentOverview,
   ResidentSupportingRecordInput,
   ResidentUpdateInput,
@@ -34,18 +28,13 @@ import { toIsoDateString } from '@gentrix/shared-utils';
 import { assertTransition } from '../domain/policies/care-status.policy';
 import {
   RESIDENT_REPOSITORY,
-  type ResidentEventRecordInput,
-  type ResidentObservationEntryRecordInput,
-  type ResidentObservationRecordInput,
-  type ResidentObservationResolveRecordInput,
   type ResidentRepository,
 } from '../domain/repositories/resident.repository';
 
 /**
  * Resultado del cambio de estado clínico operativo. `changed` indica si la
  * transición efectivamente ocurrió. Pasamos `false` cuando el residente ya se
- * encontraba en el estado destino — caso modelado como no-op silencioso para
- * que el flujo "crear evento + poner en observación" sea idempotente.
+ * encontraba en el estado destino — caso modelado como no-op silencioso.
  */
 export interface ResidentCareStatusChangeResult {
   resident: ResidentDetail;
@@ -85,19 +74,6 @@ export class ResidentsService {
   async getResidentById(id: string, organizationId?: string): Promise<ResidentDetail> {
     const resident = await this.getResidentEntityById(id, organizationId);
     return toResidentDetail(resident);
-  }
-
-  async getResidentEvents(
-    residentId: string,
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentEvent[]> {
-    const resident = await this.getResidentEntityById(residentId, organizationId);
-    const events = await this.residents.listEventsByResidentId(
-      resident.id,
-      resident.organizationId,
-    );
-
-    return sortResidentEventsDesc(events);
   }
 
   async createResident(
@@ -151,11 +127,6 @@ export class ResidentsService {
    *    se lanza BadRequestException antes de tocar el repositorio.
    *  - Caso contrario, se actualiza el residente y su auditoría
    *    (`updatedAt`/`updatedBy`) en una sola operación.
-   *
-   * Auditoría dedicada: por ahora reutilizamos `updatedBy/updatedAt` del
-   * residente. La tabla de auditoría histórica de transiciones quedó como
-   * deuda técnica documentada en
-   * docs/tech-debt/resident-care-status-audit.md
    */
   async setResidentCareStatus(
     residentId: string,
@@ -203,149 +174,6 @@ export class ResidentsService {
       .map(toResidentCard);
   }
 
-  async createResidentEvent(
-    residentId: string,
-    input: ResidentEventCreateInput,
-    actor: string,
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentEvent> {
-    const resident = await this.getResidentEntityById(residentId, organizationId);
-
-    this.validateResidentEventCreateInput(input);
-
-    const now = toIsoDateString(new Date());
-    const eventRecord: ResidentEventRecordInput = {
-      residentId: resident.id,
-      organizationId: resident.organizationId,
-      facilityId: resident.facilityId,
-      eventType: input.eventType,
-      title: input.title.trim(),
-      description: input.description.trim(),
-      occurredAt: toIsoDateString(input.occurredAt),
-      actor,
-      createdAt: now,
-    };
-
-    const createdEvent = await this.residents.createEvent(eventRecord);
-    await this.residents.touchAudit(resident.id, actor, resident.organizationId);
-    return createdEvent;
-  }
-
-  async getResidentObservations(
-    residentId: string,
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentObservation[]> {
-    const resident = await this.getResidentEntityById(residentId, organizationId);
-    const observations = await this.residents.listObservationsByResidentId(
-      resident.id,
-      resident.organizationId,
-    );
-
-    return sortResidentObservations(observations);
-  }
-
-  async createResidentObservation(
-    residentId: string,
-    input: ResidentObservationCreateInput,
-    actor: string,
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentObservation> {
-    const resident = await this.getResidentEntityById(residentId, organizationId);
-    this.validateResidentObservationCreateInput(input);
-
-    const now = toIsoDateString(new Date());
-    const observationRecord: ResidentObservationRecordInput = {
-      residentId: resident.id,
-      organizationId: resident.organizationId,
-      severity: input.severity,
-      title: input.title.trim(),
-      description: input.description.trim(),
-      actor,
-      openedAt: now,
-    };
-
-    const createdObservation = await this.residents.createObservation(
-      observationRecord,
-    );
-    await this.residents.touchAudit(resident.id, actor, resident.organizationId);
-    return createdObservation;
-  }
-
-  async createResidentObservationEntry(
-    residentId: string,
-    observationId: string,
-    input: ResidentObservationEntryCreateInput,
-    actor: string,
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentObservation> {
-    const resident = await this.getResidentEntityById(residentId, organizationId);
-    this.validateResidentObservationEntryCreateInput(input);
-    const observation = await this.getResidentObservationEntity(
-      observationId,
-      resident,
-    );
-
-    if (observation.status !== 'active') {
-      throw new BadRequestException(
-        'La observacion ya fue cerrada y no admite nuevos seguimientos.',
-      );
-    }
-
-    const now = toIsoDateString(new Date());
-    const entryRecord: ResidentObservationEntryRecordInput = {
-      observationId: observation.id,
-      residentId: resident.id,
-      organizationId: resident.organizationId,
-      entryType: input.entryType,
-      title: input.title.trim(),
-      description: input.description.trim(),
-      actor,
-      occurredAt: now,
-    };
-
-    const updatedObservation = await this.residents.createObservationEntry(
-      entryRecord,
-    );
-    await this.residents.touchAudit(resident.id, actor, resident.organizationId);
-    return updatedObservation;
-  }
-
-  async resolveResidentObservation(
-    residentId: string,
-    observationId: string,
-    input: ResidentObservationResolveInput,
-    actor: string,
-    organizationId?: Resident['organizationId'],
-  ): Promise<ResidentObservation> {
-    const resident = await this.getResidentEntityById(residentId, organizationId);
-    this.validateResidentObservationResolveInput(input);
-    const observation = await this.getResidentObservationEntity(
-      observationId,
-      resident,
-    );
-
-    if (observation.status !== 'active') {
-      throw new BadRequestException('La observacion ya estaba resuelta.');
-    }
-
-    const now = toIsoDateString(new Date());
-    const resolutionRecord: ResidentObservationResolveRecordInput = {
-      observationId: observation.id,
-      residentId: resident.id,
-      organizationId: resident.organizationId,
-      resolutionType: input.resolutionType,
-      summary: input.summary.trim(),
-      actor,
-      resolvedAt: now,
-    };
-
-    const updatedObservation = await this.residents.resolveObservation(
-      resolutionRecord,
-    );
-    await this.residents.touchAudit(resident.id, actor, resident.organizationId);
-    return updatedObservation;
-  }
-
   private validateResidentCreateInput(input: ResidentCreateInput): void {
     this.validateResidentBaseProfile(input);
     this.validateResidentSupportingRecords(input);
@@ -356,81 +184,6 @@ export class ResidentsService {
   private validateResidentUpdateInput(input: ResidentUpdateInput): void {
     this.validateResidentBaseProfile(input);
     this.validateResidentGeriatricAssessment(input.geriatricAssessment);
-  }
-
-  private validateResidentEventCreateInput(input: ResidentEventCreateInput): void {
-    const occurredAt = new Date(input.occurredAt);
-
-    if (Number.isNaN(occurredAt.getTime())) {
-      throw new BadRequestException(
-        'La fecha del evento no tiene un formato valido.',
-      );
-    }
-
-    if (input.title.trim().length === 0) {
-      throw new BadRequestException('El evento debe tener un titulo.');
-    }
-
-    if (input.description.trim().length === 0) {
-      throw new BadRequestException('El evento debe tener una descripcion.');
-    }
-
-    if (occurredAt.getTime() > Date.now()) {
-      throw new BadRequestException(
-        'La fecha del evento no puede estar en el futuro.',
-      );
-    }
-  }
-
-  private validateResidentObservationCreateInput(
-    input: ResidentObservationCreateInput,
-  ): void {
-    if (input.title.trim().length === 0) {
-      throw new BadRequestException('La observacion debe tener un titulo.');
-    }
-
-    if (input.description.trim().length === 0) {
-      throw new BadRequestException(
-        'La observacion debe tener un detalle operativo.',
-      );
-    }
-  }
-
-  private validateResidentObservationEntryCreateInput(
-    input: ResidentObservationEntryCreateInput,
-  ): void {
-    if (input.title.trim().length === 0) {
-      throw new BadRequestException('El seguimiento debe tener un titulo.');
-    }
-
-    if (input.description.trim().length === 0) {
-      throw new BadRequestException('El seguimiento debe tener un detalle.');
-    }
-  }
-
-  private validateResidentObservationResolveInput(
-    input: ResidentObservationResolveInput,
-  ): void {
-    if (input.summary.trim().length === 0) {
-      throw new BadRequestException('El cierre requiere un resumen final.');
-    }
-  }
-
-  private async getResidentObservationEntity(
-    observationId: string,
-    resident: Resident,
-  ): Promise<ResidentObservation> {
-    const observation = await this.residents.findObservationById(
-      observationId as ResidentObservation['id'],
-      resident.id,
-      resident.organizationId,
-    );
-
-    if (!observation) {
-      throw new NotFoundException('No encontre la observacion solicitada.');
-    }
-
-    return observation;
   }
 
   private validateResidentBaseProfile(
@@ -536,33 +289,4 @@ export class ResidentsService {
       }
     }
   }
-}
-
-function sortResidentEventsDesc(events: ResidentEvent[]): ResidentEvent[] {
-  return [...events].sort(
-    (left, right) =>
-      new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime(),
-  );
-}
-
-function sortResidentObservations(
-  observations: ResidentObservation[],
-): ResidentObservation[] {
-  return [...observations].sort((left, right) => {
-    if (left.status !== right.status) {
-      return left.status === 'active' ? -1 : 1;
-    }
-
-    return (
-      resolveObservationActivityTime(right) - resolveObservationActivityTime(left)
-    );
-  });
-}
-
-function resolveObservationActivityTime(observation: ResidentObservation): number {
-  const latestEntryAt = observation.entries[0]?.occurredAt;
-
-  return new Date(
-    latestEntryAt ?? observation.resolvedAt ?? observation.openedAt,
-  ).getTime();
 }
