@@ -525,6 +525,91 @@ export interface ResidentAgendaEventUpdateInput {
   scheduledAt: IsoDateString;
 }
 
+/**
+ * Tipos de recurrencia soportados por la agenda.
+ *   - `daily`: todos los días.
+ *   - `weekly`: días específicos de la semana (`daysOfWeek`, 0=Dom..6=Sab).
+ *   - `monthly`: mismo día del mes que `startsOn`. Meses sin ese día se saltean.
+ *   - `yearly`: mismo mes y día que `startsOn`. 29/feb en año no bisiesto se saltea.
+ */
+export type ResidentAgendaRecurrenceType =
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'yearly';
+
+/**
+ * Regla de recurrencia de la agenda. Una serie sola representa "este evento se
+ * repite a esta hora según este patrón". Para más de un horario por día crear
+ * más de una serie.
+ */
+export interface ResidentAgendaSeries {
+  id: EntityId;
+  residentId: EntityId;
+  title: string;
+  description?: string;
+  recurrenceType: ResidentAgendaRecurrenceType;
+  recurrenceDaysOfWeek: number[]; // sólo weekly, 0..6
+  timeOfDay: string; // 'HH:mm' en TZ de la organización
+  startsOn: IsoDateString; // YYYY-MM-DD
+  endsOn?: IsoDateString; // opcional, YYYY-MM-DD
+  audit: AuditTrail;
+}
+
+export interface ResidentAgendaSeriesCreateInput {
+  title: string;
+  description?: string;
+  recurrenceType: ResidentAgendaRecurrenceType;
+  recurrenceDaysOfWeek?: number[];
+  timeOfDay: string;
+  startsOn: IsoDateString;
+  endsOn?: IsoDateString;
+}
+
+export type ResidentAgendaSeriesUpdateInput = ResidentAgendaSeriesCreateInput;
+
+/**
+ * Override de una ocurrencia puntual. `overrideScheduledAt` es opcional:
+ * permite reprogramar la ocurrencia a otro momento del día sin tocar la serie.
+ */
+export interface ResidentAgendaOccurrenceOverrideInput {
+  title: string;
+  description?: string;
+  overrideScheduledAt?: IsoDateString;
+}
+
+/**
+ * Ocurrencia calculada para listar en UI. Puede provenir de un evento one-off
+ * o de la expansión de una serie. Se arma en el servidor expandiendo las reglas
+ * contra el día pedido (hoy, en la TZ de la organización).
+ */
+export interface ResidentAgendaOccurrence {
+  sourceType: 'event' | 'series';
+  sourceId: EntityId;
+  residentId: EntityId;
+  occurrenceDate?: IsoDateString; // YYYY-MM-DD, solo para sourceType='series'
+  isOverride?: boolean;
+  exceptionId?: EntityId;
+  title: string;
+  description?: string;
+  scheduledAt: IsoDateString;
+  recurrence?: {
+    type: ResidentAgendaRecurrenceType;
+    daysOfWeek: number[];
+    endsOn?: IsoDateString;
+    /** Útil para editar la serie desde una ocurrencia sin pedir la serie completa. */
+    startsOn: IsoDateString;
+    timeOfDay: string;
+  };
+  audit: AuditTrail;
+}
+
+export interface ResidentAgendaOccurrenceWithResident
+  extends ResidentAgendaOccurrence {
+  residentFullName: string;
+  residentRoom: string;
+}
+
 export interface ResidentLiveProfileResident
   extends ResidentBaseProfile,
     ResidentCurrentState {

@@ -72,6 +72,139 @@ export function toIsoDateString(value: Date | string): IsoDateString {
   return (value instanceof Date ? value : new Date(value)).toISOString();
 }
 
+/**
+ * Devuelve el Date UTC que corresponde a la medianoche local del día que
+ * contiene `reference` en la zona horaria `timeZone` (ej. 'America/Argentina/Buenos_Aires').
+ *
+ * Ejemplo: reference = 2026-04-15T13:30:00Z, timeZone = 'America/Argentina/Buenos_Aires'
+ * → devuelve 2026-04-15T03:00:00Z (00:00 local = 03:00 UTC en ART).
+ *
+ * Implementación zero-deps basada en `Intl.DateTimeFormat` — proyectamos la
+ * fecha a la TZ pedida, reconstruimos el timestamp buscado y el offset local
+ * con una sola conversión recíproca.
+ */
+export function startOfLocalDay(reference: Date, timeZone: string): Date {
+  const { year, month, day } = extractLocalYmd(reference, timeZone);
+  return localYmdHmToUtc(year, month, day, 0, 0, timeZone);
+}
+
+/**
+ * Devuelve el Date UTC que corresponde al inicio del día siguiente (exclusivo
+ * para rangos). Útil para `scheduledAt < endOfLocalDay(today)`.
+ */
+export function endOfLocalDay(reference: Date, timeZone: string): Date {
+  const start = startOfLocalDay(reference, timeZone);
+  // Sumamos 24h + un margen para cubrir DST "spring forward" (23h) / "fall
+  // back" (25h). Luego normalizamos al inicio del día siguiente.
+  const candidate = new Date(start.getTime() + 26 * 60 * 60 * 1000);
+  return startOfLocalDay(candidate, timeZone);
+}
+
+/**
+ * Formatea `reference` como `YYYY-MM-DD` en la TZ pedida.
+ */
+export function formatLocalYmd(reference: Date, timeZone: string): string {
+  const { year, month, day } = extractLocalYmd(reference, timeZone);
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+/**
+ * Combina una fecha local `YYYY-MM-DD` y una hora `HH:mm` en la TZ pedida, y
+ * devuelve el Date UTC correspondiente.
+ */
+export function localDateTimeToUtc(
+  ymd: string,
+  hhmm: string,
+  timeZone: string,
+): Date {
+  const [yearToken, monthToken, dayToken] = ymd.split('-');
+  const [hoursToken, minutesToken] = hhmm.split(':');
+  return localYmdHmToUtc(
+    Number.parseInt(yearToken, 10),
+    Number.parseInt(monthToken, 10),
+    Number.parseInt(dayToken, 10),
+    Number.parseInt(hoursToken, 10),
+    Number.parseInt(minutesToken, 10),
+    timeZone,
+  );
+}
+
+function extractLocalYmd(
+  reference: Date,
+  timeZone: string,
+): { year: number; month: number; day: number } {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  const parts = formatter.formatToParts(reference);
+  const map: Record<string, string> = {};
+  for (const part of parts) {
+    map[part.type] = part.value;
+  }
+  return {
+    year: Number.parseInt(map.year, 10),
+    month: Number.parseInt(map.month, 10),
+    day: Number.parseInt(map.day, 10),
+  };
+}
+
+/**
+ * Convierte `YYYY-MM-DD HH:mm` en TZ local → Date UTC usando el offset actual
+ * de la zona para ese instante. Precisión: 1 minuto.
+ */
+function localYmdHmToUtc(
+  year: number,
+  month: number,
+  day: number,
+  hours: number,
+  minutes: number,
+  timeZone: string,
+): Date {
+  // Primera aproximación: interpretar como UTC. El error es exactamente
+  // `offsetMinutes(timeZone, candidate)`.
+  const guess = Date.UTC(year, month - 1, day, hours, minutes, 0, 0);
+  const offset = timezoneOffsetMinutes(new Date(guess), timeZone);
+  return new Date(guess - offset * 60_000);
+}
+
+/**
+ * Offset (en minutos) de la TZ pedida respecto de UTC para un instante dado.
+ * Positivo para zonas al este de UTC (ej. Europe/Paris → 60 o 120),
+ * negativo para zonas al oeste (ej. Argentina → -180).
+ */
+function timezoneOffsetMinutes(reference: Date, timeZone: string): number {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  const parts = formatter.formatToParts(reference);
+  const map: Record<string, string> = {};
+  for (const part of parts) {
+    map[part.type] = part.value;
+  }
+  // `hour: 2-digit` con `hour12:false` puede devolver "24" a medianoche en
+  // algunas implementaciones — normalizamos a 0.
+  const hour = Number.parseInt(map.hour, 10) % 24;
+  const asUtc = Date.UTC(
+    Number.parseInt(map.year, 10),
+    Number.parseInt(map.month, 10) - 1,
+    Number.parseInt(map.day, 10),
+    hour,
+    Number.parseInt(map.minute, 10),
+    Number.parseInt(map.second, 10),
+  );
+  return Math.round((asUtc - reference.getTime()) / 60_000);
+}
+
 export function calculateAge(
   birthDate: IsoDateString,
   referenceDate: Date = new Date(),

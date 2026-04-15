@@ -22,6 +22,7 @@ model Organization {
   deletedBy        String?
   clinicalEvents   ClinicalHistoryEvent[]
   agendaEvents     ResidentAgendaEvent[]
+  agendaSeries     ResidentAgendaSeries[]
   observationEntries ResidentObservationEntry[]
   observations     ResidentObservation[]
   medicationExecutions MedicationExecution[]
@@ -53,6 +54,7 @@ model Facility {
   deletedBy        String?
   clinicalEvents   ClinicalHistoryEvent[]
   agendaEvents     ResidentAgendaEvent[]
+  agendaSeries     ResidentAgendaSeries[]
   medicationExecutions MedicationExecution[]
   medicationOrders MedicationOrder[]
   membershipScopes MembershipFacilityScope[]
@@ -221,6 +223,7 @@ model Resident {
   deletedBy              String?
   clinicalEvents         ClinicalHistoryEvent[]
   agendaEvents           ResidentAgendaEvent[]
+  agendaSeries           ResidentAgendaSeries[]
   observationEntries     ResidentObservationEntry[]
   observations           ResidentObservation[]
   facility               Facility               @relation(fields: [facilityId], references: [id], onDelete: Restrict)
@@ -459,6 +462,60 @@ model ResidentAgendaEvent {
   @@index([organizationId, scheduledAt, deletedAt])
   @@index([residentId, scheduledAt, deletedAt])
   @@index([deletedAt])
+}
+
+/// Regla de recurrencia de la agenda del residente. Cada fila expresa "este
+/// evento se repite según `recurrenceType` a la hora `timeOfDay` desde
+/// `startsOn` hasta `endsOn` (o indefinidamente)". Las ocurrencias concretas
+/// se expanden al listar; no se materializan.
+model ResidentAgendaSeries {
+  id                   String                          @id @default(uuid()) @db.Uuid
+  organizationId       String                          @db.Uuid
+  facilityId           String?                         @db.Uuid
+  residentId           String                          @db.Uuid
+  title                String
+  description          String?
+  recurrenceType       String
+  recurrenceDaysOfWeek Int[]                           @default([])
+  timeOfDay            String
+  startsOn             DateTime                        @db.Date
+  endsOn               DateTime?                       @db.Date
+  createdAt            DateTime
+  createdBy            String
+  updatedAt            DateTime
+  updatedBy            String
+  deletedAt            DateTime?
+  deletedBy            String?
+  facility             Facility?                       @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  organization         Organization                    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  resident             Resident                        @relation(fields: [residentId], references: [id], onDelete: Restrict)
+  exceptions           ResidentAgendaSeriesException[]
+
+  @@index([organizationId, deletedAt])
+  @@index([residentId, deletedAt])
+  @@index([deletedAt])
+}
+
+/// Excepción puntual de una serie para una fecha específica: skip (saltear
+/// la ocurrencia de ese día) u override (reemplazar título/descripción y/o
+/// reprogramar a otra hora). Un único par (serie, fecha) puede tener una
+/// sola excepción.
+model ResidentAgendaSeriesException {
+  id                   String               @id @default(uuid()) @db.Uuid
+  seriesId             String               @db.Uuid
+  occurrenceDate       DateTime             @db.Date
+  action               String
+  overrideTitle        String?
+  overrideDescription  String?
+  overrideScheduledAt  DateTime?
+  createdAt            DateTime
+  createdBy            String
+  updatedAt            DateTime
+  updatedBy            String
+  series               ResidentAgendaSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@unique([seriesId, occurrenceDate])
+  @@index([seriesId])
 }
 
 model StaffSchedule {

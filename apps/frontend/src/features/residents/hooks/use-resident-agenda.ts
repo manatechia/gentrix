@@ -4,6 +4,11 @@ import type {
   ResidentAgendaEvent,
   ResidentAgendaEventCreateInput,
   ResidentAgendaEventUpdateInput,
+  ResidentAgendaOccurrence,
+  ResidentAgendaOccurrenceOverrideInput,
+  ResidentAgendaSeries,
+  ResidentAgendaSeriesCreateInput,
+  ResidentAgendaSeriesUpdateInput,
 } from '@gentrix/shared-types';
 
 import {
@@ -14,34 +19,34 @@ import { useAuthSession } from '../../auth/hooks/use-auth-session';
 import * as residentsService from '../services/residents-service';
 
 /**
- * Estado y mutaciones de la agenda del residente (próximos eventos).
- *
- * Mantiene la lista filtrada (sólo futuros) y ordenada ascendente. El backend
- * ya garantiza ambos, pero re-aplicamos del lado cliente para mantener
- * consistencia después de mutaciones optimistas.
+ * Orquesta el listado y las mutaciones de la agenda del residente.
+ * La lista cargada representa las ocurrencias del día (mix de eventos one-off
+ * y series recurrentes expandidas). Las mutaciones cubren ambos mundos:
+ * eventos aislados, series (reglas completas) y excepciones por ocurrencia.
  */
 export function useResidentAgenda(residentId: string | undefined) {
   const { logout, status, token } = useAuthSession();
-  const [events, setEvents] = useState<ResidentAgendaEvent[]>([]);
+  const [occurrences, setOccurrences] = useState<ResidentAgendaOccurrence[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  // 'create' durante la creación, el eventId durante edición/borrado. null en reposo.
+  // key identifies busy item:
+  //   'create-event' | 'create-series' | `event:${id}` | `series:${id}` | `occurrence:${seriesId}:${date}`
   const [activeMutationId, setActiveMutationId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [noticeTone, setNoticeTone] = useState<'success' | 'error'>('success');
 
   const load = useCallback(async (): Promise<void> => {
     if (!residentId || !token) {
-      setEvents([]);
+      setOccurrences([]);
       setIsLoading(false);
       return;
     }
     setIsLoading(true);
     setError(null);
     try {
-      const payload = await residentsService.getResidentAgendaEvents(residentId);
-      setEvents(sortUpcoming(unwrapEnvelope(payload)));
+      const payload = await residentsService.getResidentAgendaOccurrences(residentId);
+      setOccurrences(unwrapEnvelope(payload));
     } catch (caught) {
       const message = getApiErrorMessage(
         caught,
@@ -59,135 +64,222 @@ export function useResidentAgenda(residentId: string | undefined) {
 
   useEffect(() => {
     if (status !== 'authenticated' || !token) {
-      setEvents([]);
+      setOccurrences([]);
       setIsLoading(true);
       return;
     }
     void load();
   }, [load, status, token]);
 
-  const create = useCallback(
+  // Helper para envolver la mutación con loading/notice/reload.
+  async function withMutation<T>(
+    mutationId: string,
+    successNotice: string,
+    errorFallback: string,
+    fn: () => Promise<T>,
+  ): Promise<T | null> {
+    if (!residentId || !token) return null;
+    setIsSaving(true);
+    setActiveMutationId(mutationId);
+    setNotice(null);
+    try {
+      const result = await fn();
+      await load();
+      setNoticeTone('success');
+      setNotice(successNotice);
+      return result;
+    } catch (caught) {
+      const message = getApiErrorMessage(caught, errorFallback);
+      if (message === 'Unauthorized.') {
+        await logout();
+        return null;
+      }
+      setNoticeTone('error');
+      setNotice(message);
+      return null;
+    } finally {
+      setIsSaving(false);
+      setActiveMutationId(null);
+    }
+  }
+
+  const createEvent = useCallback(
     async (
       input: ResidentAgendaEventCreateInput,
     ): Promise<ResidentAgendaEvent | null> => {
-      if (!residentId || !token) {
-        return null;
-      }
-      setIsSaving(true);
-      setActiveMutationId('create');
-      setNotice(null);
-      try {
-        const payload = await residentsService.createResidentAgendaEvent(
-          residentId,
-          input,
-        );
-        const created = unwrapEnvelope(payload);
-        setEvents((current) => sortUpcoming([...current, created]));
-        setNoticeTone('success');
-        setNotice('Evento agendado correctamente.');
-        return created;
-      } catch (caught) {
-        const message = getApiErrorMessage(
-          caught,
-          'No pude guardar el evento de agenda.',
-        );
-        if (message === 'Unauthorized.') {
-          await logout();
-          return null;
-        }
-        setNoticeTone('error');
-        setNotice(message);
-        return null;
-      } finally {
-        setIsSaving(false);
-        setActiveMutationId(null);
-      }
+      return withMutation(
+        'create-event',
+        'Evento agendado correctamente.',
+        'No pude guardar el evento.',
+        async () => {
+          const payload = await residentsService.createResidentAgendaEvent(
+            residentId as string,
+            input,
+          );
+          return unwrapEnvelope(payload);
+        },
+      );
     },
-    [logout, residentId, token],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [residentId, token],
   );
 
-  const update = useCallback(
+  const updateEvent = useCallback(
     async (
       eventId: string,
       input: ResidentAgendaEventUpdateInput,
     ): Promise<ResidentAgendaEvent | null> => {
-      if (!residentId || !token) {
-        return null;
-      }
-      setIsSaving(true);
-      setActiveMutationId(eventId);
-      setNotice(null);
-      try {
-        const payload = await residentsService.updateResidentAgendaEvent(
-          residentId,
-          eventId,
-          input,
-        );
-        const updated = unwrapEnvelope(payload);
-        setEvents((current) =>
-          sortUpcoming(
-            current.map((event) => (event.id === updated.id ? updated : event)),
-          ),
-        );
-        setNoticeTone('success');
-        setNotice('Evento actualizado correctamente.');
-        return updated;
-      } catch (caught) {
-        const message = getApiErrorMessage(
-          caught,
-          'No pude actualizar el evento de agenda.',
-        );
-        if (message === 'Unauthorized.') {
-          await logout();
-          return null;
-        }
-        setNoticeTone('error');
-        setNotice(message);
-        return null;
-      } finally {
-        setIsSaving(false);
-        setActiveMutationId(null);
-      }
+      return withMutation(
+        `event:${eventId}`,
+        'Evento actualizado.',
+        'No pude actualizar el evento.',
+        async () => {
+          const payload = await residentsService.updateResidentAgendaEvent(
+            residentId as string,
+            eventId,
+            input,
+          );
+          return unwrapEnvelope(payload);
+        },
+      );
     },
-    [logout, residentId, token],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [residentId, token],
   );
 
-  const remove = useCallback(
+  const deleteEvent = useCallback(
     async (eventId: string): Promise<boolean> => {
-      if (!residentId || !token) {
-        return false;
-      }
-      setIsSaving(true);
-      setActiveMutationId(eventId);
-      setNotice(null);
-      try {
-        await residentsService.deleteResidentAgendaEvent(residentId, eventId);
-        setEvents((current) => current.filter((event) => event.id !== eventId));
-        setNoticeTone('success');
-        setNotice('Evento eliminado.');
-        return true;
-      } catch (caught) {
-        const message = getApiErrorMessage(
-          caught,
-          'No pude eliminar el evento de agenda.',
-        );
-        if (message === 'Unauthorized.') {
-          await logout();
-          return false;
-        }
-        setNoticeTone('error');
-        setNotice(message);
-        return false;
-      } finally {
-        setIsSaving(false);
-        setActiveMutationId(null);
-      }
+      const result = await withMutation(
+        `event:${eventId}`,
+        'Evento eliminado.',
+        'No pude eliminar el evento.',
+        async () => {
+          await residentsService.deleteResidentAgendaEvent(
+            residentId as string,
+            eventId,
+          );
+          return true;
+        },
+      );
+      return result ?? false;
     },
-    [logout, residentId, token],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [residentId, token],
+  );
+
+  const createSeries = useCallback(
+    async (
+      input: ResidentAgendaSeriesCreateInput,
+    ): Promise<ResidentAgendaSeries | null> => {
+      return withMutation(
+        'create-series',
+        'Serie recurrente creada.',
+        'No pude crear la serie.',
+        async () => {
+          const payload = await residentsService.createResidentAgendaSeries(
+            residentId as string,
+            input,
+          );
+          return unwrapEnvelope(payload);
+        },
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [residentId, token],
+  );
+
+  const updateSeries = useCallback(
+    async (
+      seriesId: string,
+      input: ResidentAgendaSeriesUpdateInput,
+    ): Promise<ResidentAgendaSeries | null> => {
+      return withMutation(
+        `series:${seriesId}`,
+        'Serie actualizada.',
+        'No pude actualizar la serie.',
+        async () => {
+          const payload = await residentsService.updateResidentAgendaSeries(
+            residentId as string,
+            seriesId,
+            input,
+          );
+          return unwrapEnvelope(payload);
+        },
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [residentId, token],
+  );
+
+  const deleteSeries = useCallback(
+    async (seriesId: string): Promise<boolean> => {
+      const result = await withMutation(
+        `series:${seriesId}`,
+        'Serie eliminada.',
+        'No pude eliminar la serie.',
+        async () => {
+          await residentsService.deleteResidentAgendaSeries(
+            residentId as string,
+            seriesId,
+          );
+          return true;
+        },
+      );
+      return result ?? false;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [residentId, token],
+  );
+
+  const skipOccurrence = useCallback(
+    async (seriesId: string, occurrenceDate: string): Promise<boolean> => {
+      const result = await withMutation(
+        `occurrence:${seriesId}:${occurrenceDate}`,
+        'Ocurrencia de hoy eliminada.',
+        'No pude saltear la ocurrencia.',
+        async () => {
+          await residentsService.skipResidentAgendaOccurrence(
+            residentId as string,
+            seriesId,
+            occurrenceDate,
+          );
+          return true;
+        },
+      );
+      return result ?? false;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [residentId, token],
+  );
+
+  const overrideOccurrence = useCallback(
+    async (
+      seriesId: string,
+      occurrenceDate: string,
+      input: ResidentAgendaOccurrenceOverrideInput,
+    ): Promise<boolean> => {
+      const result = await withMutation(
+        `occurrence:${seriesId}:${occurrenceDate}`,
+        'Ocurrencia de hoy actualizada.',
+        'No pude actualizar la ocurrencia.',
+        async () => {
+          await residentsService.overrideResidentAgendaOccurrence(
+            residentId as string,
+            seriesId,
+            occurrenceDate,
+            input,
+          );
+          return true;
+        },
+      );
+      return result ?? false;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [residentId, token],
   );
 
   return {
-    events,
+    occurrences,
     isLoading,
     error,
     isSaving,
@@ -195,19 +287,13 @@ export function useResidentAgenda(residentId: string | undefined) {
     notice,
     noticeTone,
     reload: load,
-    handleCreate: create,
-    handleUpdate: update,
-    handleDelete: remove,
+    handleEventCreate: createEvent,
+    handleEventUpdate: updateEvent,
+    handleEventDelete: deleteEvent,
+    handleSeriesCreate: createSeries,
+    handleSeriesUpdate: updateSeries,
+    handleSeriesDelete: deleteSeries,
+    handleOccurrenceSkip: skipOccurrence,
+    handleOccurrenceOverride: overrideOccurrence,
   };
-}
-
-function sortUpcoming(events: ResidentAgendaEvent[]): ResidentAgendaEvent[] {
-  const now = Date.now();
-  return [...events]
-    .filter((event) => new Date(event.scheduledAt).getTime() >= now)
-    .sort(
-      (left, right) =>
-        new Date(left.scheduledAt).getTime() -
-        new Date(right.scheduledAt).getTime(),
-    );
 }
