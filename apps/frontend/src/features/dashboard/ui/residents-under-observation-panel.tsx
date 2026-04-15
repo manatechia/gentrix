@@ -50,18 +50,43 @@ export function ResidentsUnderObservationPanel({
     (resident) => resident.careStatus === 'en_observacion',
   );
 
+  if (underObservation.length === 0) {
+    return (
+      <section
+        data-testid="residents-under-observation-panel"
+        className={`${surfaceCardClassName} flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4`}
+      >
+        <span className="flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[rgb(25,95,70)] sm:text-[0.76rem] sm:tracking-[0.16em]">
+          <span
+            className="inline-block h-2 w-2 rounded-full bg-[rgb(25,95,70)]"
+            aria-hidden="true"
+          />
+          En observación
+          <span className="ml-1 font-normal normal-case tracking-normal text-brand-text-secondary">
+            · sin novedades
+          </span>
+        </span>
+        <span
+          className={`${badgeBaseClassName} bg-[rgba(34,124,94,0.14)] text-[rgb(25,95,70)]`}
+        >
+          0
+        </span>
+      </section>
+    );
+  }
+
   return (
     <section
-      className={`${surfaceCardClassName} grid gap-4`}
+      className={`${surfaceCardClassName} grid gap-3 sm:gap-4`}
       data-testid="residents-under-observation-panel"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="grid gap-1">
-          <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-            En observacion
+          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-brand-primary sm:text-[0.76rem] sm:tracking-[0.16em]">
+            En observación
           </span>
-          <p className="max-w-[60ch] leading-[1.55] text-brand-text-secondary">
-            Residentes que requieren atencion reforzada del equipo. Hace click
+          <p className="hidden max-w-[60ch] text-[0.86rem] leading-[1.45] text-brand-text-secondary sm:block sm:text-base sm:leading-[1.55]">
+            Residentes que requieren atención reforzada del equipo. Hacé click
             para abrir la ficha y registrar seguimiento o quitarlos del estado.
           </p>
         </div>
@@ -72,13 +97,8 @@ export function ResidentsUnderObservationPanel({
         </span>
       </div>
 
-      {underObservation.length === 0 ? (
-        <article className="rounded-[22px] border border-dashed border-[rgba(0,102,132,0.22)] bg-white/70 px-4 py-4 text-brand-text-secondary">
-          No hay residentes en observacion en este momento.
-        </article>
-      ) : (
-        <ul className="grid gap-2.5">
-          {underObservation.map((resident) => (
+      <ul className="grid gap-2.5">
+        {underObservation.map((resident) => (
             <li key={resident.id}>
               <Link
                 to={`/residentes/${resident.id}`}
@@ -115,8 +135,7 @@ export function ResidentsUnderObservationPanel({
               </Link>
             </li>
           ))}
-        </ul>
-      )}
+      </ul>
     </section>
   );
 }

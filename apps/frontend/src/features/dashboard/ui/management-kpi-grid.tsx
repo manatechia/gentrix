@@ -1,6 +1,7 @@
 import type { DashboardSnapshot } from '@gentrix/shared-types';
 
 type Semaphore = 'good' | 'attention' | 'critical' | 'neutral';
+type Tone = 'teal' | 'violet' | Semaphore;
 
 interface ManagementKpi {
   id: string;
@@ -8,23 +9,35 @@ interface ManagementKpi {
   value: string | number;
   helper: string;
   semaphore: Semaphore;
+  tone: Tone;
   testId: string;
 }
 
-const SEMAPHORE_STYLES: Record<Semaphore, string> = {
-  good: 'border-l-[rgb(25,95,70)] bg-[rgba(34,124,94,0.06)]',
-  attention:
-    'border-l-[rgb(150,90,10)] bg-[rgba(212,140,18,0.06)]',
-  critical:
-    'border-l-[rgb(168,43,17)] bg-[rgba(168,43,17,0.06)]',
-  neutral: 'border-l-[rgba(0,102,132,0.25)] bg-white/92',
+const TONE_STYLES: Record<Tone, string> = {
+  good: 'border-l-[rgb(25,95,70)] bg-[rgba(34,124,94,0.14)]',
+  attention: 'border-l-[rgb(150,90,10)] bg-[rgba(212,140,18,0.18)]',
+  critical: 'border-l-[rgb(168,43,17)] bg-[rgba(168,43,17,0.14)]',
+  neutral: 'border-l-[rgba(0,102,132,0.35)] bg-[rgba(0,102,132,0.08)]',
+  teal: 'border-l-[rgb(0,120,148)] bg-[rgba(0,120,148,0.14)]',
+  violet: 'border-l-[rgb(108,86,168)] bg-[rgba(108,86,168,0.14)]',
 };
 
-const SEMAPHORE_DOT: Record<Semaphore, string> = {
+const TONE_DOT: Record<Tone, string> = {
   good: 'bg-[rgb(25,95,70)]',
   attention: 'bg-[rgb(150,90,10)]',
   critical: 'bg-[rgb(168,43,17)]',
   neutral: 'bg-brand-primary',
+  teal: 'bg-[rgb(0,120,148)]',
+  violet: 'bg-[rgb(108,86,168)]',
+};
+
+const TONE_LABEL: Record<Tone, string> = {
+  good: 'text-[rgb(25,95,70)]',
+  attention: 'text-[rgb(150,90,10)]',
+  critical: 'text-[rgb(130,44,25)]',
+  neutral: 'text-brand-primary',
+  teal: 'text-[rgb(0,120,148)]',
+  violet: 'text-[rgb(92,72,150)]',
 };
 
 function classifyOccupancy(rate: number): Semaphore {
@@ -44,6 +57,9 @@ function buildKpis(dashboard: DashboardSnapshot): ManagementKpi[] {
     (resident) => resident.careStatus === 'en_observacion',
   ).length;
 
+  const occupancySemaphore = classifyOccupancy(dashboard.summary.occupancyRate);
+  const observationSemaphore = classifyObservationCount(inObservation);
+
   return [
     {
       id: 'residents-total',
@@ -51,6 +67,7 @@ function buildKpis(dashboard: DashboardSnapshot): ManagementKpi[] {
       value: dashboard.summary.residentCount,
       helper: 'total activos',
       semaphore: 'neutral',
+      tone: 'teal',
       testId: 'management-kpi-residents-total',
     },
     {
@@ -58,7 +75,8 @@ function buildKpis(dashboard: DashboardSnapshot): ManagementKpi[] {
       label: 'Ocupación',
       value: `${dashboard.summary.occupancyRate}%`,
       helper: 'general',
-      semaphore: classifyOccupancy(dashboard.summary.occupancyRate),
+      semaphore: occupancySemaphore,
+      tone: occupancySemaphore,
       testId: 'management-kpi-occupancy',
     },
     {
@@ -66,7 +84,8 @@ function buildKpis(dashboard: DashboardSnapshot): ManagementKpi[] {
       label: 'En observación',
       value: inObservation,
       helper: inObservation === 1 ? 'residente' : 'residentes',
-      semaphore: classifyObservationCount(inObservation),
+      semaphore: observationSemaphore,
+      tone: observationSemaphore,
       testId: 'management-kpi-in-observation',
     },
     {
@@ -75,6 +94,7 @@ function buildKpis(dashboard: DashboardSnapshot): ManagementKpi[] {
       value: dashboard.summary.staffOnDuty,
       helper: 'activos',
       semaphore: 'neutral',
+      tone: 'violet',
       testId: 'management-kpi-staff-on-duty',
     },
   ];
@@ -90,25 +110,25 @@ export function ManagementKpiGrid({ dashboard }: ManagementKpiGridProps) {
   return (
     <section
       data-testid="management-kpi-grid"
-      className="grid gap-3 sm:grid-cols-2 min-[1100px]:grid-cols-4"
+      className="grid grid-cols-2 gap-2 sm:gap-3 min-[1100px]:grid-cols-4"
     >
       {kpis.map((kpi) => (
         <article
           key={kpi.id}
           data-testid={kpi.testId}
-          className={`grid gap-1 rounded-[22px] border border-[rgba(0,102,132,0.08)] border-l-4 px-4 py-3 shadow-panel backdrop-blur-sm ${SEMAPHORE_STYLES[kpi.semaphore]}`}
+          className={`grid gap-0.5 rounded-2xl border border-[rgba(0,102,132,0.08)] border-l-4 px-3 py-2 shadow-panel backdrop-blur-sm sm:gap-1 sm:rounded-[22px] sm:px-4 sm:py-3 ${TONE_STYLES[kpi.tone]}`}
         >
-          <span className="flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-brand-primary">
+          <span className={`flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.1em] sm:gap-2 sm:text-[0.72rem] sm:tracking-[0.14em] ${TONE_LABEL[kpi.tone]}`}>
             <span
-              className={`inline-block h-2 w-2 rounded-full ${SEMAPHORE_DOT[kpi.semaphore]}`}
+              className={`inline-block h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2 ${TONE_DOT[kpi.tone]}`}
               aria-hidden="true"
             />
             {kpi.label}
           </span>
-          <strong className="text-[1.75rem] font-bold leading-none tracking-[-0.02em] text-brand-text">
+          <strong className="text-[1.25rem] font-bold leading-none tracking-[-0.02em] text-brand-text sm:text-[1.75rem]">
             {kpi.value}
           </strong>
-          <span className="text-[0.82rem] text-brand-text-secondary">
+          <span className="text-[0.72rem] text-brand-text-secondary sm:text-[0.82rem]">
             {kpi.helper}
           </span>
         </article>

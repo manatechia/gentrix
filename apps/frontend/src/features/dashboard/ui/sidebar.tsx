@@ -79,16 +79,7 @@ export function Sidebar({
         </button>
       </div>
 
-      <div className="shrink-0 grid gap-1.5 rounded-[22px] border border-white/10 bg-white/8 p-4">
-        <span className="text-[0.76rem] uppercase tracking-[0.16em] text-white/72">
-          Residentes
-        </span>
-        <strong className="text-[1.8rem] leading-none tracking-[-0.06em]">
-          {residentCount}
-        </strong>
-      </div>
-
-      <nav className="grid min-h-0 flex-1 gap-2 overflow-y-auto pr-1">
+      <nav className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1 content-start">
         {navigationSections.map((section) => (
           <NavLink
             key={section.label}

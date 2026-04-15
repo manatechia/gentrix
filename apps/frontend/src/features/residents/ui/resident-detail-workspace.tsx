@@ -46,6 +46,34 @@ import { ResidentAgendaPanel } from './resident-agenda-panel';
 import { ResidentLiveProfilePanel } from './resident-live-profile-panel';
 import { ResidentObservationsPanel } from './resident-observations-panel';
 
+/**
+ * Filtra las notas de observación para mostrar únicamente las que pertenecen
+ * al "episodio" de observación actual. Si el residente no está en observación,
+ * devolvemos una lista vacía: las notas siguen persistidas en el backend y
+ * se expondrán más adelante desde una vista de historial. Si está en
+ * observación, mostramos sólo las creadas desde que entró al estado.
+ */
+function filterCurrentObservationNotes(
+  notes: ResidentObservationNote[],
+  resident: ResidentDetail,
+): ResidentObservationNote[] {
+  if (resident.careStatus !== 'en_observacion') {
+    return [];
+  }
+  const sinceIso = resident.careStatusChangedAt;
+  if (!sinceIso) {
+    return notes;
+  }
+  const since = new Date(sinceIso).getTime();
+  if (Number.isNaN(since)) {
+    return notes;
+  }
+  return notes.filter((note) => {
+    const createdAt = new Date(note.audit.createdAt).getTime();
+    return !Number.isNaN(createdAt) && createdAt >= since;
+  });
+}
+
 interface ResidentDetailWorkspaceProps {
   screenState: DashboardScreenState;
   session: AuthSession;
@@ -321,7 +349,7 @@ export function ResidentDetailWorkspace({
           />
 
           <ResidentObservationsPanel
-            notes={observationNotes}
+            notes={filterCurrentObservationNotes(observationNotes, resident)}
             isUnderObservation={resident.careStatus === 'en_observacion'}
             isSaving={isSavingObservationNote}
             activeMutationId={activeObservationMutationId}
@@ -329,6 +357,12 @@ export function ResidentDetailWorkspace({
             noticeTone={observationNoticeTone}
             onCreate={onObservationNoteCreate}
             onDelete={onObservationNoteDelete}
+            onClearObservation={
+              canManageRecords
+                ? () => onCareStatusChange('normal')
+                : undefined
+            }
+            isClearingObservation={isUpdatingCareStatus}
           />
 
           <ResidentLiveProfilePanel profile={residentLiveProfile} />
