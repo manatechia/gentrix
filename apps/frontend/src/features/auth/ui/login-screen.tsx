@@ -11,6 +11,7 @@ import {
   inputClassName,
   secondaryButtonClassName,
 } from '../../../shared/ui/class-names';
+import { PasswordInput } from '../../../shared/ui/password-input';
 
 interface LoginScreenProps {
   isCheckingSession: boolean;
@@ -211,10 +212,8 @@ export function LoginScreen({
                       <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                         Contrasena
                       </span>
-                      <input
+                      <PasswordInput
                         data-testid="login-password-input"
-                        className={inputClassName}
-                        type="password"
                         autoComplete="current-password"
                         name="password"
                         placeholder="Ingresa tu contrasena"

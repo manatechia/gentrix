@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from 'react';
 
 import {
-  inputClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   surfaceCardClassName,
 } from '../../../shared/ui/class-names';
+import { PasswordInput } from '../../../shared/ui/password-input';
 import { getApiErrorMessage } from '../../../shared/lib/api-envelope';
 import { changeOwnPassword } from '../../users/services/users-service';
 import { validatePasswordPolicy } from '../lib/password-policy';
@@ -118,10 +118,8 @@ export function ForcePasswordChangeScreen({
           <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
             Contraseña actual
           </span>
-          <input
+          <PasswordInput
             data-testid="force-password-change-current-input"
-            className={inputClassName}
-            type="password"
             autoComplete="current-password"
             value={currentPassword}
             onChange={(event) => setCurrentPassword(event.target.value)}
@@ -133,10 +131,8 @@ export function ForcePasswordChangeScreen({
           <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
             Nueva contraseña
           </span>
-          <input
+          <PasswordInput
             data-testid="force-password-change-new-input"
-            className={inputClassName}
-            type="password"
             autoComplete="new-password"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
@@ -148,10 +144,8 @@ export function ForcePasswordChangeScreen({
           <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
             Confirmar nueva contraseña
           </span>
-          <input
+          <PasswordInput
             data-testid="force-password-change-confirm-input"
-            className={inputClassName}
-            type="password"
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}

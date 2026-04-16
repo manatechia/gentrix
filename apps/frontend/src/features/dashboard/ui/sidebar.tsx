@@ -38,11 +38,13 @@ export function Sidebar({
     return section.visibleTo.some((role) => role === session.user.role);
   });
 
+  const isHiddenOnMobile = isMobileViewport && !isMobileOpen;
+
   return (
     <aside
       id="workspace-sidebar"
       data-testid="workspace-sidebar"
-      aria-hidden={isMobileViewport ? !isMobileOpen : undefined}
+      inert={isHiddenOnMobile}
       className={[
         'flex min-h-0 flex-col gap-3.5 overflow-x-hidden bg-[linear-gradient(180deg,rgba(47,79,79,0.98),rgba(37,63,63,0.98))] px-[18px] py-[22px] text-white shadow-sidebar',
         'min-[1181px]:sticky min-[1181px]:top-0 min-[1181px]:z-10 min-[1181px]:h-screen min-[1181px]:max-h-screen min-[1181px]:overflow-hidden min-[1181px]:rounded-r-[28px]',
@@ -140,11 +142,17 @@ export function Sidebar({
       </nav>
 
       <div className="mt-auto shrink-0 grid gap-3 border-t border-white/12 pt-3.5">
-        <div className="grid gap-1.5 rounded-[22px] border border-white/12 bg-white/8 px-4 py-3.5">
-          <strong className="text-[0.98rem] font-semibold text-white">
+        <div className="grid min-w-0 gap-1.5 rounded-[22px] border border-white/12 bg-white/8 px-4 py-3.5">
+          <strong
+            className="truncate text-[0.98rem] font-semibold text-white"
+            title={session.user.fullName}
+          >
             {session.user.fullName}
           </strong>
-          <span className="text-[0.94rem] text-white/74">
+          <span
+            className="truncate text-[0.94rem] text-white/74"
+            title={session.user.email}
+          >
             {session.user.email}
           </span>
           <span className="inline-flex min-h-8 w-fit items-center justify-center rounded-full bg-[rgba(171,230,240,0.16)] px-3 text-[0.78rem] font-semibold uppercase tracking-[0.04em] text-[#d8f5fb]">
