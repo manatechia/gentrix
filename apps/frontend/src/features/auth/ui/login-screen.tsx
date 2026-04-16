@@ -7,10 +7,7 @@ import {
   demoCredentials,
 } from '../constants/demo-credentials';
 import { loginFormSchema } from '../schemas/login-form.schema';
-import {
-  inputClassName,
-  secondaryButtonClassName,
-} from '../../../shared/ui/class-names';
+import { inputClassName } from '../../../shared/ui/class-names';
 import { PasswordInput } from '../../../shared/ui/password-input';
 
 interface LoginScreenProps {
@@ -113,7 +110,11 @@ export function LoginScreen({
             )}
 
             <Formik<AuthLoginRequest>
-              initialValues={demoCredentials}
+              initialValues={
+                import.meta.env.DEV
+                  ? demoCredentials
+                  : { email: '', password: '' }
+              }
               validationSchema={loginFormSchema}
               onSubmit={async (values) => {
                 onClearError();
@@ -138,53 +139,55 @@ export function LoginScreen({
 
                 return (
                   <form className="grid gap-[18px]" onSubmit={handleSubmit}>
-                    <div className="grid gap-3">
-                      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                        Accesos demo
-                      </span>
+                    {import.meta.env.DEV && (
                       <div className="grid gap-3">
-                        {demoAccessOptions.map((option) => {
-                          const isSelected = option.id === selectedAccessId;
+                        <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
+                          Accesos demo
+                        </span>
+                        <div className="grid gap-3">
+                          {demoAccessOptions.map((option) => {
+                            const isSelected = option.id === selectedAccessId;
 
-                          return (
-                            <button
-                              key={option.id}
-                              className={`grid gap-2 rounded-[22px] border px-4 py-4 text-left transition ${
-                                isSelected
-                                  ? 'border-[rgba(0,102,132,0.22)] bg-[rgba(0,102,132,0.08)] shadow-[0_18px_36px_rgba(0,102,132,0.08)]'
-                                  : 'border-[rgba(0,102,132,0.08)] bg-brand-neutral/45 hover:border-[rgba(0,102,132,0.16)] hover:bg-white'
-                              }`}
-                              type="button"
-                              onClick={() => {
-                                onClearError();
-                                setValues(option.credentials);
-                              }}
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="grid gap-1">
-                                  <strong className="text-brand-text">
-                                    {option.label}
-                                  </strong>
-                                  <span className="leading-[1.55] text-brand-text-secondary">
-                                    {option.description}
+                            return (
+                              <button
+                                key={option.id}
+                                className={`grid gap-2 rounded-[22px] border px-4 py-4 text-left transition ${
+                                  isSelected
+                                    ? 'border-[rgba(0,102,132,0.22)] bg-[rgba(0,102,132,0.08)] shadow-[0_18px_36px_rgba(0,102,132,0.08)]'
+                                    : 'border-[rgba(0,102,132,0.08)] bg-brand-neutral/45 hover:border-[rgba(0,102,132,0.16)] hover:bg-white'
+                                }`}
+                                type="button"
+                                onClick={() => {
+                                  onClearError();
+                                  setValues(option.credentials);
+                                }}
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="grid gap-1">
+                                    <strong className="text-brand-text">
+                                      {option.label}
+                                    </strong>
+                                    <span className="leading-[1.55] text-brand-text-secondary">
+                                      {option.description}
+                                    </span>
+                                  </div>
+                                  <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-brand-primary">
+                                    {isSelected ? 'Activo' : 'Demo'}
                                   </span>
                                 </div>
-                                <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-brand-primary">
-                                  {isSelected ? 'Activo' : 'Demo'}
+                                <span className="text-[0.9rem] leading-[1.55] text-brand-text-secondary">
+                                  {option.capabilities}
                                 </span>
-                              </div>
-                              <span className="text-[0.9rem] leading-[1.55] text-brand-text-secondary">
-                                {option.capabilities}
-                              </span>
-                              <div className="grid gap-1 text-[0.9rem] text-brand-secondary">
-                                <code>{option.credentials.email}</code>
-                                <code>{option.credentials.password}</code>
-                              </div>
-                            </button>
-                          );
-                        })}
+                                <div className="grid gap-1 text-[0.9rem] text-brand-secondary">
+                                  <code>{option.credentials.email}</code>
+                                  <code>{option.credentials.password}</code>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     <label className="grid gap-2.5">
                       <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
@@ -252,44 +255,10 @@ export function LoginScreen({
                     >
                       {isSubmitting ? 'Ingresando...' : 'Ingresar'}
                     </button>
-
-                    <button
-                      data-testid="login-demo-button"
-                      className={`${secondaryButtonClassName} mt-2`}
-                      type="button"
-                      onClick={() => {
-                        onClearError();
-                        setValues(demoAccessOptions[0].credentials);
-                      }}
-                    >
-                      Cargar acceso admin
-                    </button>
                   </form>
                 );
               }}
             </Formik>
-
-            <div className="grid gap-3.5 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-[linear-gradient(180deg,rgba(245,247,247,0.88),#fff)] p-[18px] shadow-panel">
-              <div>
-                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-                  Diferencias por rol
-                </span>
-                <p className="mt-2 leading-[1.6] text-brand-text-secondary">
-                  Admin gestiona usuarios y configuracion sensible. Director de
-                  salud opera residentes y medicacion sin panel admin.
-                  Enfermeria, asistentes y externos trabajan sobre la vista
-                  operativa del turno.
-                </p>
-              </div>
-              <div>
-                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-                  Acceso por defecto
-                </span>
-                <code className="mt-1 block font-mono text-brand-secondary">
-                  {demoCredentials.email}
-                </code>
-              </div>
-            </div>
           </div>
 
           <div className="flex flex-wrap justify-between gap-3 text-[0.78rem] uppercase tracking-[0.06em] text-brand-text-muted max-sm:flex-col">
