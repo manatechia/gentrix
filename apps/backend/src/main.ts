@@ -11,12 +11,29 @@ import { ForcePasswordChangeGuard } from './common/auth/force-password-change.gu
 import { SessionGuard } from './common/auth/session.guard';
 import { AppModule } from './app.module';
 
+function resolveCorsOrigin():
+  | true
+  | string[]
+  | ((origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void) {
+  // En dev (sin CORS_ORIGIN seteada) reflejamos cualquier origen para no
+  // pelear con localhost:4200, host.docker.internal, etc. En produccion
+  // exigimos lista blanca explicita por env.
+  const raw = process.env.CORS_ORIGIN?.trim();
+  if (!raw) {
+    return true;
+  }
+  if (raw === '*') {
+    return true;
+  }
+  return raw.split(',').map((value) => value.trim()).filter(Boolean);
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
     cors: {
-      origin: true,
-      methods: ['GET', 'POST', 'OPTIONS'],
+      origin: resolveCorsOrigin(),
+      methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     },
   });

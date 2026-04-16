@@ -1,0 +1,39 @@
+# Render Blueprint para el backend Nest de Gentrix.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Notas:
+# - Usa pnpm a traves de corepack (mismo packageManager que el repo).
+# - El build corre `prisma migrate deploy` para mantener la DB de Supabase
+#   en sync con el schema en cada release. Si preferis migraciones manuales,
+#   sacar esa pieza del buildCommand.
+# - DATABASE_URL, DIRECT_URL y CORS_ORIGIN se setean como Environment
+#   Variables desde el dashboard de Render (no se commitean).
+# - El plan free duerme tras 15 min de inactividad y tarda ~30s en despertar.
+#   Cambiar a `starter` o superior para evitar cold starts.
+
+services:
+  - type: web
+    name: gentrix-backend
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: .
+    buildCommand: |
+      corepack enable
+      pnpm install --frozen-lockfile
+      pnpm exec nx run backend:build:production
+      pnpm exec prisma migrate deploy --schema=apps/backend/prisma/schema.prisma
+    startCommand: node dist/apps/backend/main.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AUTO_SEED_DEMO
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
