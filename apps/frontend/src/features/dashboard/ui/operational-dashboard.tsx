@@ -7,14 +7,9 @@ import type {
 } from '@gentrix/shared-types';
 
 import { OperationalHeader } from './operational-header';
-import {
-  OperationalKpiGrid,
-  type OperationalKpi,
-} from './operational-kpi-grid';
 import { PriorityTasksPanel } from './priority-tasks-panel';
 import { QuickObservationModal } from './quick-observation-modal';
 import { ResidentsUnderObservationPanel } from './residents-under-observation-panel';
-import { classifyOccurrenceByTime } from '../lib/shift-time';
 
 interface OperationalDashboardProps {
   session: AuthSession;
@@ -28,8 +23,7 @@ const TASKS_ANCHOR_ID = 'priority-tasks-anchor';
 /**
  * Variante del dashboard para roles operativos (asistente, enfermera).
  * Diseñada para escaneo rápido durante el turno: header con saludo y
- * turno, KPIs compactos, tareas agrupadas por urgencia, residentes en
- * observación.
+ * turno, tareas agrupadas por urgencia, residentes en observación.
  */
 export function OperationalDashboard({
   session,
@@ -44,56 +38,13 @@ export function OperationalDashboard({
   // mucho tiempo, el próximo refresh (manual o del modal) recalcula.
   const now = useMemo(() => new Date(), []);
 
-  const kpis = useMemo<OperationalKpi[]>(() => {
-    const residentsInObservation = dashboard.residents.filter(
-      (resident) => resident.careStatus === 'en_observacion',
-    ).length;
-
-    let nowCount = 0;
-    let soonCount = 0;
-    for (const occurrence of upcomingAgendaOccurrences) {
-      const bucket = classifyOccurrenceByTime(occurrence.scheduledAt, now);
-      if (bucket === 'now') nowCount += 1;
-      if (bucket === 'soon') soonCount += 1;
-    }
-    const upcomingTotal = nowCount + soonCount;
-
-    const medicationAlerts = dashboard.alerts.filter(
-      (alert) => alert.source === 'medication-execution',
-    ).length;
-
-    return [
-      {
-        id: 'in-observation',
-        label: 'En observación',
-        value: residentsInObservation,
-        helper:
-          residentsInObservation === 1 ? 'residente' : 'residentes',
-        testId: 'operational-kpi-in-observation',
-      },
-      {
-        id: 'upcoming',
-        label: 'Próximas 2 h',
-        value: upcomingTotal,
-        helper: nowCount > 0 ? `${nowCount} urgente${nowCount === 1 ? '' : 's'}` : 'tareas a la vista',
-        testId: 'operational-kpi-upcoming',
-      },
-      {
-        id: 'medication-alerts',
-        label: 'Alertas medicación',
-        value: medicationAlerts,
-        helper: medicationAlerts === 0 ? 'sin pendientes' : 'requieren seguimiento',
-        testId: 'operational-kpi-medication-alerts',
-      },
-      {
-        id: 'day-total',
-        label: 'Tareas del día',
-        value: upcomingAgendaOccurrences.length,
-        helper: 'agenda total',
-        testId: 'operational-kpi-day-total',
-      },
-    ];
-  }, [dashboard.residents, dashboard.alerts, upcomingAgendaOccurrences, now]);
+  // Solo mostramos la columna derecha cuando hay algo que mirar: si el
+  // equipo no tiene residentes en observación, no queremos ocupar espacio
+  // con un estado vacío.
+  const hasResidentsUnderObservation = useMemo(
+    () => dashboard.residents.some((r) => r.careStatus === 'en_observacion'),
+    [dashboard.residents],
+  );
 
   const handleObservationSuccess = (message: string) => {
     setNotice(message);
@@ -128,15 +79,21 @@ export function OperationalDashboard({
         </div>
       )}
 
-      <OperationalKpiGrid kpis={kpis} />
-
-      <section className="grid gap-[18px] min-[1181px]:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+      <section
+        className={`grid gap-[18px] ${
+          hasResidentsUnderObservation
+            ? 'min-[1181px]:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]'
+            : ''
+        }`}
+      >
         <PriorityTasksPanel
           occurrences={upcomingAgendaOccurrences}
           now={now}
           anchorId={TASKS_ANCHOR_ID}
         />
-        <ResidentsUnderObservationPanel residents={dashboard.residents} />
+        {hasResidentsUnderObservation && (
+          <ResidentsUnderObservationPanel residents={dashboard.residents} />
+        )}
       </section>
 
       {isObservationModalOpen && (

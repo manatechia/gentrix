@@ -34,7 +34,7 @@ test('admin sees the management dashboard variant', async ({ page }) => {
   ).toHaveCount(0);
 });
 
-test('nurse sees the operational dashboard variant with header and KPIs', async ({
+test('nurse sees the operational dashboard variant with header and tasks', async ({
   page,
 }) => {
   const nurseOption = demoAccessOptions.find((option) => option.id === 'nurse');
@@ -48,7 +48,7 @@ test('nurse sees the operational dashboard variant with header and KPIs', async 
   await expect(
     page.getByTestId('operational-dashboard-shift-label'),
   ).toBeVisible();
-  await expect(page.getByTestId('operational-kpi-grid')).toBeVisible();
+  await expect(page.getByTestId('operational-kpi-grid')).toHaveCount(0);
   await expect(page.getByTestId('priority-tasks-panel')).toBeVisible();
   await expect(
     page.getByTestId('operational-header-new-observation'),

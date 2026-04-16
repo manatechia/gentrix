@@ -80,22 +80,22 @@ export function ResidentsUnderObservationPanel({
       className={`${surfaceCardClassName} grid gap-3 sm:gap-4`}
       data-testid="residents-under-observation-panel"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="grid gap-1">
+      <header className="grid gap-1">
+        <div className="flex items-center justify-between gap-3">
           <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-brand-primary sm:text-[0.76rem] sm:tracking-[0.16em]">
             En observación
           </span>
-          <p className="hidden max-w-[60ch] text-[0.86rem] leading-[1.45] text-brand-text-secondary sm:block sm:text-base sm:leading-[1.55]">
-            Residentes que requieren atención reforzada del equipo. Hacé click
-            para abrir la ficha y registrar seguimiento o quitarlos del estado.
-          </p>
+          <span
+            className={`${badgeBaseClassName} bg-[rgba(212,140,18,0.16)] text-[rgb(150,90,10)]`}
+          >
+            {underObservation.length}
+          </span>
         </div>
-        <span
-          className={`${badgeBaseClassName} bg-[rgba(212,140,18,0.16)] text-[rgb(150,90,10)]`}
-        >
-          {underObservation.length}
-        </span>
-      </div>
+        <p className="hidden max-w-[60ch] text-[0.86rem] leading-[1.45] text-brand-text-secondary sm:block sm:text-base sm:leading-[1.55]">
+          Residentes que requieren atención reforzada del equipo. Hacé click
+          para abrir la ficha y registrar seguimiento o quitarlos del estado.
+        </p>
+      </header>
 
       <ul className="grid gap-2.5">
         {underObservation.map((resident) => (
