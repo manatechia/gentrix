@@ -334,22 +334,21 @@ export function ResidentDetailWorkspace({
                     {chip}
                   </span>
                 ))}
-                {resident.careStatus === 'en_observacion' &&
-                  canManageRecords && (
-                    <button
-                      type="button"
-                      data-testid="resident-clear-observation-button"
-                      className={secondaryButtonClassName}
-                      disabled={isUpdatingCareStatus}
-                      onClick={() => {
-                        void onCareStatusChange('normal');
-                      }}
-                    >
-                      {isUpdatingCareStatus
-                        ? 'Actualizando...'
-                        : 'Quitar de observacion'}
-                    </button>
-                  )}
+                {resident.careStatus === 'en_observacion' && (
+                  <button
+                    type="button"
+                    data-testid="resident-clear-observation-button"
+                    className={secondaryButtonClassName}
+                    disabled={isUpdatingCareStatus}
+                    onClick={() => {
+                      void onCareStatusChange('normal');
+                    }}
+                  >
+                    {isUpdatingCareStatus
+                      ? 'Actualizando...'
+                      : 'Quitar de observacion'}
+                  </button>
+                )}
               </div>
               {careStatusNotice && (
                 <div
@@ -435,11 +434,7 @@ export function ResidentDetailWorkspace({
             noticeTone={observationNoticeTone}
             onCreate={onObservationNoteCreate}
             onDelete={onObservationNoteDelete}
-            onClearObservation={
-              canManageRecords
-                ? () => onCareStatusChange('normal')
-                : undefined
-            }
+            onClearObservation={() => onCareStatusChange('normal')}
             isClearingObservation={isUpdatingCareStatus}
           />
 

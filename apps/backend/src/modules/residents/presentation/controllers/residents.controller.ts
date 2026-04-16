@@ -12,7 +12,10 @@ import {
 } from '@nestjs/common';
 
 import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
-import { assertCanManageResidentRecords } from '../../../../common/auth/role-access';
+import {
+  assertCanManageResidentRecords,
+  assertCanRecordResidentObservations,
+} from '../../../../common/auth/role-access';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { ResidentLiveProfileQueryService } from '../../application/resident-live-profile.query.service';
 import { ResidentsService } from '../../application/residents.service';
@@ -107,13 +110,22 @@ export class ResidentsController {
     );
   }
 
+  /**
+   * Transiciona el `careStatus` del residente (hoy: normal ↔ en_observacion).
+   *
+   * Habilitado para todo el equipo que puede registrar observaciones
+   * (admin, director de salud, enfermería, asistentes): los mismos roles
+   * que pueden poner a un residente en observación a través de la nota
+   * rápida también pueden quitarlo desde su ficha, sin tener que pedirle
+   * al admin que libere el estado.
+   */
   @Patch(':residentId/care-status')
   updateResidentCareStatus(
     @Param('residentId') residentId: string,
     @Body() body: UpdateResidentCareStatusDto,
     @Req() request: RequestWithSession,
   ) {
-    assertCanManageResidentRecords(request.authSession!.user.role);
+    assertCanRecordResidentObservations(request.authSession!.user.role);
     return this.residentsService.setResidentCareStatus(
       residentId,
       body.toStatus,
