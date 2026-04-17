@@ -1,15 +1,15 @@
 import 'reflect-metadata';
 
-import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { json, urlencoded } from 'express';
 
-import { AuthService } from './modules/auth/application/auth.service';
-import { ApiExceptionFilter } from './common/http/api-exception.filter';
-import { ApiEnvelopeInterceptor } from './common/http/api-envelope.interceptor';
+import { AppModule } from './app.module';
 import { ForcePasswordChangeGuard } from './common/auth/force-password-change.guard';
 import { SessionGuard } from './common/auth/session.guard';
-import { AppModule } from './app.module';
+import { ApiEnvelopeInterceptor } from './common/http/api-envelope.interceptor';
+import { ApiExceptionFilter } from './common/http/api-exception.filter';
+import { AuthService } from './modules/auth/application/auth.service';
 
 function resolveCorsOrigin():
   | true

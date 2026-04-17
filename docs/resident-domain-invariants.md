@@ -2,8 +2,7 @@
 
 ## Purpose
 
-This note closes `TASK-000` from `tmp/resident-product-audit/docs/implementation-tasks.md`.
-It defines the minimum invariant we will use when evolving the resident model, its base
+This note defines the minimum invariant we will use when evolving the resident model, its base
 profile, its current state and its event timeline.
 
 ## Core Rule

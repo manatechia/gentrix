@@ -18,10 +18,8 @@ Package manager oficial del repo: `pnpm`.
 ## Documentacion De Arquitectura
 
 - `docs/engineering-working-agreement.md`: decisiones tecnicas y de trabajo confirmadas.
-- `docs/multitenancy-rbac-domain-north.md`: norte de dominio para multi-tenant, RBAC, pacientes, personal y acceso de familiares.
-- `docs/domain-entity-model.md`: propuesta concreta de entidades, relaciones y corte recomendado para implementacion.
-- `docs/prisma-phase-1-design.md`: corte concreto para la primera implementacion en Prisma y estrategia de migracion.
-- `AGENT.md`: contexto operativo y advertencias para no confundir direccion futura con estado actual.
+- `docs/domain-model.md`: modelo de dominio consolidado, estado de implementacion y norte multi-tenant/RBAC/familiares/FHIR.
+- `AGENTS.md`: contexto operativo y advertencias para no confundir direccion futura con estado actual.
 
 ## Comandos
 

@@ -3,13 +3,13 @@
 ## Proposito
 
 Este archivo define el acuerdo de trabajo tecnico para `gentrix`.
-Antes de proponer arquitectura, crear nuevas features o refactorizar, revisar este documento junto con `AGENT.md`.
+Antes de proponer arquitectura, crear nuevas features o refactorizar, revisar este documento junto con `AGENTS.md`.
 Si una decision de codigo entra en conflicto con este archivo, primero pedir confirmacion y luego actualizar la decision aqui.
 
 ## Estado
 
 - Estado actual: en progreso con primeras decisiones confirmadas por el usuario.
-- Fuente de verdad para contexto de negocio: `AGENT.md`.
+- Fuente de verdad para contexto de negocio: `AGENTS.md`.
 - Fuente de verdad para criterios tecnicos y de infraestructura: este archivo.
 - Pendiente: cerrar boundaries de Nx, naming, ownership tecnico y algunos detalles de evolucion.
 - Implementado al 2026-03-26:
@@ -28,7 +28,7 @@ Si una decision de codigo entra en conflicto con este archivo, primero pedir con
 
 1. El usuario responde este cuestionario en bloques.
 2. Las respuestas se convierten en decisiones concretas en este mismo archivo.
-3. Las reglas de negocio estables se resumen en `AGENT.md`.
+3. Las reglas de negocio estables se resumen en `AGENTS.md`.
 4. Cada cambio relevante de arquitectura debe actualizar ambos archivos si afecta tecnica y negocio.
 
 ## Resumen Ejecutivo
@@ -111,11 +111,10 @@ Si una decision de codigo entra en conflicto con este archivo, primero pedir con
 
 ## Norte De Dominio 2026-03-24
 
-- Existe una nota detallada para esta direccion en `docs/multitenancy-rbac-domain-north.md`.
-- Existe una propuesta mas concreta de entidades en `docs/domain-entity-model.md`.
-- Existe una propuesta concreta de primera ola Prisma en `docs/prisma-phase-1-design.md`.
-- Esa nota fija el norte para multi-tenant, RBAC, pacientes, personal y acceso de familiares.
-- El codigo actual todavia no refleja ese modelo; se trata de direccion confirmada antes de implementar.
+- La fuente de verdad del modelo de dominio es `docs/domain-model.md`.
+- Ese documento fija el norte para multi-tenant, RBAC, pacientes, personal y acceso de familiares, e incluye el estado actual de implementacion en Prisma.
+- La primera ola multi-tenant (`Organization`, `Facility`, memberships, scoping por org/facility, auth persistida) ya esta en el schema.
+- Lo pendiente principal es la segunda ola: `Person`, `PatientRecord`, `FacilityStay`, acceso de familiares y billing.
 
 ## Respuestas Confirmadas 2026-03-20
 

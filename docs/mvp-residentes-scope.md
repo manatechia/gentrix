@@ -5,10 +5,8 @@
 Este documento recorta el MVP de producto usando como base:
 
 - `resumen-discovery-geriatrico.md`
-- `AGENT.md`
+- `AGENTS.md`
 - `README.md`
-- `TASKS_ROADMAP.md`
-- `implementation-tasks.md`
 
 La decision central es simple:
 
