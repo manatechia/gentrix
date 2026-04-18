@@ -10,6 +10,13 @@ import { loginFormSchema } from '../schemas/login-form.schema';
 import { inputClassName } from '../../../shared/ui/class-names';
 import { PasswordInput } from '../../../shared/ui/password-input';
 
+const isLocalHost =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1');
+
+const showDemoAccess = import.meta.env.DEV || isLocalHost;
+
 interface LoginScreenProps {
   isCheckingSession: boolean;
   authError: string | null;
@@ -111,9 +118,7 @@ export function LoginScreen({
 
             <Formik<AuthLoginRequest>
               initialValues={
-                import.meta.env.DEV
-                  ? demoCredentials
-                  : { email: '', password: '' }
+                showDemoAccess ? demoCredentials : { email: '', password: '' }
               }
               validationSchema={loginFormSchema}
               onSubmit={async (values) => {
@@ -139,7 +144,7 @@ export function LoginScreen({
 
                 return (
                   <form className="grid gap-[18px]" onSubmit={handleSubmit}>
-                    {import.meta.env.DEV && (
+                    {showDemoAccess && (
                       <div className="grid gap-3">
                         <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
                           Accesos demo
