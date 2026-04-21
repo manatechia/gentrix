@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER } from '@nestjs/core';
 
+import { ApiExceptionFilter } from './common/http/api-exception.filter';
+import { LoggerModule } from './common/logger/logger.module';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { MedicationModule } from './modules/medication/medication.module';
@@ -18,6 +21,7 @@ import { UsersModule } from './modules/users/users.module';
       isGlobal: true,
       envFilePath: ['.env.local', '.env'],
     }),
+    LoggerModule,
     PrismaModule,
     AuthModule,
     ResidentsModule,
@@ -28,6 +32,9 @@ import { UsersModule } from './modules/users/users.module';
     MedicationModule,
     SystemModule,
     UsersModule,
+  ],
+  providers: [
+    { provide: APP_FILTER, useClass: ApiExceptionFilter },
   ],
 })
 export class AppModule {}

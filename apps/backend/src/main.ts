@@ -3,12 +3,12 @@ import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { json, urlencoded } from 'express';
+import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
 import { ForcePasswordChangeGuard } from './common/auth/force-password-change.guard';
 import { SessionGuard } from './common/auth/session.guard';
 import { ApiEnvelopeInterceptor } from './common/http/api-envelope.interceptor';
-import { ApiExceptionFilter } from './common/http/api-exception.filter';
 import { AuthService } from './modules/auth/application/auth.service';
 
 function resolveCorsOrigin():
@@ -31,12 +31,16 @@ function resolveCorsOrigin():
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
+    bufferLogs: true,
     cors: {
       origin: resolveCorsOrigin(),
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id'],
+      exposedHeaders: ['x-request-id'],
     },
   });
+
+  app.useLogger(app.get(Logger));
 
   app.use(json({ limit: '12mb' }));
   app.use(urlencoded({ extended: true, limit: '12mb' }));
@@ -47,7 +51,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  app.useGlobalFilters(new ApiExceptionFilter());
   app.useGlobalInterceptors(new ApiEnvelopeInterceptor());
   const reflector = app.get(Reflector);
   app.useGlobalGuards(
@@ -57,7 +60,7 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT ?? 3333);
   await app.listen(port);
-  console.log(`Gentrix backend listening on http://localhost:${port}`);
+  app.get(Logger).log(`Gentrix backend listening on :${port}`, 'Bootstrap');
 }
 
 void bootstrap();
