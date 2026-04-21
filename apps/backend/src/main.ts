@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { ValidationPipe } from '@nestjs/common';
+import { ConsoleLogger, ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { json, urlencoded } from 'express';
 import { Logger } from 'nestjs-pino';
@@ -58,16 +58,45 @@ async function bootstrap() {
     new ForcePasswordChangeGuard(reflector),
   );
 
+  const logger = app.get(Logger);
+
+  // Red de seguridad para errores que no pasan por ApiExceptionFilter
+  // (setTimeout, promesas sin catch, EventEmitters sin listener de error,
+  // etc.). Si llegamos acá el proceso quedó en estado inconsistente —
+  // logueamos y dejamos que Render nos recicle.
+  process.on('uncaughtException', (err) => {
+    logger.error(
+      { err: { name: err.name, message: err.message, stack: err.stack } },
+      'process.uncaughtException',
+    );
+    process.exit(1);
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    const err =
+      reason instanceof Error
+        ? { name: reason.name, message: reason.message, stack: reason.stack }
+        : { value: reason };
+    logger.error({ err }, 'process.unhandledRejection');
+  });
+
   app.enableShutdownHooks();
   for (const signal of ['SIGTERM', 'SIGINT'] as const) {
     process.once(signal, () => {
-      app.get(Logger).log(`Received ${signal}, shutting down...`, 'Bootstrap');
+      logger.log(`Received ${signal}, shutting down...`, 'Bootstrap');
     });
   }
 
   const port = Number(process.env.PORT ?? 3333);
   await app.listen(port);
-  app.get(Logger).log(`Gentrix backend listening on :${port}`, 'Bootstrap');
+  logger.log(`Gentrix backend listening on :${port}`, 'Bootstrap');
 }
 
-void bootstrap();
+bootstrap().catch((err: unknown) => {
+  // Fallamos antes de que el logger de la app esté disponible: Prisma no
+  // conecta, un módulo no levanta, etc. Usamos ConsoleLogger (lo que Render
+  // ya captura por stdout) para no perder el stack en silencio.
+  const fallback = new ConsoleLogger('Bootstrap');
+  fallback.error(err instanceof Error ? (err.stack ?? err.message) : String(err));
+  process.exit(1);
+});
