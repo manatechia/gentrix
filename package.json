@@ -15,7 +15,7 @@
     "e2e:install": "nx run frontend-e2e:install-browsers",
     "e2e:typecheck": "nx run frontend-e2e:typecheck",
     "serve:frontend": "nx serve frontend",
-    "serve:backend": "nx serve backend",
+    "serve:backend": "node scripts/run-backend.cjs",
     "show:projects": "nx show projects",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
