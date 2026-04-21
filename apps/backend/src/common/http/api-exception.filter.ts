@@ -4,20 +4,26 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
+  Injectable,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import { toIsoDateString } from '@gentrix/shared-utils';
 
 @Catch()
+@Injectable()
 export class ApiExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(ApiExceptionFilter.name);
+  constructor(
+    @InjectPinoLogger(ApiExceptionFilter.name)
+    private readonly logger: PinoLogger,
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const request = host.switchToHttp().getRequest<{
       method?: string;
       url?: string;
+      id?: string;
     }>();
     const response = host.switchToHttp().getResponse<Response>();
 
@@ -49,11 +55,30 @@ export class ApiExceptionFilter implements ExceptionFilter {
     }
 
     if (statusCode >= HttpStatus.INTERNAL_SERVER_ERROR) {
-      const label = [request.method, request.url].filter(Boolean).join(' ');
-
       this.logger.error(
-        label || 'Unhandled request error',
-        exception instanceof Error ? exception.stack : JSON.stringify(exception),
+        {
+          err: exception instanceof Error
+            ? { name: exception.name, message: exception.message, stack: exception.stack }
+            : { value: exception },
+          method: request.method,
+          url: request.url,
+          statusCode,
+          reqId: request.id,
+        },
+        'Unhandled request error',
+      );
+    } else if (statusCode >= HttpStatus.BAD_REQUEST) {
+      // 4xx: loguear a warn para ver validación fallida / auth / forbidden
+      // sin inundar con stack traces. No incluye 404 de assets del SPA.
+      this.logger.warn(
+        {
+          method: request.method,
+          url: request.url,
+          statusCode,
+          reqId: request.id,
+          message,
+        },
+        'Client-facing request error',
       );
     }
 

@@ -5,6 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import type {
   AuthLoginResponse,
@@ -38,12 +39,15 @@ export class AuthService {
     private readonly users: AuthUserRepository,
     @Inject(AUTH_SESSION_REPOSITORY)
     private readonly sessions: AuthSessionRepository,
+    @InjectPinoLogger(AuthService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async login(credentials: LoginDto): Promise<AuthLoginResponse> {
     const user = await this.users.findByEmail(credentials.email);
 
     if (!user) {
+      this.logger.warn({ email: credentials.email, reason: 'user-not-found' }, 'auth.login.failed');
       throw new UnauthorizedException('Invalid email or password.');
     }
 
@@ -53,6 +57,10 @@ export class AuthService {
     );
 
     if (!verification.matches) {
+      this.logger.warn(
+        { email: credentials.email, userId: user.id, reason: 'bad-password' },
+        'auth.login.failed',
+      );
       throw new UnauthorizedException('Invalid email or password.');
     }
 
@@ -63,8 +71,8 @@ export class AuthService {
       try {
         const rehashed = await hashPassword(credentials.password);
         await this.users.updatePasswordHash(user.id, rehashed);
-      } catch {
-        // Swallow intentionally.
+      } catch (error) {
+        this.logger.warn({ err: error, userId: user.id }, 'auth.password.rehash-failed');
       }
     }
 
@@ -83,6 +91,16 @@ export class AuthService {
     };
 
     await this.sessions.create(session);
+    this.logger.info(
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        organizationId: user.activeOrganization?.id,
+        forcePasswordChange: user.forcePasswordChange,
+      },
+      'auth.login.ok',
+    );
     return session;
   }
 
@@ -114,6 +132,7 @@ export class AuthService {
       throw new UnauthorizedException('Unauthorized.');
     }
 
+    this.logger.info({ actor }, 'auth.logout');
     return { success: true };
   }
 }

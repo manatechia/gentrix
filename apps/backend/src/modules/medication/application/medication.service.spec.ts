@@ -16,6 +16,7 @@ import type {
   ResidentDetail,
 } from '@gentrix/shared-types';
 
+import { silentPinoLogger } from '../../../common/logger/testing';
 import { ResidentsService } from '../../residents/application/residents.service';
 import type { MedicationCatalogRepository } from '../domain/repositories/medication-catalog.repository';
 import type { MedicationExecutionRepository } from '../domain/repositories/medication-execution.repository';
@@ -148,6 +149,7 @@ describe('MedicationService audit trail', () => {
       new MedicationExecutionRepositoryStub(),
       new MedicationCatalogRepositoryStub(catalogItem),
       residentsService as unknown as ResidentsService,
+      silentPinoLogger(),
     );
 
     const created = await service.createMedication(
@@ -176,6 +178,7 @@ describe('MedicationService audit trail', () => {
       new MedicationExecutionRepositoryStub(),
       new MedicationCatalogRepositoryStub(catalogItem),
       residentsService as unknown as ResidentsService,
+      silentPinoLogger(),
     );
 
     const updated = await service.updateMedication(
@@ -207,6 +210,7 @@ describe('MedicationService audit trail', () => {
         }),
       ),
       residentsService as unknown as ResidentsService,
+      silentPinoLogger(),
     );
 
     const execution = await service.createMedicationExecution(

@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import type {
   EntityId,
@@ -53,6 +54,8 @@ export class ResidentAgendaService {
     private readonly seriesRepository: ResidentAgendaSeriesRepository,
     @Inject(ResidentsService)
     private readonly residentsService: ResidentsService,
+    @InjectPinoLogger(ResidentAgendaService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   /**
@@ -195,6 +198,10 @@ export class ResidentAgendaService {
       actor,
       resident.organizationId,
     );
+    this.logger.info(
+      { eventId: created.id, residentId: resident.id, organizationId: resident.organizationId, actor },
+      'agenda.event.created',
+    );
     return created;
   }
 
@@ -259,6 +266,10 @@ export class ResidentAgendaService {
       actor,
       resident.organizationId,
     );
+    this.logger.info(
+      { eventId: existing.id, residentId: resident.id, organizationId: resident.organizationId, actor },
+      'agenda.event.deleted',
+    );
   }
 
   // --------------------------- Series ---------------------------
@@ -283,6 +294,16 @@ export class ResidentAgendaService {
       resident.id,
       actor,
       resident.organizationId,
+    );
+    this.logger.info(
+      {
+        seriesId: created.id,
+        residentId: resident.id,
+        organizationId: resident.organizationId,
+        recurrenceType: created.recurrenceType,
+        actor,
+      },
+      'agenda.series.created',
     );
     return created;
   }
@@ -343,6 +364,10 @@ export class ResidentAgendaService {
       actor,
       resident.organizationId,
     );
+    this.logger.info(
+      { seriesId: existing.id, residentId: resident.id, organizationId: resident.organizationId, actor },
+      'agenda.series.deleted',
+    );
   }
 
   async skipOccurrence(
@@ -371,6 +396,16 @@ export class ResidentAgendaService {
       resident.id,
       actor,
       resident.organizationId,
+    );
+    this.logger.info(
+      {
+        seriesId: series.id,
+        residentId: resident.id,
+        organizationId: resident.organizationId,
+        occurrenceDate,
+        actor,
+      },
+      'agenda.occurrence.skipped',
     );
     return exception;
   }

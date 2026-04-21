@@ -4,11 +4,12 @@ import { MedicationModule } from '../medication/medication.module';
 import { ResidentsModule } from '../residents/residents.module';
 import { StaffModule } from '../staff/staff.module';
 import { SystemService } from './application/system.service';
+import { ClientErrorsController } from './presentation/controllers/client-errors.controller';
 import { SystemController } from './presentation/controllers/system.controller';
 
 @Module({
   imports: [ResidentsModule, StaffModule, MedicationModule],
-  controllers: [SystemController],
+  controllers: [SystemController, ClientErrorsController],
   providers: [SystemService],
 })
 export class SystemModule {}

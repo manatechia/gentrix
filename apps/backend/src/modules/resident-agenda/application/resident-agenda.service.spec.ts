@@ -14,6 +14,7 @@ import type {
   ResidentAgendaSeriesUpdateInput,
 } from '@gentrix/shared-types';
 
+import { silentPinoLogger } from '../../../common/logger/testing';
 import type { SeriesExceptionRecord } from '../domain/occurrence-expansion';
 import type { ResidentAgendaRepository } from '../domain/repositories/resident-agenda.repository';
 import type { ResidentAgendaSeriesRepository } from '../domain/repositories/resident-agenda-series.repository';
@@ -307,6 +308,7 @@ function buildService(): {
     agendaRepo,
     seriesRepo,
     residents as unknown as ResidentsService,
+    silentPinoLogger(),
   );
   return { service, agendaRepo, seriesRepo, residents };
 }

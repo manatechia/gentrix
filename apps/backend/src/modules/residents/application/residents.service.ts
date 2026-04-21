@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import {
   createResidentFromIntake,
@@ -48,6 +49,8 @@ export class ResidentsService {
   constructor(
     @Inject(RESIDENT_REPOSITORY)
     private readonly residents: ResidentRepository,
+    @InjectPinoLogger(ResidentsService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async getResidents(organizationId?: string): Promise<ResidentOverview[]> {
@@ -87,6 +90,16 @@ export class ResidentsService {
     resident.audit.createdBy = actor;
     resident.audit.updatedBy = actor;
     const created = await this.residents.create(resident);
+    this.logger.info(
+      {
+        residentId: created.id,
+        organizationId,
+        facilityId,
+        careStatus: created.careStatus,
+        actor,
+      },
+      'residents.created',
+    );
     return toResidentCard(created);
   }
 
@@ -105,6 +118,10 @@ export class ResidentsService {
     this.validateResidentUpdateInput(input);
     const updatedResident = updateResidentBaseProfile(currentResident, input, actor);
     const persistedResident = await this.residents.update(updatedResident);
+    this.logger.info(
+      { residentId: persistedResident.id, organizationId: persistedResident.organizationId, actor },
+      'residents.updated',
+    );
     return toResidentDetail(persistedResident);
   }
 
@@ -155,6 +172,17 @@ export class ResidentsService {
       actor,
       changedAt: toIsoDateString(new Date()),
     });
+
+    this.logger.info(
+      {
+        residentId: persisted.id,
+        organizationId: persisted.organizationId,
+        fromStatus,
+        toStatus,
+        actor,
+      },
+      'residents.care-status.changed',
+    );
 
     return {
       resident: toResidentDetail(persisted),

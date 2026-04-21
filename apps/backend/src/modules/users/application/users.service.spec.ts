@@ -5,6 +5,7 @@ import type { UserOverview } from '@gentrix/shared-types';
 
 import { verifyPassword } from '../../../common/auth/password-hash';
 import { validatePasswordPolicy } from '../../../common/auth/password-policy';
+import { silentPinoLogger } from '../../../common/logger/testing';
 import type {
   PasswordResetAuditEntry,
   PasswordResetAuditRecord,
@@ -154,7 +155,7 @@ describe('UsersService - password reset', () => {
   beforeEach(() => {
     users = new InMemoryUserRepository();
     audits = new InMemoryPasswordResetAuditRepository();
-    service = new UsersService(users, audits);
+    service = new UsersService(users, audits, silentPinoLogger());
   });
 
   it('generates a policy-compliant temporary password and records an audit entry', async () => {
@@ -231,7 +232,7 @@ describe('UsersService - completeForcedChange', () => {
   beforeEach(() => {
     users = new InMemoryUserRepository();
     audits = new InMemoryPasswordResetAuditRepository();
-    service = new UsersService(users, audits);
+    service = new UsersService(users, audits, silentPinoLogger());
   });
 
   it('rejects mismatched confirmation and audits the failure', async () => {
