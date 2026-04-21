@@ -12,6 +12,10 @@ import {
 } from '@nestjs/common';
 
 import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
+import {
+  assertCanManageResidentRecords,
+  assertCanRecordResidentObservations,
+} from '../../../../common/auth/role-access';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { ResidentAgendaService } from '../../application/resident-agenda.service';
 import { CreateResidentAgendaEventDto } from '../dto/create-resident-agenda-event.dto';
@@ -29,6 +33,13 @@ import { UpdateResidentAgendaSeriesDto } from '../dto/update-resident-agenda-ser
  * Eventos one-off siguen usando `/agenda` para POST/PATCH/DELETE.
  * Series usan `/agenda/series`. Excepciones de una ocurrencia puntual usan
  * `/agenda/series/:id/occurrences/:YYYY-MM-DD`.
+ *
+ * Autorización:
+ *  - Crear / actualizar / skippear / overridear ocurrencias: rol operativo
+ *    (enfermería, asistente, admin, director) — son acciones de turno.
+ *  - Borrar eventos, series o limpiar excepciones: sólo gestión (admin,
+ *    director). Alineado con `resident-observation-notes` donde el delete
+ *    también está gated a management.
  */
 @Controller('api')
 export class ResidentAgendaController {
@@ -65,6 +76,7 @@ export class ResidentAgendaController {
     @Body() body: CreateResidentAgendaEventDto,
     @Req() request: RequestWithSession,
   ) {
+    assertCanRecordResidentObservations(request.authSession!.user.role);
     return this.agendaService.createEvent(
       residentId,
       body,
@@ -80,6 +92,7 @@ export class ResidentAgendaController {
     @Body() body: UpdateResidentAgendaEventDto,
     @Req() request: RequestWithSession,
   ) {
+    assertCanRecordResidentObservations(request.authSession!.user.role);
     return this.agendaService.updateEvent(
       residentId,
       eventId,
@@ -96,6 +109,7 @@ export class ResidentAgendaController {
     @Param('eventId') eventId: string,
     @Req() request: RequestWithSession,
   ): Promise<void> {
+    assertCanManageResidentRecords(request.authSession!.user.role);
     await this.agendaService.deleteEvent(
       residentId,
       eventId,
@@ -112,6 +126,7 @@ export class ResidentAgendaController {
     @Body() body: CreateResidentAgendaSeriesDto,
     @Req() request: RequestWithSession,
   ) {
+    assertCanRecordResidentObservations(request.authSession!.user.role);
     return this.agendaService.createSeries(
       residentId,
       body,
@@ -127,6 +142,7 @@ export class ResidentAgendaController {
     @Body() body: UpdateResidentAgendaSeriesDto,
     @Req() request: RequestWithSession,
   ) {
+    assertCanRecordResidentObservations(request.authSession!.user.role);
     return this.agendaService.updateSeries(
       residentId,
       seriesId,
@@ -143,6 +159,7 @@ export class ResidentAgendaController {
     @Param('seriesId') seriesId: string,
     @Req() request: RequestWithSession,
   ): Promise<void> {
+    assertCanManageResidentRecords(request.authSession!.user.role);
     await this.agendaService.deleteSeries(
       residentId,
       seriesId,
@@ -162,6 +179,7 @@ export class ResidentAgendaController {
     @Param('occurrenceDate') occurrenceDate: string,
     @Req() request: RequestWithSession,
   ) {
+    assertCanRecordResidentObservations(request.authSession!.user.role);
     return this.agendaService.skipOccurrence(
       residentId,
       seriesId,
@@ -181,6 +199,7 @@ export class ResidentAgendaController {
     @Body() body: OverrideResidentAgendaOccurrenceDto,
     @Req() request: RequestWithSession,
   ) {
+    assertCanRecordResidentObservations(request.authSession!.user.role);
     return this.agendaService.overrideOccurrence(
       residentId,
       seriesId,
@@ -201,6 +220,7 @@ export class ResidentAgendaController {
     @Param('occurrenceDate') occurrenceDate: string,
     @Req() request: RequestWithSession,
   ): Promise<void> {
+    assertCanManageResidentRecords(request.authSession!.user.role);
     await this.agendaService.clearOccurrenceException(
       residentId,
       seriesId,

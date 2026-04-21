@@ -6,6 +6,7 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 
 import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
 import { AllowDuringForcedChange } from '../../../../common/auth/force-password-change.guard';
@@ -22,6 +23,9 @@ export class AuthController {
   ) {}
 
   @Public()
+  // 10 intentos de login por minuto por IP. Freno anti brute-force; si alguien
+  // legítimo se quedó afuera, sigue teniendo la ventana siguiente.
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @Post('login')
   login(@Body() body: LoginDto) {
     return this.authService.login(body);

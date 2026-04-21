@@ -26,8 +26,13 @@ export class SchedulesService {
     private readonly staffService: StaffService,
   ) {}
 
-  async listByStaffId(staffId: string): Promise<StaffSchedule[]> {
-    await this.staffService.getStaffEntityById(staffId);
+  async listByStaffId(
+    staffId: string,
+    organizationId: string,
+  ): Promise<StaffSchedule[]> {
+    // getStaffEntityById ahora scopea por organizationId — si el staff no
+    // pertenece a la org del caller tira 404 en vez de exponer datos.
+    await this.staffService.getStaffEntityById(staffId, organizationId);
     return this.scheduleRepository.listByStaffId(staffId as StaffSchedule['staffId']);
   }
 
@@ -35,8 +40,9 @@ export class SchedulesService {
     staffId: string,
     input: StaffScheduleCreateInput,
     actor: string,
+    organizationId: string,
   ): Promise<StaffSchedule> {
-    await this.staffService.getStaffEntityById(staffId);
+    await this.staffService.getStaffEntityById(staffId, organizationId);
     validateScheduleInput(input);
 
     return this.scheduleRepository.create(
@@ -50,6 +56,7 @@ export class SchedulesService {
     scheduleId: string,
     input: StaffScheduleUpdateInput,
     actor: string,
+    organizationId: string,
   ): Promise<StaffSchedule> {
     const existingSchedule = await this.scheduleRepository.findById(
       scheduleId as StaffSchedule['id'],
@@ -59,7 +66,12 @@ export class SchedulesService {
       throw new NotFoundException('No encontre el horario solicitado.');
     }
 
-    await this.staffService.getStaffEntityById(existingSchedule.staffId);
+    // Verificamos que el staff del schedule sea de la misma org del caller
+    // antes de permitir el update.
+    await this.staffService.getStaffEntityById(
+      existingSchedule.staffId,
+      organizationId,
+    );
     validateScheduleInput(input);
 
     return this.scheduleRepository.update(

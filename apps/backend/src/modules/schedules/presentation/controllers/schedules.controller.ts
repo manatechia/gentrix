@@ -24,8 +24,14 @@ export class SchedulesController {
   ) {}
 
   @Get(':staffId/schedules')
-  listByStaffId(@Param('staffId') staffId: string) {
-    return this.schedulesService.listByStaffId(staffId);
+  listByStaffId(
+    @Param('staffId') staffId: string,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.schedulesService.listByStaffId(
+      staffId,
+      request.authSession!.activeOrganization.id,
+    );
   }
 
   @Post(':staffId/schedules')
@@ -39,6 +45,7 @@ export class SchedulesController {
       staffId,
       body,
       getAuditActorFromRequest(request),
+      request.authSession!.activeOrganization.id,
     );
   }
 
@@ -53,6 +60,7 @@ export class SchedulesController {
       scheduleId,
       body,
       getAuditActorFromRequest(request),
+      request.authSession!.activeOrganization.id,
     );
   }
 }
