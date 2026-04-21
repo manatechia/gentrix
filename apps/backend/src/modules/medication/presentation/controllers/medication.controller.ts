@@ -10,7 +10,10 @@ import {
 } from '@nestjs/common';
 
 import { getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
-import { assertCanManageMedicationOrders } from '../../../../common/auth/role-access';
+import {
+  assertCanManageMedicationOrders,
+  assertCanRecordResidentObservations,
+} from '../../../../common/auth/role-access';
 import type { RequestWithSession } from '../../../../common/auth/session.guard';
 import { MedicationService } from '../../application/medication.service';
 import { CreateMedicationExecutionDto } from '../dto/create-medication-execution.dto';
@@ -88,6 +91,9 @@ export class MedicationController {
     @Body() body: CreateMedicationExecutionDto,
     @Req() request: RequestWithSession,
   ) {
+    // Ejecutar una dosis es parte del turno operativo (enfermería/asistente),
+    // a diferencia de crear o editar la orden que requiere gestión.
+    assertCanRecordResidentObservations(request.authSession!.user.role);
     return this.medicationService.createMedicationExecution(
       medicationId,
       body,

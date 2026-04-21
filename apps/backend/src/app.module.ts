@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { ApiExceptionFilter } from './common/http/api-exception.filter';
 import { LoggerModule } from './common/logger/logger.module';
@@ -22,6 +23,12 @@ import { UsersModule } from './modules/users/users.module';
       envFilePath: ['.env.local', '.env'],
     }),
     LoggerModule,
+    // Rate limit global: techo de 120 req/min por IP. Endpoints sensibles
+    // (login, reset, change-password) bajan ese techo con @Throttle() local.
+    // TTL en ms (formato v6).
+    ThrottlerModule.forRoot([
+      { name: 'default', ttl: 60_000, limit: 120 },
+    ]),
     PrismaModule,
     AuthModule,
     ResidentsModule,
@@ -35,6 +42,7 @@ import { UsersModule } from './modules/users/users.module';
   ],
   providers: [
     { provide: APP_FILTER, useClass: ApiExceptionFilter },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

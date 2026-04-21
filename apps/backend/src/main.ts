@@ -2,7 +2,9 @@ import 'reflect-metadata';
 
 import { ConsoleLogger, ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { json, urlencoded } from 'express';
+import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 
 import { AppModule } from './app.module';
@@ -29,7 +31,7 @@ function resolveCorsOrigin():
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
     bufferLogs: true,
     cors: {
@@ -40,7 +42,23 @@ async function bootstrap() {
     },
   });
 
+  // Render / Vercel nos llegan detrás de un reverse proxy. Sin esto,
+  // ThrottlerGuard ve la IP del proxy y limita a todo el tráfico como si
+  // viniera de 1 cliente.
+  app.set('trust proxy', 1);
+
   app.useLogger(app.get(Logger));
+
+  // Security headers. Dejamos la CSP a cargo del frontend (Vercel) porque
+  // este servicio es una API — no sirve HTML al browser. crossOriginResourcePolicy
+  // queda en cross-origin para que el frontend en vercel.app pueda consumir.
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   app.use(json({ limit: '12mb' }));
   app.use(urlencoded({ extended: true, limit: '12mb' }));

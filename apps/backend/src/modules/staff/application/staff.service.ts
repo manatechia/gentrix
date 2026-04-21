@@ -56,8 +56,11 @@ export class StaffService {
     return this.staffRepository.list(organizationId);
   }
 
-  async getStaffEntityById(staffId: string): Promise<StaffMember> {
-    const member = await this.staffRepository.findById(staffId);
+  async getStaffEntityById(
+    staffId: string,
+    organizationId?: string,
+  ): Promise<StaffMember> {
+    const member = await this.staffRepository.findById(staffId, organizationId);
 
     if (!member) {
       throw new NotFoundException('No encontre el personal solicitado.');

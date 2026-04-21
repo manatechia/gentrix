@@ -8,6 +8,7 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 
 import { buildAuditActorLabel, getAuditActorFromRequest } from '../../../../common/auth/audit-actor';
 import { AllowDuringForcedChange } from '../../../../common/auth/force-password-change.guard';
@@ -43,6 +44,9 @@ export class UsersController {
     );
   }
 
+  // Reset administrativo: 20 req/min por IP (margen para operaciones masivas
+  // de un admin sin dejar abierto a fuerza bruta sobre IDs).
+  @Throttle({ default: { ttl: 60_000, limit: 20 } })
   @Post(':userId/reset-password')
   resetPassword(
     @Param('userId', new ParseUUIDPipe()) userId: string,
@@ -59,6 +63,9 @@ export class UsersController {
     });
   }
 
+  // Cambio de contraseña propio: 10 req/min por IP para frenar brute-force
+  // sobre la "currentPassword" durante un forced-change.
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @AllowDuringForcedChange()
   @Post('me/change-password')
   async changeOwnPassword(
