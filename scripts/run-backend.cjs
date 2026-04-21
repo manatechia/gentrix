@@ -1,3 +1,7 @@
+// Workaround: Render dashboard has `startCommand = pnpm serve:backend` while
+// render.yaml declares `node dist/apps/backend/main.js`. Branching here avoids
+// `nx serve backend` in prod (OOMs the free plan). See
+// docs/tech-debt/render-start-command-wrapper.md for the plan to remove this.
 const { existsSync } = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
