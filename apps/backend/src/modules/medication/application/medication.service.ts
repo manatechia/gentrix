@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import {
   createMedicationFromInput,
@@ -56,6 +57,8 @@ export class MedicationService {
     private readonly medicationCatalogRepository: MedicationCatalogRepository,
     @Inject(ResidentsService)
     private readonly residentsService: ResidentsService,
+    @InjectPinoLogger(MedicationService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async getMedicationCatalog(): Promise<MedicationCatalogItem[]> {
@@ -173,6 +176,17 @@ export class MedicationService {
       resident.organizationId,
     );
 
+    this.logger.info(
+      {
+        medicationId: createdMedication.id,
+        residentId: resident.id,
+        catalogId: createInput.medicationCatalogId,
+        organizationId: resident.organizationId,
+        actor,
+      },
+      'medication.order.created',
+    );
+
     return toMedicationOverview(
       createdMedication,
       `${resident.firstName} ${resident.lastName}`.trim(),
@@ -213,6 +227,17 @@ export class MedicationService {
       resident.organizationId,
     );
 
+    this.logger.info(
+      {
+        medicationId: persistedMedication.id,
+        residentId: resident.id,
+        organizationId: resident.organizationId,
+        actor,
+        status: persistedMedication.status,
+      },
+      'medication.order.updated',
+    );
+
     return toMedicationDetail(
       persistedMedication,
       `${resident.firstName} ${resident.lastName}`.trim(),
@@ -244,6 +269,17 @@ export class MedicationService {
       medication.residentId,
       actor,
       medication.organizationId,
+    );
+
+    this.logger.info(
+      {
+        executionId: createdExecution.id,
+        medicationId: medication.id,
+        residentId: medication.residentId,
+        organizationId: medication.organizationId,
+        actor,
+      },
+      'medication.execution.recorded',
     );
 
     return toMedicationExecutionOverview(createdExecution, resident.fullName);

@@ -58,6 +58,13 @@ async function bootstrap() {
     new ForcePasswordChangeGuard(reflector),
   );
 
+  app.enableShutdownHooks();
+  for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+    process.once(signal, () => {
+      app.get(Logger).log(`Received ${signal}, shutting down...`, 'Bootstrap');
+    });
+  }
+
   const port = Number(process.env.PORT ?? 3333);
   await app.listen(port);
   app.get(Logger).log(`Gentrix backend listening on :${port}`, 'Bootstrap');

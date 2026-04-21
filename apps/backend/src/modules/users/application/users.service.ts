@@ -7,6 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import type {
   PasswordResetResponse,
@@ -56,6 +57,8 @@ export class UsersService {
     private readonly users: UserRepository,
     @Inject(PASSWORD_RESET_AUDIT_REPOSITORY)
     private readonly audits: PasswordResetAuditRepository,
+    @InjectPinoLogger(UsersService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   async getUsers(organizationId: string): Promise<UserOverview[]> {
@@ -86,7 +89,7 @@ export class UsersService {
     const passwordHash = await hashPassword(password);
 
     try {
-      return await this.users.create({
+      const created = await this.users.create({
         ...input,
         fullName,
         password: passwordHash,
@@ -94,6 +97,17 @@ export class UsersService {
         actor,
         organizationId,
       });
+      this.logger.info(
+        {
+          targetUserId: created.id,
+          email: created.email,
+          role: created.role,
+          organizationId,
+          actor,
+        },
+        'users.created',
+      );
+      return created;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -152,6 +166,15 @@ export class UsersService {
       ipAddress: admin.ipAddress,
       userAgent: admin.userAgent,
     });
+
+    this.logger.info(
+      {
+        adminUserId: admin.userId,
+        targetUserId,
+        organizationId: admin.organizationId,
+      },
+      'users.password.reset-by-admin',
+    );
 
     return {
       userId: targetUserId as PasswordResetResponse['userId'],
@@ -224,12 +247,21 @@ export class UsersService {
       ipAddress: actor.ipAddress,
       userAgent: actor.userAgent,
     });
+
+    this.logger.info(
+      { userId: actor.userId, organizationId: record.organizationId },
+      'users.password.forced-change-completed',
+    );
   }
 
   private async recordForcedFailure(
     actor: SelfActor,
     reason: string,
   ): Promise<void> {
+    this.logger.warn(
+      { userId: actor.userId, organizationId: actor.organizationId, reason },
+      'users.password.forced-change-failed',
+    );
     await this.audits.record({
       organizationId: actor.organizationId,
       adminUserId: null,

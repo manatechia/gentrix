@@ -67,6 +67,19 @@ export class ApiExceptionFilter implements ExceptionFilter {
         },
         'Unhandled request error',
       );
+    } else if (statusCode >= HttpStatus.BAD_REQUEST) {
+      // 4xx: loguear a warn para ver validación fallida / auth / forbidden
+      // sin inundar con stack traces. No incluye 404 de assets del SPA.
+      this.logger.warn(
+        {
+          method: request.method,
+          url: request.url,
+          statusCode,
+          reqId: request.id,
+          message,
+        },
+        'Client-facing request error',
+      );
     }
 
     response.status(statusCode).json({
