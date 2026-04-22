@@ -90,6 +90,23 @@ async function ensureDemoUsers(prisma) {
 
   for (const demoUser of demoUsers) {
     const now = new Date();
+
+    const role = await prisma.role.findUnique({
+      where: {
+        organizationId_code: {
+          organizationId: organization.id,
+          code: demoUser.role,
+        },
+      },
+    });
+
+    if (!role) {
+      console.log(
+        `Skipping ${demoUser.email}: role ${demoUser.role} no está sembrado en la organización activa.`,
+      );
+      continue;
+    }
+
     const user = await prisma.userAccount.upsert({
       where: {
         email: demoUser.email,
@@ -97,7 +114,6 @@ async function ensureDemoUsers(prisma) {
       update: {
         fullName: demoUser.fullName,
         password: demoUser.password,
-        role: demoUser.role,
         status: 'active',
         deletedAt: null,
         deletedBy: null,
@@ -109,7 +125,6 @@ async function ensureDemoUsers(prisma) {
         fullName: demoUser.fullName,
         email: demoUser.email,
         password: demoUser.password,
-        role: demoUser.role,
         status: 'active',
         createdAt: now,
         createdBy: 'seed-script',
@@ -126,7 +141,7 @@ async function ensureDemoUsers(prisma) {
         },
       },
       update: {
-        roleCode: demoUser.role,
+        roleId: role.id,
         status: 'active',
         isDefault: true,
         leftAt: null,
@@ -139,7 +154,7 @@ async function ensureDemoUsers(prisma) {
         id: demoUser.membershipId,
         organizationId: organization.id,
         userId: user.id,
-        roleCode: demoUser.role,
+        roleId: role.id,
         status: 'active',
         isDefault: true,
         joinedAt: now,
