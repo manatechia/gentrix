@@ -91,14 +91,17 @@ asistentes), dirección de salud y administración.
 - **Backend** (API): `helmet()` con defaults + `crossOriginResourcePolicy:
   cross-origin` (el front de Vercel consume datos). CSP se deja off acá
   porque la API no sirve HTML.
-- **Frontend** (Vercel): `vercel.json` → `headers` con:
+- **Frontend** (Vercel): `vercel.ts` → `headers` con:
   - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
   - `X-Content-Type-Options: nosniff`
   - `X-Frame-Options: DENY`
   - `Referrer-Policy: strict-origin-when-cross-origin`
   - `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`
   - `Content-Security-Policy` moderada:
-    `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://gentrix-86yn.onrender.com; frame-ancestors 'none'`
+    `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'`
+  - El backend no aparece en `connect-src` porque el browser pega al mismo
+    origen de Vercel y el rewrite (`/api/* → $BACKEND_URL/api/*`) es
+    server-side. `BACKEND_URL` se configura por entorno en Vercel.
 
 ### CORS
 

@@ -6,6 +6,7 @@
   },
   "include": [
     "prisma.config.ts",
+    "vercel.ts",
     "apps/frontend/vite.config.mts",
     "apps/frontend-e2e/playwright.config.ts"
   ]
