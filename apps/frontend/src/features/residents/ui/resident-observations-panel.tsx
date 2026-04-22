@@ -186,9 +186,19 @@ export function ResidentObservationsPanel({
                   className="grid gap-2 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-white/85 px-4 py-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="text-[0.78rem] font-semibold text-brand-text-muted">
-                      {formatDateTime(item.audit.createdAt)}
-                    </span>
+                    <div className="grid gap-0.5">
+                      <span className="text-[0.78rem] font-semibold text-brand-text-muted">
+                        {formatDateTime(item.audit.createdAt)} · {item.audit.createdBy}
+                      </span>
+                      {item.audit.updatedAt !== item.audit.createdAt && (
+                        <span className="text-[0.72rem] text-brand-text-muted">
+                          Editado {formatDateTime(item.audit.updatedAt)}
+                          {item.audit.updatedBy && item.audit.updatedBy !== item.audit.createdBy
+                            ? ` · ${item.audit.updatedBy}`
+                            : ''}
+                        </span>
+                      )}
+                    </div>
                     {!isConfirming ? (
                       <button
                         data-testid="resident-observation-delete-button"

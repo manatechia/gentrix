@@ -208,6 +208,10 @@ export function toResidentFormValues(
       recordedAt: formatResidentIsoDateForInput(entry.recordedAt),
       title: entry.title,
       notes: entry.notes,
+      createdAt: entry.createdAt,
+      updatedAt: entry.updatedAt,
+      createdBy: entry.createdBy,
+      updatedBy: entry.updatedBy,
     })),
     attachments: resident.attachments.map((attachment) => ({
       localId: attachment.id,

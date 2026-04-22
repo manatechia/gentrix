@@ -139,6 +139,14 @@ export function ResidentLiveProfilePanel({
                       ? ` hasta ${formatDate(medication.endDate)}`
                       : ''}
                   </span>
+                  <span className="text-[0.82rem] text-brand-text-muted">
+                    Cargada por {medication.audit.createdBy}
+                    {medication.audit.updatedAt !== medication.audit.createdAt &&
+                      medication.audit.updatedBy &&
+                      medication.audit.updatedBy !== medication.audit.createdBy
+                      ? ` · editada por ${medication.audit.updatedBy}`
+                      : ''}
+                  </span>
                 </div>
               </article>
             ))}

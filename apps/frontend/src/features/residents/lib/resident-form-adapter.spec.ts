@@ -42,6 +42,9 @@ describe('resident-form-adapter', () => {
           title: 'Hipertension arterial',
           notes: 'Controlada con seguimiento ambulatorio.',
           createdAt: '2026-01-10T09:00:00.000Z',
+          updatedAt: '2026-01-10T09:00:00.000Z',
+          createdBy: 'setup-script',
+          updatedBy: 'setup-script',
         },
       ],
     });

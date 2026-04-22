@@ -14,6 +14,10 @@ export interface ResidentMedicalHistoryFormValue {
   recordedAt: string;
   title: string;
   notes: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export interface ResidentAttachmentFormValue {

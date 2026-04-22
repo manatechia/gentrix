@@ -72,6 +72,9 @@ export interface ResidentMedicalHistoryEntry
   extends ResidentMedicalHistoryEntryInput {
   id: EntityId;
   createdAt: IsoDateString;
+  updatedAt: IsoDateString;
+  createdBy: string;
+  updatedBy: string;
 }
 
 export interface ResidentAttachmentInput {
