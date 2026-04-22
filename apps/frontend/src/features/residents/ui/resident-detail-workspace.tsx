@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import type {
   AuthSession,
+  MedicationExecutionResult,
   ResidentAgendaEventCreateInput,
   ResidentAgendaEventUpdateInput,
   ResidentAgendaOccurrence,
@@ -16,6 +17,7 @@ import type {
   ResidentObservationNote,
   ResidentObservationNoteCreateInput,
   ResidentObservationNoteCreateResponse,
+  ResidentShiftDoses,
 } from '@gentrix/shared-types';
 
 import {
@@ -42,6 +44,7 @@ import { PageToolbar } from '../../../shared/ui/page-toolbar';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
+import { ResidentMedicationShiftPanel } from '../../medication/ui/resident-medication-shift-panel';
 import { ResidentAgendaPanel } from './resident-agenda-panel';
 import { ResidentLiveProfilePanel } from './resident-live-profile-panel';
 import { ResidentObservationsPanel } from './resident-observations-panel';
@@ -119,6 +122,18 @@ interface ResidentDetailWorkspaceProps {
     input: ResidentObservationNoteCreateInput,
   ) => Promise<ResidentObservationNoteCreateResponse | null>;
   onObservationNoteDelete: (noteId: string) => Promise<boolean>;
+  medicationShift: ResidentShiftDoses | null;
+  isLoadingMedicationShift: boolean;
+  isSavingMedicationShift: boolean;
+  activeMedicationShiftMutationId: string | null;
+  medicationShiftNotice: string | null;
+  medicationShiftNoticeTone: 'success' | 'error';
+  onMedicationShiftRecord: (
+    medicationOrderId: string,
+    doseId: string,
+    scheduledFor: string,
+    result: MedicationExecutionResult,
+  ) => Promise<boolean>;
 }
 
 interface DetailFieldProps {
@@ -215,6 +230,13 @@ export function ResidentDetailWorkspace({
   observationNoticeTone,
   onObservationNoteCreate,
   onObservationNoteDelete,
+  medicationShift,
+  isLoadingMedicationShift,
+  isSavingMedicationShift,
+  activeMedicationShiftMutationId,
+  medicationShiftNotice,
+  medicationShiftNoticeTone,
+  onMedicationShiftRecord,
 }: ResidentDetailWorkspaceProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -423,6 +445,16 @@ export function ResidentDetailWorkspace({
             onSeriesDelete={onAgendaSeriesDelete}
             onOccurrenceSkip={onAgendaOccurrenceSkip}
             onOccurrenceOverride={onAgendaOccurrenceOverride}
+          />
+
+          <ResidentMedicationShiftPanel
+            snapshot={medicationShift}
+            isLoading={isLoadingMedicationShift}
+            isSaving={isSavingMedicationShift}
+            activeMutationId={activeMedicationShiftMutationId}
+            notice={medicationShiftNotice}
+            noticeTone={medicationShiftNoticeTone}
+            onRecord={onMedicationShiftRecord}
           />
 
           <ResidentObservationsPanel

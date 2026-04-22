@@ -710,6 +710,38 @@ export interface MedicationExecutionOverview {
   audit: AuditTrail;
 }
 
+export type ResidentShiftDoseStatus =
+  | 'pending'
+  | MedicationExecutionResult;
+
+/**
+ * Una dosis programada para el residente dentro del turno consultado.
+ * `status` refleja el estado concreto (pending si no hay ejecución todavía, o el
+ * resultado cuando sí la hay) para que la UI decida qué acciones ofrecer.
+ */
+export interface ResidentShiftDose {
+  /** Id estable derivado de medicationOrderId + scheduledFor. */
+  id: EntityId;
+  medicationOrderId: EntityId;
+  medicationName: string;
+  dose: string;
+  route: MedicationRoute;
+  scheduledFor: IsoDateString;
+  status: ResidentShiftDoseStatus;
+  /** Presentes sólo cuando hay una ejecución registrada para esta dosis. */
+  executionId?: EntityId;
+  occurredAt?: IsoDateString;
+  actor?: string;
+}
+
+export interface ResidentShiftDoses {
+  shift: HandoffShift;
+  shiftStartedAt: IsoDateString;
+  shiftEndsAt: IsoDateString;
+  generatedAt: IsoDateString;
+  doses: ResidentShiftDose[];
+}
+
 export type DashboardAlertSeverity = 'info' | 'warning' | 'critical';
 
 export type DashboardAlertSource =
