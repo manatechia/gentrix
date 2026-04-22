@@ -1,5 +1,7 @@
 import type {
+  EntityStatus,
   HandoffShift,
+  IsoDateString,
   MedicationRoute,
   ResidentShiftDose,
   ResidentShiftDoseStatus,
@@ -7,8 +9,24 @@ import type {
 } from '@gentrix/shared-types';
 import { createEntityId, toIsoDateString } from '@gentrix/shared-utils';
 
-import type { MedicationExecution, MedicationOrder } from './domain-medication';
-import { isMedicationActive } from './domain-medication';
+import type { MedicationExecution } from './domain-medication';
+
+/**
+ * Forma mínima de una orden de medicación requerida por el computador de
+ * dosis de turno. Tanto `MedicationOrder` (dominio) como `MedicationOverview`
+ * (DTO público) la satisfacen, así que ambos callers pueden pasarla sin
+ * transformaciones intermedias.
+ */
+export interface ShiftDoseMedication {
+  id: string;
+  medicationName: string;
+  dose: string;
+  route: MedicationRoute;
+  scheduleTimes: string[];
+  startDate: IsoDateString;
+  endDate?: IsoDateString;
+  status: EntityStatus;
+}
 
 /**
  * Ventana tolerada entre la dosis programada y una ejecución real para
@@ -22,10 +40,30 @@ const medicationExecutionMatchWindowMs = 1000 * 60 * 60 * 2;
  */
 const facilityUtcOffsetMinutes = -180;
 
-interface ShiftWindow {
+export interface ShiftWindow {
   shift: HandoffShift;
   shiftStartedAt: Date;
   shiftEndsAt: Date;
+}
+
+/**
+ * Ventana del turno que contiene a `referenceDate`. Los horarios de corte
+ * (06-14 / 14-22 / 22-06) están fijos para la residencia.
+ */
+export function resolveShiftWindow(referenceDate: Date): ShiftWindow {
+  return deriveShiftWindowFromReference(referenceDate);
+}
+
+/**
+ * Ventana del turno inmediatamente siguiente a `referenceDate`. Útil para
+ * proyectar dosis futuras (handoff muestra "qué viene") sin mezclarlas con
+ * las del turno actual.
+ */
+export function resolveNextShiftWindow(referenceDate: Date): ShiftWindow {
+  const current = deriveShiftWindowFromReference(referenceDate);
+  // 1 ms después del cierre del turno actual cae dentro del siguiente.
+  const nextReference = new Date(current.shiftEndsAt.getTime() + 1);
+  return deriveShiftWindowFromReference(nextReference);
 }
 
 /**
@@ -37,12 +75,23 @@ interface ShiftWindow {
  * devuelve siempre el mismo resultado.
  */
 export function computeResidentShiftDoses(input: {
-  medications: MedicationOrder[];
+  medications: ShiftDoseMedication[];
   executions: MedicationExecution[];
   referenceDate?: Date;
+  /**
+   * `current` (default) calcula las dosis del turno que contiene a
+   * `referenceDate` y las une con ejecuciones ya registradas.
+   * `next` proyecta el turno siguiente: las dosis aparecen `pending` y se
+   * ignoran las ejecuciones (todavía no pueden existir).
+   */
+  window?: 'current' | 'next';
 }): ResidentShiftDoses {
   const referenceDate = input.referenceDate ?? new Date();
-  const shiftWindow = resolveShiftWindow(referenceDate);
+  const shiftWindow =
+    input.window === 'next'
+      ? resolveNextShiftWindow(referenceDate)
+      : resolveShiftWindow(referenceDate);
+  const matchExecutions = input.window !== 'next';
 
   const doses: ResidentShiftDose[] = [];
 
@@ -56,18 +105,19 @@ export function computeResidentShiftDoses(input: {
       continue;
     }
 
-    const candidateExecutions = input.executions
-      .filter((execution) => execution.medicationOrderId === medication.id)
-      .sort(
-        (left, right) =>
-          new Date(left.occurredAt).getTime() -
-          new Date(right.occurredAt).getTime(),
-      );
+    const candidateExecutions = matchExecutions
+      ? input.executions
+          .filter((execution) => execution.medicationOrderId === medication.id)
+          .sort(
+            (left, right) =>
+              new Date(left.occurredAt).getTime() -
+              new Date(right.occurredAt).getTime(),
+          )
+      : [];
 
-    const matches = assignExecutionsToScheduledDoses(
-      scheduledDoses,
-      candidateExecutions,
-    );
+    const matches = matchExecutions
+      ? assignExecutionsToScheduledDoses(scheduledDoses, candidateExecutions)
+      : new Map<number, MedicationExecution>();
 
     for (const scheduledFor of scheduledDoses) {
       const execution = matches.get(scheduledFor.getTime());
@@ -120,7 +170,7 @@ export function computeResidentShiftDoses(input: {
 }
 
 function buildShiftScheduledDoses(
-  medication: MedicationOrder,
+  medication: ShiftDoseMedication,
   shiftWindow: ShiftWindow,
 ): Date[] {
   const candidateDays = [
@@ -137,7 +187,7 @@ function buildShiftScheduledDoses(
       if (
         time < shiftWindow.shiftStartedAt.getTime() ||
         time > shiftWindow.shiftEndsAt.getTime() ||
-        !isMedicationActive(medication, toIsoDateString(candidate))
+        !isMedicationWindowActive(medication, candidate)
       ) {
         continue;
       }
@@ -148,6 +198,21 @@ function buildShiftScheduledDoses(
   return [...unique.values()].sort(
     (left, right) => left.getTime() - right.getTime(),
   );
+}
+
+function isMedicationWindowActive(
+  medication: ShiftDoseMedication,
+  at: Date,
+): boolean {
+  if (medication.status !== 'active') return false;
+  const time = at.getTime();
+  const start = new Date(medication.startDate).getTime();
+  if (time < start) return false;
+  if (medication.endDate) {
+    const end = new Date(medication.endDate).getTime();
+    if (time > end) return false;
+  }
+  return true;
 }
 
 function assignExecutionsToScheduledDoses(
@@ -183,7 +248,7 @@ function assignExecutionsToScheduledDoses(
   return matches;
 }
 
-function resolveShiftWindow(referenceDate: Date): ShiftWindow {
+function deriveShiftWindowFromReference(referenceDate: Date): ShiftWindow {
   const parts = toFacilityDateParts(referenceDate);
   const hour = parts.hours;
 

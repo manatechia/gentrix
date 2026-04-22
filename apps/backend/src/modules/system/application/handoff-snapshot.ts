@@ -1,4 +1,7 @@
-import type { MedicationExecution } from '@gentrix/domain-medication';
+import {
+  computeResidentShiftDoses,
+  type MedicationExecution,
+} from '@gentrix/domain-medication';
 import { createEntityId, toIsoDateString } from '@gentrix/shared-utils';
 import type {
   DashboardAlertSeverity,
@@ -8,6 +11,7 @@ import type {
   HandoffSnapshot,
   MedicationOverview,
   ResidentOverview,
+  ResidentShiftDose,
 } from '@gentrix/shared-types';
 
 const medicationExecutionMatchWindowMs = 1000 * 60 * 60 * 2;
@@ -35,21 +39,31 @@ export function deriveHandoffSnapshot({
   referenceDate = new Date(),
 }: DeriveHandoffSnapshotInput): HandoffSnapshot {
   const shiftContext = resolveHandoffShiftContext(referenceDate);
+  const activeMedications = medications.filter((medication) => medication.active);
   const medicationIssuesByResidentId = buildMedicationIssuesByResidentId(
-    medications.filter((medication) => medication.active),
+    activeMedications,
     medicationExecutions,
     shiftContext,
+  );
+  const upcomingDosesByResidentId = buildUpcomingDosesByResidentId(
+    activeMedications,
+    referenceDate,
   );
   const relevantResidents = residents
     .filter((resident) => {
       const medicationIssues =
         medicationIssuesByResidentId.get(resident.id) ?? [];
+      const upcomingDoses = upcomingDosesByResidentId.get(resident.id) ?? [];
 
-      return medicationIssues.length > 0;
+      // Incluimos a cualquier residente con actividad médica del turno:
+      // issues del actual (lo que quedó pendiente o quedó registrado como
+      // omitido/rechazado) o dosis proyectadas del próximo turno.
+      return medicationIssues.length > 0 || upcomingDoses.length > 0;
     })
     .map((resident) => {
       const medicationIssues =
         medicationIssuesByResidentId.get(resident.id) ?? [];
+      const upcomingDoses = upcomingDosesByResidentId.get(resident.id) ?? [];
 
       return {
         residentId: resident.id,
@@ -58,6 +72,7 @@ export function deriveHandoffSnapshot({
         careLevel: resident.careLevel,
         priority: resolveResidentPriority(resident, medicationIssues),
         medicationIssues,
+        upcomingDoses,
       } satisfies HandoffResident;
     })
     .sort(compareHandoffResidents);
@@ -83,9 +98,44 @@ export function deriveHandoffSnapshot({
         relevantResidents,
         'rejected',
       ),
+      upcomingDoseCount: relevantResidents.reduce(
+        (total, resident) => total + resident.upcomingDoses.length,
+        0,
+      ),
     },
     residents: relevantResidents,
   };
+}
+
+/**
+ * Proyecta las dosis del próximo turno agrupadas por residente. Delega en
+ * `computeResidentShiftDoses` con `window: 'next'` — sin ejecuciones, todas
+ * las dosis salen como `pending`.
+ */
+function buildUpcomingDosesByResidentId(
+  medications: MedicationOverview[],
+  referenceDate: Date,
+): Map<ResidentOverview['id'], ResidentShiftDose[]> {
+  const byResident = new Map<ResidentOverview['id'], MedicationOverview[]>();
+  for (const medication of medications) {
+    const list = byResident.get(medication.residentId) ?? [];
+    list.push(medication);
+    byResident.set(medication.residentId, list);
+  }
+
+  const result = new Map<ResidentOverview['id'], ResidentShiftDose[]>();
+  for (const [residentId, residentMedications] of byResident.entries()) {
+    const snapshot = computeResidentShiftDoses({
+      medications: residentMedications,
+      executions: [],
+      referenceDate,
+      window: 'next',
+    });
+    if (snapshot.doses.length > 0) {
+      result.set(residentId, snapshot.doses);
+    }
+  }
+  return result;
 }
 
 function buildMedicationIssuesByResidentId(

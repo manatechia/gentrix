@@ -5,6 +5,7 @@ import type { AuthSession, HandoffSnapshot } from '@gentrix/shared-types';
 import {
   formatDashboardAlertSeverity,
   formatHandoffMedicationStatus,
+  formatMedicationRoute,
   formatResidentCareLevel,
   formatShiftLabel,
 } from '../../../shared/lib/display-labels';
@@ -183,7 +184,7 @@ export function HandoffWorkspace({
               </div>
             </div>
 
-            <div className="grid gap-3 min-[860px]:grid-cols-4">
+            <div className="grid gap-3 min-[860px]:grid-cols-5">
               <SummaryTile
                 label="Residentes"
                 value={handoff.summary.relevantResidentCount}
@@ -199,6 +200,10 @@ export function HandoffWorkspace({
               <SummaryTile
                 label="Rechazadas"
                 value={handoff.summary.rejectedMedicationCount}
+              />
+              <SummaryTile
+                label="Próximo turno"
+                value={handoff.summary.upcomingDoseCount}
               />
             </div>
           </section>
@@ -264,8 +269,7 @@ export function HandoffWorkspace({
 
                     {resident.medicationIssues.length === 0 ? (
                       <div className="rounded-[20px] border border-dashed border-[rgba(0,102,132,0.18)] bg-white/65 px-4 py-4 text-brand-text-secondary">
-                        No hay medicacion pendiente, omitida o rechazada para
-                        este residente en el turno actual.
+                        Sin novedades en el turno actual.
                       </div>
                     ) : (
                       <div className="grid gap-2.5">
@@ -321,6 +325,41 @@ export function HandoffWorkspace({
                       </div>
                     )}
                   </section>
+
+                  {resident.upcomingDoses.length > 0 && (
+                    <section className="mt-4 grid gap-3 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-[rgba(0,102,132,0.04)] p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                          Próximo turno · {formatShiftLabel(handoff.nextShift).toLowerCase()}
+                        </span>
+                        <span className="text-[0.9rem] text-brand-text-secondary">
+                          {resident.upcomingDoses.length === 1
+                            ? '1 dosis'
+                            : `${resident.upcomingDoses.length} dosis`}
+                        </span>
+                      </div>
+                      <ul className="grid gap-2">
+                        {resident.upcomingDoses.map((dose) => (
+                          <li
+                            key={dose.id}
+                            className="flex flex-wrap items-start justify-between gap-3 rounded-[18px] bg-white/80 px-4 py-3"
+                          >
+                            <div className="grid gap-0.5">
+                              <strong className="text-brand-text">
+                                {dose.medicationName}
+                              </strong>
+                              <span className="text-[0.88rem] text-brand-text-secondary">
+                                {dose.dose} · {formatMedicationRoute(dose.route)}
+                              </span>
+                            </div>
+                            <span className="inline-flex rounded-full bg-brand-primary/10 px-3 py-1 text-[0.78rem] font-semibold text-brand-primary">
+                              {formatShiftTime(dose.scheduledFor)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
                 </article>
               ))}
             </section>
