@@ -18,6 +18,7 @@ import {
   type MedicationOrder,
 } from '@gentrix/domain-medication';
 import type {
+  MedicationAdherenceSummary,
   MedicationCatalogItem,
   MedicationCreateInput,
   MedicationExecutionCreateInput,
@@ -173,6 +174,69 @@ export class MedicationService {
       medications,
       executions,
     });
+  }
+
+  /**
+   * Resumen básico de adherencia del residente en los últimos `days` días.
+   * v1 agrega únicamente ejecuciones registradas en la ventana — no cuenta
+   * dosis programadas que nunca se registraron. Eso queda como follow-up.
+   */
+  async getResidentAdherence(
+    residentId: string,
+    days: number,
+    organizationId?: MedicationOrder['organizationId'],
+  ): Promise<MedicationAdherenceSummary> {
+    const clampedDays = this.clampAdherenceDays(days);
+    const resident = await this.residentsService.getResidentEntityById(
+      residentId,
+      organizationId,
+    );
+    const executions =
+      await this.medicationExecutionRepository.listByResidentId(
+        resident.id,
+        resident.organizationId,
+      );
+
+    const to = new Date();
+    const from = new Date(to.getTime() - clampedDays * 24 * 60 * 60 * 1000);
+    const toTime = to.getTime();
+    const fromTime = from.getTime();
+
+    let administeredCount = 0;
+    let omittedCount = 0;
+    let rejectedCount = 0;
+
+    for (const execution of executions) {
+      const occurred = new Date(execution.occurredAt).getTime();
+      if (!Number.isFinite(occurred)) continue;
+      if (occurred < fromTime || occurred > toTime) continue;
+
+      if (execution.result === 'administered') administeredCount += 1;
+      else if (execution.result === 'omitted') omittedCount += 1;
+      else if (execution.result === 'rejected') rejectedCount += 1;
+    }
+
+    const totalCount = administeredCount + omittedCount + rejectedCount;
+
+    return {
+      residentId: resident.id,
+      from: toIsoDateString(from),
+      to: toIsoDateString(to),
+      days: clampedDays,
+      administeredCount,
+      omittedCount,
+      rejectedCount,
+      totalCount,
+      adherenceRate: totalCount === 0 ? null : administeredCount / totalCount,
+    };
+  }
+
+  private clampAdherenceDays(days: number): number {
+    if (!Number.isFinite(days)) return 30;
+    const rounded = Math.round(days);
+    if (rounded < 1) return 1;
+    if (rounded > 90) return 90;
+    return rounded;
   }
 
   async createMedication(

@@ -739,6 +739,28 @@ export interface ResidentShiftDoses {
   doses: ResidentShiftDose[];
 }
 
+/**
+ * Resumen básico de adherencia para un residente en un rango temporal.
+ *
+ * v1 agrega únicamente ejecuciones REGISTRADAS en la ventana: mide
+ * "de lo que se registró, qué proporción fue administrada". No cuenta
+ * dosis programadas nunca ejecutadas como "perdidas" — ese refinamiento
+ * queda para un follow-up cuando tengamos la proyección histórica.
+ */
+export interface MedicationAdherenceSummary {
+  residentId: EntityId;
+  from: IsoDateString;
+  to: IsoDateString;
+  days: number;
+  administeredCount: number;
+  omittedCount: number;
+  rejectedCount: number;
+  /** administered + omitted + rejected. Puede ser 0 si no hubo registros. */
+  totalCount: number;
+  /** Proporción entre 0 y 1. `null` cuando `totalCount === 0`. */
+  adherenceRate: number | null;
+}
+
 export type DashboardAlertSeverity = 'info' | 'warning' | 'critical';
 
 export type DashboardAlertSource =
