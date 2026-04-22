@@ -7,6 +7,7 @@ import type {
   MedicationExecutionOverview,
   MedicationOverview,
   MedicationUpdateInput,
+  ResidentShiftDoses,
 } from '@gentrix/shared-types';
 
 import { apiClient } from '../../../shared/config/api-client';
@@ -89,6 +90,16 @@ export async function createMedicationExecution(
   const response = await apiClient.post<ApiEnvelope<MedicationExecutionOverview>>(
     `/api/medications/${medicationId}/executions`,
     input,
+  );
+
+  return response.data;
+}
+
+export async function getResidentShiftDoses(
+  residentId: string,
+): Promise<ApiEnvelope<ResidentShiftDoses>> {
+  const response = await apiClient.get<ApiEnvelope<ResidentShiftDoses>>(
+    `/api/medications/resident/${residentId}/shift-doses`,
   );
 
   return response.data;

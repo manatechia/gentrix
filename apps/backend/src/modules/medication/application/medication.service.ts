@@ -7,6 +7,7 @@ import {
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import {
+  computeResidentShiftDoses,
   createMedicationFromInput,
   createMedicationExecutionFromInput,
   isMedicationActive,
@@ -24,6 +25,7 @@ import type {
   MedicationDetail,
   MedicationOverview,
   MedicationUpdateInput,
+  ResidentShiftDoses,
 } from '@gentrix/shared-types';
 import { toIsoDateString } from '@gentrix/shared-utils';
 
@@ -141,6 +143,36 @@ export class MedicationService {
     return executions.map((execution) =>
       toMedicationExecutionOverview(execution, resident.fullName),
     );
+  }
+
+  /**
+   * Dosis del turno actual para un residente, con el estado concreto de cada
+   * una (pending / administered / omitted / rejected). Usada por el panel de
+   * registro por turno en la ficha del residente.
+   */
+  async getResidentShiftDoses(
+    residentId: string,
+    organizationId?: MedicationOrder['organizationId'],
+  ): Promise<ResidentShiftDoses> {
+    const resident = await this.residentsService.getResidentEntityById(
+      residentId,
+      organizationId,
+    );
+    const [medications, executions] = await Promise.all([
+      this.medicationRepository.listByResidentId(
+        resident.id,
+        resident.organizationId,
+      ),
+      this.medicationExecutionRepository.listByResidentId(
+        resident.id,
+        resident.organizationId,
+      ),
+    ]);
+
+    return computeResidentShiftDoses({
+      medications,
+      executions,
+    });
   }
 
   async createMedication(

@@ -2,6 +2,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { useAuthSession } from '../../features/auth/hooks/use-auth-session';
 import { AuthCheckingScreen } from '../../features/auth/ui/auth-checking-screen';
+import { useResidentMedicationShift } from '../../features/medication/hooks/use-resident-medication-shift';
 import { useResidentAgenda } from '../../features/residents/hooks/use-resident-agenda';
 import { useResidentEditRoute } from '../../features/residents/hooks/use-resident-edit-route';
 import { useResidentDetailRoute } from '../../features/residents/hooks/use-resident-detail-route';
@@ -85,6 +86,7 @@ export function ResidentDetailRoute() {
   const observations = useResidentObservations(residentId, {
     onCareStatusChanged: detail.handleRetry,
   });
+  const medicationShift = useResidentMedicationShift(residentId);
 
   if (auth.status === 'checking') {
     return <AuthCheckingScreen />;
@@ -128,6 +130,13 @@ export function ResidentDetailRoute() {
       observationNoticeTone={observations.noticeTone}
       onObservationNoteCreate={observations.handleCreate}
       onObservationNoteDelete={observations.handleDelete}
+      medicationShift={medicationShift.snapshot}
+      isLoadingMedicationShift={medicationShift.isLoading}
+      isSavingMedicationShift={medicationShift.isSaving}
+      activeMedicationShiftMutationId={medicationShift.activeMutationId}
+      medicationShiftNotice={medicationShift.notice}
+      medicationShiftNoticeTone={medicationShift.noticeTone}
+      onMedicationShiftRecord={medicationShift.handleRecord}
     />
   );
 }

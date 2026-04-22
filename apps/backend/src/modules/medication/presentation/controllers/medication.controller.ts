@@ -50,6 +50,17 @@ export class MedicationController {
     );
   }
 
+  @Get('resident/:residentId/shift-doses')
+  getResidentShiftDoses(
+    @Param('residentId') residentId: string,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.medicationService.getResidentShiftDoses(
+      residentId,
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
   @Get(':medicationId')
   getMedicationById(
     @Param('medicationId') medicationId: string,
