@@ -6,10 +6,16 @@ import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 
 import type { RequestWithSession } from '../auth/session.guard';
 
-const isProd = process.env.NODE_ENV === 'production';
+// Silenciamos los logs ruidosos de bootstrap de Nest en cualquier entorno
+// hosteado (production, staging, etc.) para no saturar los logs. Solo dev/test
+// los dejan pasar. IMPORTANTE: nunca pasar `hooks: undefined` a pino — rompe
+// pino@10 porque `Object.assign` sobrescribe el default `{logMethod, streamWrite}`
+// con undefined y `setLevel` explota leyendo `this[hooksSym].logMethod`.
+const nodeEnv = process.env.NODE_ENV;
+const shouldSilenceBootstrapLogs =
+  nodeEnv !== undefined && nodeEnv !== 'development' && nodeEnv !== 'test';
+const isProd = nodeEnv === 'production';
 
-// Nest emite muchos logs de bootstrap (InstanceLoader, RouterExplorer, etc.).
-// En prod los silenciamos para no saturar los logs de Render.
 const NOISY_BOOTSTRAP_CONTEXTS = new Set([
   'InstanceLoader',
   'RouterExplorer',
@@ -83,22 +89,25 @@ function readRequestIdHeader(req: IncomingMessage): string | undefined {
         autoLogging: {
           ignore: (req) => req.url === '/health' || req.url === '/health/',
         },
-        // En prod descartamos los logs ruidosos de bootstrap de Nest.
-        hooks: isProd
+        // Spread condicional: si no queremos filtrar, omitimos la prop por
+        // completo. Pasar `hooks: undefined` literal rompe pino@10 (ver arriba).
+        ...(shouldSilenceBootstrapLogs
           ? {
-              logMethod(args, method) {
-                const first = args[0];
-                const ctx =
-                  typeof first === 'object' && first !== null
-                    ? (first as { context?: unknown }).context
-                    : undefined;
-                if (typeof ctx === 'string' && NOISY_BOOTSTRAP_CONTEXTS.has(ctx)) {
-                  return;
-                }
-                return method.apply(this, args);
+              hooks: {
+                logMethod(args, method) {
+                  const first = args[0];
+                  const ctx =
+                    typeof first === 'object' && first !== null
+                      ? (first as { context?: unknown }).context
+                      : undefined;
+                  if (typeof ctx === 'string' && NOISY_BOOTSTRAP_CONTEXTS.has(ctx)) {
+                    return;
+                  }
+                  return method.apply(this, args);
+                },
               },
             }
-          : undefined,
+          : {}),
       },
     }),
   ],
