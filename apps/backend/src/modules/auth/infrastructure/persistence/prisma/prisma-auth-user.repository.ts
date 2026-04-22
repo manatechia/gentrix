@@ -45,6 +45,7 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
           },
           orderBy: [{ isDefault: 'desc' }, { joinedAt: 'asc' }],
           include: {
+            role: true,
             organization: {
               include: {
                 facilities: {
@@ -80,7 +81,7 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
       return null;
     }
 
-    const normalizedRole = normalizeAuthRole(activeMembership.roleCode);
+    const normalizedRole = normalizeAuthRole(activeMembership.role.code);
 
     if (!normalizedRole) {
       return null;
@@ -132,13 +133,5 @@ export class PrismaAuthUserRepository implements AuthUserRepository {
 }
 
 function normalizeAuthRole(value: string): AuthRole | null {
-  if (value === 'coordinator') {
-    return 'health-director';
-  }
-
-  if (value === 'staff') {
-    return 'assistant';
-  }
-
   return authRoles.has(value as AuthRole) ? (value as AuthRole) : null;
 }
