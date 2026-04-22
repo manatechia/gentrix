@@ -199,6 +199,7 @@ function createMedicalHistoryEntry(
   input: ResidentMedicalHistoryEntryInput,
   createdAt: IsoDateString,
   idSeed: string,
+  actor: string = 'setup-script',
 ): ResidentMedicalHistoryEntry {
   return {
     id: createEntityId('resident-history', idSeed),
@@ -206,6 +207,9 @@ function createMedicalHistoryEntry(
     title: input.title.trim(),
     notes: input.notes.trim(),
     createdAt,
+    updatedAt: createdAt,
+    createdBy: actor,
+    updatedBy: actor,
   };
 }
 
@@ -505,6 +509,9 @@ function mapResidentCreateInput(
         title: entry.title.trim(),
         notes: entry.notes.trim(),
         createdAt: now,
+        updatedAt: now,
+        createdBy: 'dashboard-intake',
+        updatedBy: 'dashboard-intake',
       }) satisfies ResidentMedicalHistoryEntry,
     ),
     attachments: input.attachments.map((attachment) =>

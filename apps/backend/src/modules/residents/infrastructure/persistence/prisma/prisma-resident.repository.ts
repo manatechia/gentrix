@@ -277,6 +277,9 @@ function mapResidentRecord(record: ResidentRecord): Resident {
       title: event.title,
       notes: event.description,
       createdAt: toIsoDateString(event.createdAt),
+      updatedAt: toIsoDateString(event.updatedAt),
+      createdBy: event.createdBy,
+      updatedBy: event.updatedBy,
     })),
     attachments: fromJson<ResidentAttachment[]>(record.attachments, []),
     insurance: fromJson<ResidentInsuranceInfo>(record.insurance, {}),
@@ -397,9 +400,9 @@ function toMedicalHistoryEventRecords(resident: Resident) {
     description: entry.notes,
     occurredAt: new Date(entry.recordedAt),
     createdAt: new Date(entry.createdAt),
-    createdBy: resident.audit.updatedBy,
-    updatedAt: new Date(resident.audit.updatedAt),
-    updatedBy: resident.audit.updatedBy,
+    createdBy: entry.createdBy,
+    updatedAt: new Date(entry.updatedAt),
+    updatedBy: entry.updatedBy,
   }));
 }
 

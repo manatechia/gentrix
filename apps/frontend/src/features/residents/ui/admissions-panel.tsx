@@ -92,6 +92,18 @@ interface ToggleCardFieldProps {
 }
 
 const textareaClassName = `${inputClassName} min-h-[132px] py-3`;
+const medicalHistoryAuditFormatter = new Intl.DateTimeFormat('es-AR', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
+function formatMedicalHistoryAuditDate(value: string): string {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? value
+    : medicalHistoryAuditFormatter.format(parsed);
+}
+
 const innerPanelClassName =
   'rounded-[24px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/60 p-5';
 const cuitFieldClassName =
@@ -660,6 +672,26 @@ function HealthAndMedicalSection({
                             }
                           />
                         </label>
+                        {entry.createdBy && (
+                          <div className="mt-3 grid gap-0.5 text-[0.82rem] text-brand-text-muted">
+                            <span>
+                              Registrado por {entry.createdBy}
+                              {entry.createdAt
+                                ? ` el ${formatMedicalHistoryAuditDate(entry.createdAt)}`
+                                : ''}
+                            </span>
+                            {entry.updatedAt &&
+                              entry.createdAt &&
+                              entry.updatedAt !== entry.createdAt &&
+                              entry.updatedBy &&
+                              entry.updatedBy !== entry.createdBy && (
+                                <span>
+                                  Editado por {entry.updatedBy} el{' '}
+                                  {formatMedicalHistoryAuditDate(entry.updatedAt)}
+                                </span>
+                              )}
+                          </div>
+                        )}
                       </article>
                     );
                   })}

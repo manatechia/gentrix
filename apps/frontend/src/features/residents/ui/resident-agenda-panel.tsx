@@ -679,8 +679,15 @@ function OccurrenceCard(props: OccurrenceCardProps) {
           {occurrence.description}
         </p>
       )}
-      <div className="mt-3 text-[0.86rem] text-brand-text-muted">
-        Agendado por {occurrence.audit.createdBy}
+      <div className="mt-3 grid gap-0.5 text-[0.86rem] text-brand-text-muted">
+        <span>Agendado por {occurrence.audit.createdBy}</span>
+        {occurrence.audit.updatedAt !== occurrence.audit.createdAt &&
+          occurrence.audit.updatedBy &&
+          occurrence.audit.updatedBy !== occurrence.audit.createdBy && (
+            <span className="text-[0.78rem]">
+              Editado por {occurrence.audit.updatedBy}
+            </span>
+          )}
       </div>
     </article>
   );

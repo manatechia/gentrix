@@ -89,6 +89,10 @@ export class ResidentsService {
     const resident = createResidentFromIntake(input, organizationId, facilityId);
     resident.audit.createdBy = actor;
     resident.audit.updatedBy = actor;
+    for (const entry of resident.medicalHistory) {
+      entry.createdBy = actor;
+      entry.updatedBy = actor;
+    }
     const created = await this.residents.create(resident);
     this.logger.info(
       {
