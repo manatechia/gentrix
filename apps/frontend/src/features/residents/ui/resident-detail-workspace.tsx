@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import type {
   AuthSession,
+  MedicationAdherenceSummary,
   MedicationExecutionResult,
   ResidentAgendaEventCreateInput,
   ResidentAgendaEventUpdateInput,
@@ -44,6 +45,7 @@ import { PageToolbar } from '../../../shared/ui/page-toolbar';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
+import { ResidentMedicationAdherenceCard } from '../../medication/ui/resident-medication-adherence-card';
 import { ResidentMedicationShiftPanel } from '../../medication/ui/resident-medication-shift-panel';
 import { ResidentAgendaPanel } from './resident-agenda-panel';
 import { ResidentLiveProfilePanel } from './resident-live-profile-panel';
@@ -134,6 +136,9 @@ interface ResidentDetailWorkspaceProps {
     scheduledFor: string,
     result: MedicationExecutionResult,
   ) => Promise<boolean>;
+  medicationAdherence: MedicationAdherenceSummary | null;
+  isLoadingMedicationAdherence: boolean;
+  medicationAdherenceError: string | null;
 }
 
 interface DetailFieldProps {
@@ -237,6 +242,9 @@ export function ResidentDetailWorkspace({
   medicationShiftNotice,
   medicationShiftNoticeTone,
   onMedicationShiftRecord,
+  medicationAdherence,
+  isLoadingMedicationAdherence,
+  medicationAdherenceError,
 }: ResidentDetailWorkspaceProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -455,6 +463,12 @@ export function ResidentDetailWorkspace({
             notice={medicationShiftNotice}
             noticeTone={medicationShiftNoticeTone}
             onRecord={onMedicationShiftRecord}
+          />
+
+          <ResidentMedicationAdherenceCard
+            summary={medicationAdherence}
+            isLoading={isLoadingMedicationAdherence}
+            error={medicationAdherenceError}
           />
 
           <ResidentObservationsPanel

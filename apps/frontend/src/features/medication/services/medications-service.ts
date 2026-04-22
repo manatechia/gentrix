@@ -1,5 +1,6 @@
 import type {
   ApiEnvelope,
+  MedicationAdherenceSummary,
   MedicationCatalogItem,
   MedicationCreateInput,
   MedicationDetail,
@@ -100,6 +101,17 @@ export async function getResidentShiftDoses(
 ): Promise<ApiEnvelope<ResidentShiftDoses>> {
   const response = await apiClient.get<ApiEnvelope<ResidentShiftDoses>>(
     `/api/medications/resident/${residentId}/shift-doses`,
+  );
+
+  return response.data;
+}
+
+export async function getResidentAdherence(
+  residentId: string,
+  days = 30,
+): Promise<ApiEnvelope<MedicationAdherenceSummary>> {
+  const response = await apiClient.get<ApiEnvelope<MedicationAdherenceSummary>>(
+    `/api/medications/resident/${residentId}/adherence?days=${days}`,
   );
 
   return response.data;

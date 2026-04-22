@@ -2,6 +2,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { useAuthSession } from '../../features/auth/hooks/use-auth-session';
 import { AuthCheckingScreen } from '../../features/auth/ui/auth-checking-screen';
+import { useResidentMedicationAdherence } from '../../features/medication/hooks/use-resident-medication-adherence';
 import { useResidentMedicationShift } from '../../features/medication/hooks/use-resident-medication-shift';
 import { useResidentAgenda } from '../../features/residents/hooks/use-resident-agenda';
 import { useResidentEditRoute } from '../../features/residents/hooks/use-resident-edit-route';
@@ -87,6 +88,7 @@ export function ResidentDetailRoute() {
     onCareStatusChanged: detail.handleRetry,
   });
   const medicationShift = useResidentMedicationShift(residentId);
+  const medicationAdherence = useResidentMedicationAdherence(residentId);
 
   if (auth.status === 'checking') {
     return <AuthCheckingScreen />;
@@ -136,7 +138,26 @@ export function ResidentDetailRoute() {
       activeMedicationShiftMutationId={medicationShift.activeMutationId}
       medicationShiftNotice={medicationShift.notice}
       medicationShiftNoticeTone={medicationShift.noticeTone}
-      onMedicationShiftRecord={medicationShift.handleRecord}
+      onMedicationShiftRecord={async (
+        medicationOrderId,
+        doseId,
+        scheduledFor,
+        result,
+      ) => {
+        const ok = await medicationShift.handleRecord(
+          medicationOrderId,
+          doseId,
+          scheduledFor,
+          result,
+        );
+        if (ok) {
+          void medicationAdherence.reload();
+        }
+        return ok;
+      }}
+      medicationAdherence={medicationAdherence.summary}
+      isLoadingMedicationAdherence={medicationAdherence.isLoading}
+      medicationAdherenceError={medicationAdherence.error}
     />
   );
 }

@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
 } from '@nestjs/common';
 
@@ -57,6 +58,20 @@ export class MedicationController {
   ) {
     return this.medicationService.getResidentShiftDoses(
       residentId,
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  @Get('resident/:residentId/adherence')
+  getResidentAdherence(
+    @Param('residentId') residentId: string,
+    @Query('days') daysRaw: string | undefined,
+    @Req() request: RequestWithSession,
+  ) {
+    const days = daysRaw === undefined ? 30 : Number.parseInt(daysRaw, 10);
+    return this.medicationService.getResidentAdherence(
+      residentId,
+      Number.isNaN(days) ? 30 : days,
       request.authSession!.activeOrganization.id,
     );
   }
