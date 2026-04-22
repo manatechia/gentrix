@@ -794,6 +794,12 @@ export interface HandoffResident {
   careLevel: ResidentCareLevel;
   priority: DashboardAlertSeverity;
   medicationIssues: HandoffMedicationIssue[];
+  /**
+   * Dosis programadas del próximo turno para este residente. Siempre tienen
+   * `status: 'pending'`; se incluyen para que el turno entrante sepa qué se
+   * viene apenas tome el relevo.
+   */
+  upcomingDoses: ResidentShiftDose[];
 }
 
 export interface HandoffSummary {
@@ -802,6 +808,8 @@ export interface HandoffSummary {
   pendingMedicationCount: number;
   omittedMedicationCount: number;
   rejectedMedicationCount: number;
+  /** Total de dosis proyectadas para el próximo turno en todos los residentes. */
+  upcomingDoseCount: number;
 }
 
 export interface HandoffSnapshot {
