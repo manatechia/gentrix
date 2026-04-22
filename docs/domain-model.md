@@ -134,7 +134,7 @@ Los roles **no** viven aqui: viven en `OrganizationMembership`.
 
 Relacion entre una cuenta y una organizacion.
 
-Campos clave: `id`, `organizationId`, `userId`, `roleCode`, `status`, `isDefault`, `joinedAt`, `leftAt?`, auditoria.
+Campos clave: `id`, `organizationId`, `userId`, `roleId` (FK a `Role`), `status`, `isDefault`, `joinedAt`, `leftAt?`, auditoria.
 
 Unique compuesto: `[organizationId, userId]`.
 
@@ -263,7 +263,8 @@ Regla: administracion, omision y rechazo se modelan aqui, no como campos adicion
 
 RBAC no debe vivir en `User` como string global.
 
-- Los roles base viven en `OrganizationMembership.roleCode`.
+- El catálogo de roles por organización vive en `Role` (`code`, `displayName`, `description`), con unicidad `[organizationId, code]` — 3FN.
+- El rol efectivo de un usuario en una organización se referencia desde `OrganizationMembership.roleId` (FK a `Role`).
 - El alcance por residencia vive en `MembershipFacilityScope`.
 - Los permisos efectivos se resuelven por organizacion y, cuando aplique, por residencia.
 

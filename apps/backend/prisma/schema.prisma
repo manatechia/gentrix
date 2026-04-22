@@ -29,6 +29,7 @@ model Organization {
   medicationOrders MedicationOrder[]
   memberships      OrganizationMembership[]
   residents        Resident[]
+  roles            Role[]
   sessions         AuthSession[]
   staffMembers     StaffMember[]
 
@@ -73,7 +74,6 @@ model UserAccount {
   fullName              String
   email                 String                   @unique
   password              String
-  role                  String
   status                String                   @default("active")
   forcePasswordChange   Boolean                  @default(false)
   passwordChangedAt     DateTime?
@@ -141,7 +141,7 @@ model OrganizationMembership {
   id             String                  @id @default(uuid()) @db.Uuid
   organizationId String                  @db.Uuid
   userId         String                  @db.Uuid
-  roleCode       String
+  roleId         String                  @db.Uuid
   status         String
   isDefault      Boolean                 @default(false)
   joinedAt       DateTime
@@ -154,11 +154,37 @@ model OrganizationMembership {
   deletedBy      String?
   facilityScopes MembershipFacilityScope[]
   organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  role           Role                    @relation(fields: [roleId], references: [id], onDelete: Restrict)
   user           UserAccount             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, userId])
   @@index([userId, status])
   @@index([organizationId, status])
+  @@index([roleId])
+  @@index([deletedAt])
+}
+
+/// Catálogo de roles (permisos) por organización. 3FN: el código canónico
+/// y el nombre legible viven en una única fila y se referencian desde
+/// OrganizationMembership.roleId. Los cinco roles base se siembran por
+/// migración al crear una organización.
+model Role {
+  id             String                   @id @default(uuid()) @db.Uuid
+  organizationId String                   @db.Uuid
+  code           String
+  displayName    String
+  description    String?
+  createdAt      DateTime
+  createdBy      String
+  updatedAt      DateTime
+  updatedBy      String
+  deletedAt      DateTime?
+  deletedBy      String?
+  memberships    OrganizationMembership[]
+  organization   Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, code])
+  @@index([organizationId, deletedAt])
   @@index([deletedAt])
 }
 

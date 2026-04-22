@@ -26,6 +26,7 @@ import type {
 type MembershipRecord = Prisma.OrganizationMembershipGetPayload<{
   include: {
     user: true;
+    role: true;
   };
 }>;
 
@@ -49,8 +50,8 @@ export class PrismaUserRepository implements UserRepository {
       where: {
         organizationId,
         deletedAt: null,
-        roleCode: {
-          not: 'admin',
+        role: {
+          code: { not: 'admin' },
         },
         user: {
           deletedAt: null,
@@ -58,6 +59,7 @@ export class PrismaUserRepository implements UserRepository {
       },
       include: {
         user: true,
+        role: true,
       },
       orderBy: {
         user: {
@@ -84,6 +86,7 @@ export class PrismaUserRepository implements UserRepository {
       },
       include: {
         user: true,
+        role: true,
       },
     });
 
@@ -130,13 +133,27 @@ export class PrismaUserRepository implements UserRepository {
       throw new ConflictException('Ya existe un usuario con ese email.');
     }
 
+    const role = await this.prisma.role.findUnique({
+      where: {
+        organizationId_code: {
+          organizationId: input.organizationId,
+          code: input.role,
+        },
+      },
+    });
+
+    if (!role) {
+      throw new NotFoundException(
+        'El rol solicitado no está configurado en esta organización.',
+      );
+    }
+
     const now = new Date();
     const createdUser = await this.prisma.userAccount.create({
       data: {
         fullName: input.fullName,
         email: input.email,
         password: input.password,
-        role: input.role,
         status: 'active',
         // Every new user is forced to pick their own password on first login.
         forcePasswordChange: true,
@@ -148,7 +165,7 @@ export class PrismaUserRepository implements UserRepository {
         memberships: {
           create: {
             organizationId: input.organizationId,
-            roleCode: input.role,
+            roleId: role.id,
             status: 'active',
             isDefault: true,
             joinedAt: now,
@@ -167,6 +184,7 @@ export class PrismaUserRepository implements UserRepository {
           },
           include: {
             user: true,
+            role: true,
           },
           take: 1,
         },
@@ -235,7 +253,7 @@ function mapMembershipRecord(record: MembershipRecord): UserOverview {
     id: record.user.id as UserOverview['id'],
     fullName: record.user.fullName,
     email: record.user.email,
-    role: normalizeAuthRole(record.roleCode),
+    role: normalizeAuthRole(record.role.code),
     status: normalizeEntityStatus(record.user.status),
     forcePasswordChange: record.user.forcePasswordChange,
     passwordChangedAt: record.user.passwordChangedAt
@@ -245,14 +263,6 @@ function mapMembershipRecord(record: MembershipRecord): UserOverview {
 }
 
 function normalizeAuthRole(value: string): AuthRole {
-  if (value === 'coordinator') {
-    return 'health-director';
-  }
-
-  if (value === 'staff') {
-    return 'assistant';
-  }
-
   return authRoles.has(value as AuthRole) ? (value as AuthRole) : 'assistant';
 }
 

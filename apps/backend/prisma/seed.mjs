@@ -34,6 +34,13 @@ const ids = {
     anaGomezDemo: '91000000-0000-4000-8000-000000000004',
     mariaLopezDemo: '91000000-0000-4000-8000-000000000005',
   },
+  roles: {
+    admin: '91000000-0000-4000-8000-000000000020',
+    healthDirector: '91000000-0000-4000-8000-000000000021',
+    nurse: '91000000-0000-4000-8000-000000000022',
+    assistant: '91000000-0000-4000-8000-000000000023',
+    external: '91000000-0000-4000-8000-000000000024',
+  },
   residents: {
     martaDiaz: 'f3bf3160-6a6e-492f-a632-e7485915a54d',
     elenaSuarez: '6d0c9153-5c16-4452-bdcb-c00b0d1cbde3',
@@ -93,6 +100,7 @@ export async function seedDatabase(prisma) {
   await prisma.resident.deleteMany();
   await prisma.membershipFacilityScope.deleteMany();
   await prisma.organizationMembership.deleteMany();
+  await prisma.role.deleteMany();
   await prisma.facility.deleteMany();
   await prisma.organization.deleteMany();
   await prisma.userAccount.deleteMany();
@@ -139,13 +147,76 @@ export async function seedDatabase(prisma) {
     },
   });
 
+  await prisma.role.createMany({
+    data: [
+      {
+        id: ids.roles.admin,
+        organizationId: ids.organizations.gentrixDemo,
+        code: 'admin',
+        displayName: 'Administrador',
+        description:
+          'Acceso total: gestión de usuarios, residentes, medicación y configuración.',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.roles.healthDirector,
+        organizationId: ids.organizations.gentrixDemo,
+        code: 'health-director',
+        displayName: 'Director de Salud',
+        description:
+          'Gestión clínica: residentes, medicación, horarios del equipo.',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.roles.nurse,
+        organizationId: ids.organizations.gentrixDemo,
+        code: 'nurse',
+        displayName: 'Enfermería',
+        description:
+          'Registro de observaciones y ejecución de medicación durante el turno.',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.roles.assistant,
+        organizationId: ids.organizations.gentrixDemo,
+        code: 'assistant',
+        displayName: 'Asistente',
+        description:
+          'Registro de observaciones operativas durante el turno.',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.roles.external,
+        organizationId: ids.organizations.gentrixDemo,
+        code: 'external',
+        displayName: 'Externo',
+        description: 'Acceso limitado sólo-lectura.',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+    ],
+  });
+
   await prisma.userAccount.create({
     data: {
       id: ids.users.sofiaQuiroga,
       fullName: 'Sofia Quiroga',
       email: 'admin@gentrix.local',
       password: seedPasswordHash,
-      role: 'admin',
       status: 'active',
       createdAt: new Date('2026-01-10T09:00:00.000Z'),
       createdBy: 'seed-script',
@@ -160,7 +231,6 @@ export async function seedDatabase(prisma) {
       fullName: 'Ana Gomez',
       email: 'ana.gomez@gentrix.local',
       password: seedPasswordHash,
-      role: 'nurse',
       status: 'active',
       createdAt: new Date('2026-01-10T09:00:00.000Z'),
       createdBy: 'seed-script',
@@ -175,7 +245,6 @@ export async function seedDatabase(prisma) {
       fullName: 'Maria Lopez',
       email: 'maria.lopez@gentrix.local',
       password: seedPasswordHash,
-      role: 'health-director',
       status: 'active',
       createdAt: new Date('2026-01-10T09:00:00.000Z'),
       createdBy: 'seed-script',
@@ -189,7 +258,7 @@ export async function seedDatabase(prisma) {
       id: ids.memberships.sofiaQuirogaDemo,
       organizationId: ids.organizations.gentrixDemo,
       userId: ids.users.sofiaQuiroga,
-      roleCode: 'admin',
+      roleId: ids.roles.admin,
       status: 'active',
       isDefault: true,
       joinedAt: new Date('2026-01-10T09:00:00.000Z'),
@@ -215,7 +284,7 @@ export async function seedDatabase(prisma) {
       id: ids.memberships.anaGomezDemo,
       organizationId: ids.organizations.gentrixDemo,
       userId: ids.users.anaGomez,
-      roleCode: 'nurse',
+      roleId: ids.roles.nurse,
       status: 'active',
       isDefault: true,
       joinedAt: new Date('2026-02-01T08:00:00.000Z'),
@@ -241,7 +310,7 @@ export async function seedDatabase(prisma) {
       id: ids.memberships.mariaLopezDemo,
       organizationId: ids.organizations.gentrixDemo,
       userId: ids.users.mariaLopez,
-      roleCode: 'health-director',
+      roleId: ids.roles.healthDirector,
       status: 'active',
       isDefault: true,
       joinedAt: new Date('2026-02-10T08:00:00.000Z'),
