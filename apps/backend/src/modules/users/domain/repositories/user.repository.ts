@@ -1,4 +1,9 @@
-import type { IsoDateString, UserCreateInput, UserOverview } from '@gentrix/shared-types';
+import type {
+  IsoDateString,
+  TeamMemberOverview,
+  UserCreateInput,
+  UserOverview,
+} from '@gentrix/shared-types';
 
 export interface PersistedUserCreateInput extends UserCreateInput {
   organizationId: string;
@@ -28,10 +33,15 @@ export interface UserPasswordRecord {
 
 export interface UserRepository {
   list(organizationId: string): Promise<UserOverview[]>;
+  listTeam(organizationId: string): Promise<TeamMemberOverview[]>;
   findById(
     userId: string,
     organizationId: string,
   ): Promise<UserOverview | null>;
+  findMembershipIdByUser(
+    userId: string,
+    organizationId: string,
+  ): Promise<string | null>;
   findPasswordRecord(userId: string): Promise<UserPasswordRecord | null>;
   create(input: PersistedUserCreateInput): Promise<UserOverview>;
   resetPassword(input: ResetPasswordInput): Promise<UserOverview>;

@@ -1,6 +1,5 @@
 import { createMedicationSeed } from '@gentrix/domain-medication';
 import { createResidentSeed } from '@gentrix/domain-residents';
-import { createStaffSeed } from '@gentrix/domain-staff';
 import type {
   AuthFacility,
   AuthOrganization,
@@ -82,22 +81,6 @@ export const seedResidents = [
       relationship: 'Hija',
       phone: '+54 11 5555-0140',
     },
-  }),
-];
-
-export const seedStaff = [
-  createStaffSeed('nurse'),
-  createStaffSeed('caregiver', {
-    firstName: 'Mauro',
-    lastName: 'Paz',
-    ward: 'Unidad B',
-    shift: 'afternoon',
-  }),
-  createStaffSeed('doctor', {
-    firstName: 'Lucia',
-    lastName: 'Mendez',
-    ward: 'Consultorio',
-    shift: 'morning',
   }),
 ];
 

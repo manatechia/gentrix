@@ -32,7 +32,6 @@ model Organization {
   residents        Resident[]
   roles            Role[]
   sessions         AuthSession[]
-  staffMembers     StaffMember[]
 
   @@index([deletedAt])
 }
@@ -63,7 +62,6 @@ model Facility {
   organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   residents        Resident[]
   sessions         AuthSession[]
-  staffAssignments StaffFacilityAssignment[]
   wards            Ward[]
 
   @@unique([organizationId, code])
@@ -71,9 +69,9 @@ model Facility {
   @@index([deletedAt])
 }
 
-/// Unidad física dentro de una residencia (ala, consultorio, piso). La
-/// normalización (etapa 2 del backlog) la desacopla del string libre que
-/// vivía en `StaffMember.ward` / `StaffFacilityAssignment.ward`.
+/// Unidad física dentro de una residencia (ala, consultorio, piso). Se
+/// referencia desde `OrganizationMembership.wardId` para marcar dónde
+/// trabaja cada miembro del equipo.
 model Ward {
   id               String                    @id @default(uuid()) @db.Uuid
   facilityId       String                    @db.Uuid
@@ -86,8 +84,7 @@ model Ward {
   deletedAt        DateTime?
   deletedBy        String?
   facility         Facility                  @relation(fields: [facilityId], references: [id], onDelete: Restrict)
-  staffMembers     StaffMember[]             @relation("StaffMemberWard")
-  staffAssignments StaffFacilityAssignment[] @relation("StaffAssignmentWard")
+  memberships      OrganizationMembership[]  @relation("MembershipWard")
 
   @@unique([facilityId, code])
   @@index([facilityId, deletedAt])
@@ -167,6 +164,9 @@ model OrganizationMembership {
   organizationId String                  @db.Uuid
   userId         String                  @db.Uuid
   roleId         String                  @db.Uuid
+  jobTitleId     String?                 @db.Uuid
+  wardId         String?                 @db.Uuid
+  shift          String?
   status         String
   isDefault      Boolean                 @default(false)
   joinedAt       DateTime
@@ -181,11 +181,16 @@ model OrganizationMembership {
   organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   role           Role                    @relation(fields: [roleId], references: [id], onDelete: Restrict)
   user           UserAccount             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobTitle       JobTitle?               @relation("MembershipJobTitle", fields: [jobTitleId], references: [id], onDelete: SetNull)
+  ward           Ward?                   @relation("MembershipWard", fields: [wardId], references: [id], onDelete: SetNull)
+  schedules      StaffSchedule[]
 
   @@unique([organizationId, userId])
   @@index([userId, status])
   @@index([organizationId, status])
   @@index([roleId])
+  @@index([jobTitleId])
+  @@index([wardId])
   @@index([deletedAt])
 }
 
@@ -311,81 +316,25 @@ model ResidentFamilyContact {
   @@index([deletedAt])
 }
 
-model StaffMember {
-  id            String                   @id @default(uuid()) @db.Uuid
-  organizationId String                  @db.Uuid
-  firstName     String
-  lastName      String
-  jobTitleId    String?                  @db.Uuid
-  wardId        String?                  @db.Uuid
-  shift         String
-  status        String
-  startDate     DateTime
-  createdAt     DateTime
-  createdBy     String
-  updatedAt     DateTime
-  updatedBy     String
-  deletedAt     DateTime?
-  deletedBy     String?
-  assignments   StaffFacilityAssignment[]
-  jobTitle      JobTitle?                @relation("StaffMemberJobTitle", fields: [jobTitleId], references: [id], onDelete: SetNull)
-  organization  Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  schedules     StaffSchedule[]
-  ward          Ward?                    @relation("StaffMemberWard", fields: [wardId], references: [id], onDelete: SetNull)
-
-  @@index([organizationId, deletedAt])
-  @@index([deletedAt])
-  @@index([wardId])
-  @@index([jobTitleId])
-}
-
-model StaffFacilityAssignment {
-  id             String      @id @default(uuid()) @db.Uuid
-  staffId        String      @db.Uuid
-  facilityId     String      @db.Uuid
-  jobTitleId     String?     @db.Uuid
-  wardId         String?     @db.Uuid
-  shift          String?
-  startDate      DateTime
-  endDate        DateTime?
-  status         String
+/// Puesto laboral (job title) del personal: enfermería, médico, cuidador,
+/// coordinador, etc. Se modela por organización para permitir que cada
+/// geriátrico defina su propio catálogo. Distinto de `Role`, que modela
+/// permisos de login. Se asocia al miembro del equipo vía
+/// `OrganizationMembership.jobTitleId`.
+model JobTitle {
+  id             String                    @id @default(uuid()) @db.Uuid
+  organizationId String                    @db.Uuid
+  code           String
+  displayName    String
+  description    String?
   createdAt      DateTime
   createdBy      String
   updatedAt      DateTime
   updatedBy      String
   deletedAt      DateTime?
   deletedBy      String?
-  facility       Facility    @relation(fields: [facilityId], references: [id], onDelete: Restrict)
-  jobTitle       JobTitle?   @relation("StaffAssignmentJobTitle", fields: [jobTitleId], references: [id], onDelete: SetNull)
-  staffMember    StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  ward           Ward?       @relation("StaffAssignmentWard", fields: [wardId], references: [id], onDelete: SetNull)
-
-  @@index([staffId, status])
-  @@index([facilityId, status])
-  @@index([deletedAt])
-  @@index([wardId])
-  @@index([jobTitleId])
-}
-
-/// Puesto laboral (job title) del personal: enfermería, médico, cuidador,
-/// coordinador, etc. Se modela por organización para permitir que cada
-/// geriátrico defina su propio catálogo. Distinto de `Role`, que modela
-/// permisos de login.
-model JobTitle {
-  id               String                    @id @default(uuid()) @db.Uuid
-  organizationId   String                    @db.Uuid
-  code             String
-  displayName      String
-  description      String?
-  createdAt        DateTime
-  createdBy        String
-  updatedAt        DateTime
-  updatedBy        String
-  deletedAt        DateTime?
-  deletedBy        String?
-  organization     Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  staffMembers     StaffMember[]             @relation("StaffMemberJobTitle")
-  staffAssignments StaffFacilityAssignment[] @relation("StaffAssignmentJobTitle")
+  organization   Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  memberships    OrganizationMembership[]  @relation("MembershipJobTitle")
 
   @@unique([organizationId, code])
   @@index([organizationId, deletedAt])
@@ -573,9 +522,12 @@ model ResidentAgendaSeriesException {
   @@index([seriesId])
 }
 
+/// Horario semanal (o cobertura puntual) asociado a la membresía de un
+/// usuario en una organización. Antes apuntaba a `StaffMember`; ahora el
+/// usuario es la verdad y el membership ata horarios a la org activa.
 model StaffSchedule {
-  id            String      @id @default(uuid()) @db.Uuid
-  staffId       String      @db.Uuid
+  id            String                 @id @default(uuid()) @db.Uuid
+  membershipId  String                 @db.Uuid
   weekday       Int
   startTime     String
   endTime       String
@@ -587,9 +539,9 @@ model StaffSchedule {
   updatedBy     String
   deletedAt     DateTime?
   deletedBy     String?
-  staffMember   StaffMember @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  membership    OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Restrict)
 
-  @@index([staffId])
+  @@index([membershipId])
   @@index([exceptionDate])
   @@index([deletedAt])
 }

@@ -7,8 +7,8 @@ import type {
   MedicationCatalogItem,
   MedicationOverview,
   ResidentOverview,
-  StaffOverview,
-  StaffSchedule,
+  TeamMemberOverview,
+  UserSchedule,
   UserOverview,
 } from '@gentrix/shared-types';
 
@@ -87,30 +87,30 @@ export async function fetchMedicationOrders(
   return readEnvelope<MedicationOverview[]>(response);
 }
 
-export async function fetchStaff(
+export async function fetchTeam(
   request: APIRequestContext,
   token: string,
-): Promise<StaffOverview[]> {
-  const response = await request.get(`${getApiBaseUrl()}/api/staff`, {
+): Promise<TeamMemberOverview[]> {
+  const response = await request.get(`${getApiBaseUrl()}/api/users/team`, {
     headers: buildAuthHeaders(token),
   });
 
-  return readEnvelope<StaffOverview[]>(response);
+  return readEnvelope<TeamMemberOverview[]>(response);
 }
 
-export async function fetchStaffSchedules(
+export async function fetchUserSchedules(
   request: APIRequestContext,
   token: string,
-  staffId: string,
-): Promise<StaffSchedule[]> {
+  userId: string,
+): Promise<UserSchedule[]> {
   const response = await request.get(
-    `${getApiBaseUrl()}/api/staff/${staffId}/schedules`,
+    `${getApiBaseUrl()}/api/users/${userId}/schedules`,
     {
       headers: buildAuthHeaders(token),
     },
   );
 
-  return readEnvelope<StaffSchedule[]>(response);
+  return readEnvelope<UserSchedule[]>(response);
 }
 
 export async function fetchUsers(

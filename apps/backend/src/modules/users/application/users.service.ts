@@ -11,6 +11,7 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
 import type {
   PasswordResetResponse,
+  TeamMemberOverview,
   UserCreateInput,
   UserOverview,
 } from '@gentrix/shared-types';
@@ -63,6 +64,26 @@ export class UsersService {
 
   async getUsers(organizationId: string): Promise<UserOverview[]> {
     return this.users.list(organizationId);
+  }
+
+  async getTeam(organizationId: string): Promise<TeamMemberOverview[]> {
+    return this.users.listTeam(organizationId);
+  }
+
+  async getMembershipIdForUser(
+    userId: string,
+    organizationId: string,
+  ): Promise<string> {
+    const membershipId = await this.users.findMembershipIdByUser(
+      userId,
+      organizationId,
+    );
+
+    if (!membershipId) {
+      throw new NotFoundException('El usuario no pertenece a esta organización.');
+    }
+
+    return membershipId;
   }
 
   async createUser(

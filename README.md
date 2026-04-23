@@ -10,7 +10,6 @@ Package manager oficial del repo: `pnpm`.
 - `apps/backend`: backend NestJS por modulos de dominio.
 - `apps/backend/prisma`: schema, migraciones y seeds de PostgreSQL.
 - `libs/domain/residents`: modelo base de residentes.
-- `libs/domain/staff`: modelo base del equipo asistencial.
 - `libs/domain/medication`: modelo base de medicacion.
 - `libs/shared/types`: contratos compartidos entre frontend y backend.
 - `libs/shared/utils`: utilidades compartidas.
@@ -48,10 +47,11 @@ Package manager oficial del repo: `pnpm`.
 - `GET /api/residents/:residentId`: detalle del residente.
 - `POST /api/residents`: alta de residentes persistida en PostgreSQL via Prisma.
 - `PUT /api/residents/:residentId`: actualizacion del perfil vigente del residente.
-- `GET /api/staff`: personal resumido.
-- `GET /api/staff/:staffId/schedules`: horarios por miembro del equipo.
-- `POST /api/staff/:staffId/schedules`: agrega una guardia o cobertura.
-- `PUT /api/staff/schedules/:scheduleId`: actualiza un horario existente.
+- `GET /api/users`: listado admin de usuarios de la organización.
+- `GET /api/users/team`: equipo operativo (puesto, sector, turno) de la organización activa.
+- `GET /api/users/:userId/schedules`: horarios por miembro del equipo.
+- `POST /api/users/:userId/schedules`: agrega una guardia o cobertura.
+- `PUT /api/users/schedules/:scheduleId`: actualiza un horario existente.
 - `GET /api/medications`: medicacion resumida.
 - `GET /api/medications/:medicationId`: detalle de una orden.
 - `GET /api/medications/catalog`: catalogo de medicacion disponible.
@@ -98,7 +98,7 @@ Docker sigue siendo la baseline recomendada para levantar el stack completo, per
 - Copiar `.env.example` a `.env` y ajustar `DATABASE_URL` segun el entorno local.
 - La estructura PostgreSQL ya esta versionada en `prisma.config.ts`, `apps/backend/prisma/schema.prisma` y `apps/backend/prisma/migrations`.
 - Los seeds iniciales cargan usuarios, residentes, medicacion, eventos clinicos y horarios.
-- Residentes, medicacion, staff y schedules ya leen/escriben contra PostgreSQL via Prisma.
+- Residentes, medicacion, usuarios (incluyendo el equipo operativo) y schedules ya leen/escriben contra PostgreSQL via Prisma.
 - Auth y sesion siguen en modo demo/simple; las sesiones actuales viven en memoria y se reinician al reiniciar el backend.
 - El flujo de resident edit ya no reescribe eventos historicos: la historia clinica se agrega desde la ficha por endpoints append-only.
 - El build del backend genera el cliente de Prisma antes de compilar.

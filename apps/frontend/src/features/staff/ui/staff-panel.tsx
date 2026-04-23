@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 
-import type { StaffOverview } from '@gentrix/shared-types';
+import type { TeamMemberOverview } from '@gentrix/shared-types';
 
 import {
+  formatJobTitleLabel,
   formatShiftLabel,
-  formatStaffRole,
 } from '../../../shared/lib/display-labels';
 import {
   badgeBaseClassName,
@@ -13,10 +13,10 @@ import {
 } from '../../../shared/ui/class-names';
 
 interface StaffPanelProps {
-  staff: StaffOverview[];
+  team: TeamMemberOverview[];
 }
 
-export function StaffPanel({ staff }: StaffPanelProps) {
+export function StaffPanel({ team }: StaffPanelProps) {
   return (
     <article className={surfaceCardClassName}>
       <div className="mb-[18px] flex items-start justify-between gap-3">
@@ -35,26 +35,25 @@ export function StaffPanel({ staff }: StaffPanelProps) {
       </div>
 
       <div className="grid gap-3">
-        {staff.map((member) => (
+        {team.map((member) => (
           <article
             key={member.id}
             className="rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral p-[18px]"
           >
             <div className="flex items-center justify-between gap-4">
               <span className="text-base font-semibold text-brand-text">
-                {member.name}
+                {member.fullName}
               </span>
               <span
                 className={`${badgeBaseClassName} bg-brand-secondary/12 text-brand-secondary`}
               >
-                {formatShiftLabel(member.shift)}
+                {member.shift ? formatShiftLabel(member.shift) : '—'}
               </span>
             </div>
-            <p className="mt-2 leading-[1.65] text-brand-text-secondary">
-              {member.assignment}
-            </p>
             <p className="mt-1 text-sm text-brand-text-muted">
-              {formatStaffRole(member.role)} / {member.ward}
+              {member.jobTitleLabel ??
+                formatJobTitleLabel(member.jobTitleCode ?? '')}{' '}
+              / {member.wardName ?? '—'}
             </p>
           </article>
         ))}

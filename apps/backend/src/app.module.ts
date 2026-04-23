@@ -19,7 +19,6 @@ import { ResidentAgendaModule } from './modules/resident-agenda/resident-agenda.
 import { ResidentObservationNotesModule } from './modules/resident-observation-notes/resident-observation-notes.module';
 import { ResidentsModule } from './modules/residents/residents.module';
 import { SchedulesModule } from './modules/schedules/schedules.module';
-import { StaffModule } from './modules/staff/staff.module';
 import { SystemModule } from './modules/system/system.module';
 import { UsersModule } from './modules/users/users.module';
 import { LoggerModule } from './common/logger/logger.module';
@@ -42,7 +41,6 @@ import { LoggerModule } from './common/logger/logger.module';
     ResidentsModule,
     ResidentAgendaModule,
     ResidentObservationNotesModule,
-    StaffModule,
     SchedulesModule,
     MedicationModule,
     SystemModule,

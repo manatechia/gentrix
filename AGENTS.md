@@ -23,9 +23,9 @@ Si cambia el estado real o cambia la prioridad de negocio, actualizarlo rapido.
 - Hoy el sistema se comporta como si hubiera un solo usuario.
 - En el codigo, el dominio aparece como `residents` / `residentes`. No asumir que esa terminologia ya este cerrada desde negocio.
 - Existen en el repo rutas de frontend para login, dashboard, residentes, personal y medicacion.
-- Existen en el repo modulos/backend/endpoints para `auth`, `residents`, `clinical-history`, `staff`, `schedules`, `medication` y `system`.
+- Existen en el repo modulos/backend/endpoints para `auth`, `residents`, `clinical-history`, `users`, `schedules`, `medication` y `system`. El personal operativo vive bajo `users` (`/api/users/team`) — la vieja tabla `StaffMember` quedó deprecada y fue eliminada.
 - Existen `schema.prisma`, migraciones y seeds.
-- Residentes, medicacion, staff y schedules ya persisten en PostgreSQL via Prisma.
+- Residentes, medicacion, usuarios (incluyendo personal operativo) y schedules ya persisten en PostgreSQL via Prisma.
 - La historia clinica ya se carga como timeline append-only desde la ficha del residente.
 - Auth y sesion siguen siendo demo/simple y viven en memoria.
 - Que algo exista en codigo no lo convierte en funcionalidad validada.
@@ -89,7 +89,6 @@ Si cambia el estado real o cambia la prioridad de negocio, actualizarlo rapido.
 - `libs/shared/types`
 - `libs/shared/utils`
 - `libs/domain/residents`
-- `libs/domain/staff`
 - `libs/domain/medication`
 
 ## Comandos utiles
