@@ -31,6 +31,7 @@ import type {
 type ResidentRecord = Prisma.ResidentGetPayload<{
   include: {
     clinicalEvents: true;
+    familyContacts: true;
   };
 }>;
 
@@ -73,6 +74,10 @@ export class PrismaResidentRepository implements ResidentRepository {
             occurredAt: 'desc',
           },
         },
+        familyContacts: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'asc' },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -100,6 +105,10 @@ export class PrismaResidentRepository implements ResidentRepository {
           orderBy: {
             occurredAt: 'desc',
           },
+        },
+        familyContacts: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'asc' },
         },
       },
     });
@@ -134,6 +143,11 @@ export class PrismaResidentRepository implements ResidentRepository {
               create: toMedicalHistoryEventRecords(resident),
             }
           : undefined,
+        familyContacts: resident.familyContacts.length
+          ? {
+              create: toFamilyContactRecords(resident),
+            }
+          : undefined,
       },
       include: {
         clinicalEvents: {
@@ -143,6 +157,10 @@ export class PrismaResidentRepository implements ResidentRepository {
           orderBy: {
             occurredAt: 'desc',
           },
+        },
+        familyContacts: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'asc' },
         },
       },
     });
@@ -172,6 +190,10 @@ export class PrismaResidentRepository implements ResidentRepository {
           orderBy: {
             occurredAt: 'desc',
           },
+        },
+        familyContacts: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'asc' },
         },
       },
     });
@@ -216,6 +238,10 @@ export class PrismaResidentRepository implements ResidentRepository {
         clinicalEvents: {
           where: { deletedAt: null },
           orderBy: { occurredAt: 'desc' },
+        },
+        familyContacts: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'asc' },
         },
       },
     });
@@ -299,10 +325,15 @@ function mapResidentRecord(record: ResidentRecord): Resident {
       walker: false,
       orthopedicBed: false,
     }),
-    familyContacts: fromJson<ResidentFamilyContact[]>(
-      record.familyContacts,
-      [],
-    ),
+    familyContacts: record.familyContacts.map((contact) => ({
+      id: contact.id as ResidentFamilyContact['id'],
+      fullName: contact.fullName,
+      relationship: contact.relationship,
+      phone: contact.phone,
+      email: contact.email ?? undefined,
+      address: contact.address ?? undefined,
+      notes: contact.notes ?? undefined,
+    })),
     discharge: fromJson<ResidentDischargeInfo>(record.discharge, {}),
     address: {
       ...address,
@@ -358,7 +389,6 @@ function toResidentPersistenceData(resident: Resident) {
     clinicalProfile: toJsonInput(resident.clinicalProfile),
     geriatricAssessment: toJsonInput(resident.geriatricAssessment),
     belongings: toJsonInput(resident.belongings),
-    familyContacts: toJsonInput(resident.familyContacts),
     discharge: toJsonInput(resident.discharge),
     address: toJsonInput(resident.address),
     emergencyContact: toJsonInput(resident.emergencyContact),
@@ -388,6 +418,23 @@ function toResidentBaseUpdatePersistenceData(resident: Resident) {
     status: resident.status,
     address: toJsonInput(resident.address),
   };
+}
+
+function toFamilyContactRecords(resident: Resident) {
+  return resident.familyContacts.map((contact) => ({
+    // El id del jsonb legacy era un string inventado (no UUID); si viene, se
+    // ignora para que la FK genere un UUID real en su lugar.
+    fullName: contact.fullName,
+    relationship: contact.relationship,
+    phone: contact.phone,
+    email: contact.email ?? null,
+    address: contact.address ?? null,
+    notes: contact.notes ?? null,
+    createdAt: new Date(resident.audit.createdAt),
+    createdBy: resident.audit.createdBy,
+    updatedAt: new Date(resident.audit.updatedAt),
+    updatedBy: resident.audit.updatedBy,
+  }));
 }
 
 function toMedicalHistoryEventRecords(resident: Resident) {
