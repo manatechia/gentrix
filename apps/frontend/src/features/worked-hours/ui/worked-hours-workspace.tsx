@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import type { AuthSession } from '@gentrix/shared-types';
@@ -18,6 +18,42 @@ import {
   type PeriodPreset,
   type useWorkedHoursRoute,
 } from '../hooks/use-worked-hours-route';
+
+// El `<input type="date">` nativo se muestra según el locale del sistema
+// operativo (no del `<html lang>`), así que en máquinas con locale `en-US`
+// aparece como MM/DD/AAAA. Forzamos DD/MM/AAAA manejando la edición como
+// texto y convirtiendo a ISO sólo cuando se persiste.
+const isoDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+const arDatePattern = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+
+function isoToAr(iso: string): string {
+  if (!iso || !isoDatePattern.test(iso.slice(0, 10))) return '';
+  const [y, m, d] = iso.slice(0, 10).split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function arToIso(ar: string): string | null {
+  const match = arDatePattern.exec(ar.trim());
+  if (!match) return null;
+  const [, d, m, y] = match;
+  const day = Number.parseInt(d, 10);
+  const month = Number.parseInt(m, 10);
+  const year = Number.parseInt(y, 10);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return `${y}-${m}-${d}`;
+}
+
+function todayAr(): string {
+  return isoToAr(new Date().toISOString().slice(0, 10));
+}
 
 interface WorkedHoursWorkspaceProps {
   session: AuthSession;
@@ -252,13 +288,18 @@ function RateCard(props: {
   const [isCreating, setIsCreating] = useState(false);
   const [rate, setRate] = useState('');
   const [currency] = useState('ARS');
-  const [effectiveFrom, setEffectiveFrom] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
+  const [effectiveFromAr, setEffectiveFromAr] = useState(todayAr());
+  const [dateError, setDateError] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
   async function submit(): Promise<void> {
-    const ok = await onCreate({ rate, currency, effectiveFrom });
+    const iso = arToIso(effectiveFromAr);
+    if (!iso) {
+      setDateError('Usá el formato DD/MM/AAAA.');
+      return;
+    }
+    setDateError(null);
+    const ok = await onCreate({ rate, currency, effectiveFrom: iso });
     if (ok) {
       setIsCreating(false);
       setRate('');
@@ -279,7 +320,7 @@ function RateCard(props: {
           </h2>
           {currentRate && (
             <p className="mt-1 text-sm text-brand-text-muted">
-              Vigente desde {currentRate.effectiveFrom}
+              Vigente desde {isoToAr(currentRate.effectiveFrom)}
             </p>
           )}
         </div>
@@ -319,13 +360,19 @@ function RateCard(props: {
           </label>
           <label className="grid gap-1.5">
             <span className="text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-              Desde
+              Desde (DD/MM/AAAA)
             </span>
             <input
               className={inputClassName}
-              type="date"
-              value={effectiveFrom}
-              onChange={(event) => setEffectiveFrom(event.target.value)}
+              type="text"
+              inputMode="numeric"
+              placeholder="DD/MM/AAAA"
+              maxLength={10}
+              value={effectiveFromAr}
+              onChange={(event) => {
+                setEffectiveFromAr(event.target.value);
+                if (dateError) setDateError(null);
+              }}
             />
           </label>
           <div className="self-end">
@@ -340,6 +387,11 @@ function RateCard(props: {
               {isSaving ? 'Guardando...' : 'Guardar tarifa'}
             </button>
           </div>
+          {dateError && (
+            <p className="text-sm text-[rgb(130,44,25)] min-[680px]:col-span-3">
+              {dateError}
+            </p>
+          )}
         </div>
       )}
 
@@ -354,7 +406,8 @@ function RateCard(props: {
                 {r.currency} {r.rate}
               </strong>
               {' — '}
-              {r.effectiveFrom} → {r.effectiveTo ?? 'vigente'}
+              {isoToAr(r.effectiveFrom)} →{' '}
+              {r.effectiveTo ? isoToAr(r.effectiveTo) : 'vigente'}
             </li>
           ))}
         </ul>
@@ -386,11 +439,10 @@ function PeriodAndEntriesCard(props: {
     onPreviewSettlement,
   } = props;
 
-  const [workDate, setWorkDate] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
+  const [workDateAr, setWorkDateAr] = useState(todayAr());
   const [hours, setHours] = useState('');
   const [notes, setNotes] = useState('');
+  const [entryDateError, setEntryDateError] = useState<string | null>(null);
 
   const draftEntries = useMemo(
     () => entries.filter((entry) => entry.settlementId === null),
@@ -407,7 +459,17 @@ function PeriodAndEntriesCard(props: {
   }
 
   async function submitEntry(): Promise<void> {
-    const ok = await onCreateEntry({ workDate, hours, notes: notes || undefined });
+    const iso = arToIso(workDateAr);
+    if (!iso) {
+      setEntryDateError('Usá el formato DD/MM/AAAA.');
+      return;
+    }
+    setEntryDateError(null);
+    const ok = await onCreateEntry({
+      workDate: iso,
+      hours,
+      notes: notes || undefined,
+    });
     if (ok) {
       setHours('');
       setNotes('');
@@ -426,7 +488,7 @@ function PeriodAndEntriesCard(props: {
             Horas del período
           </span>
           <h2 className="mt-1 text-[1.2rem] font-bold tracking-[-0.04em] text-brand-text">
-            {period.periodStart} → {period.periodEnd}
+            {isoToAr(period.periodStart)} → {isoToAr(period.periodEnd)}
           </h2>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -456,53 +518,47 @@ function PeriodAndEntriesCard(props: {
 
       {period.preset === 'custom' && (
         <div className="mt-4 grid gap-3 min-[680px]:grid-cols-[180px_180px]">
-          <label className="grid gap-1.5">
-            <span className="text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-              Desde
-            </span>
-            <input
-              className={inputClassName}
-              type="date"
-              value={period.periodStart}
-              onChange={(event) => {
-                void onPeriodChange({
-                  preset: 'custom',
-                  periodStart: event.target.value,
-                  periodEnd: period.periodEnd,
-                });
-              }}
-            />
-          </label>
-          <label className="grid gap-1.5">
-            <span className="text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-              Hasta
-            </span>
-            <input
-              className={inputClassName}
-              type="date"
-              value={period.periodEnd}
-              onChange={(event) => {
-                void onPeriodChange({
-                  preset: 'custom',
-                  periodStart: period.periodStart,
-                  periodEnd: event.target.value,
-                });
-              }}
-            />
-          </label>
+          <PeriodBoundaryInput
+            label="Desde (DD/MM/AAAA)"
+            value={period.periodStart}
+            onCommit={(iso) => {
+              void onPeriodChange({
+                preset: 'custom',
+                periodStart: iso,
+                periodEnd: period.periodEnd,
+              });
+            }}
+          />
+          <PeriodBoundaryInput
+            label="Hasta (DD/MM/AAAA)"
+            value={period.periodEnd}
+            onCommit={(iso) => {
+              void onPeriodChange({
+                preset: 'custom',
+                periodStart: period.periodStart,
+                periodEnd: iso,
+              });
+            }}
+          />
         </div>
       )}
 
       <div className="mt-4 grid gap-3 min-[780px]:grid-cols-[150px_110px_minmax(0,1fr)_auto]">
         <label className="grid gap-1.5">
           <span className="text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-            Fecha
+            Fecha (DD/MM/AAAA)
           </span>
           <input
             className={inputClassName}
-            type="date"
-            value={workDate}
-            onChange={(event) => setWorkDate(event.target.value)}
+            type="text"
+            inputMode="numeric"
+            placeholder="DD/MM/AAAA"
+            maxLength={10}
+            value={workDateAr}
+            onChange={(event) => {
+              setWorkDateAr(event.target.value);
+              if (entryDateError) setEntryDateError(null);
+            }}
           />
         </label>
         <label className="grid gap-1.5">
@@ -544,6 +600,11 @@ function PeriodAndEntriesCard(props: {
             {isSaving ? 'Guardando...' : 'Agregar horas'}
           </button>
         </div>
+        {entryDateError && (
+          <p className="text-sm text-[rgb(130,44,25)] min-[780px]:col-span-4">
+            {entryDateError}
+          </p>
+        )}
       </div>
 
       <div className="mt-5 grid gap-2">
@@ -573,7 +634,7 @@ function PeriodAndEntriesCard(props: {
                     className="flex items-center justify-between gap-3 rounded-[18px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/60 px-3 py-2 text-sm text-brand-text-secondary"
                   >
                     <span>
-                      {entry.workDate} · {entry.hours} h · liquidada
+                      {isoToAr(entry.workDate)} · {entry.hours} h · liquidada
                     </span>
                     {entry.appliedRate && (
                       <span className="text-brand-text-muted">
@@ -608,6 +669,63 @@ function PeriodAndEntriesCard(props: {
   );
 }
 
+function PeriodBoundaryInput(props: {
+  label: string;
+  value: string;
+  onCommit: (iso: string) => void;
+}) {
+  const propValueAr = isoToAr(props.value);
+  const [text, setText] = useState(propValueAr);
+  const [error, setError] = useState<string | null>(null);
+
+  // Sincroniza cuando el padre cambia el valor (ej. al cambiar preset),
+  // evitando pisar lo que el usuario está escribiendo.
+  useEffect(() => {
+    setText(propValueAr);
+    setError(null);
+  }, [propValueAr]);
+
+  function commit(): void {
+    const iso = arToIso(text);
+    if (!iso) {
+      setError('Usá DD/MM/AAAA.');
+      return;
+    }
+    setError(null);
+    props.onCommit(iso);
+  }
+
+  return (
+    <label className="grid gap-1.5">
+      <span className="text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
+        {props.label}
+      </span>
+      <input
+        className={inputClassName}
+        type="text"
+        inputMode="numeric"
+        placeholder="DD/MM/AAAA"
+        maxLength={10}
+        value={text}
+        onChange={(event) => {
+          setText(event.target.value);
+          if (error) setError(null);
+        }}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            commit();
+          }
+        }}
+      />
+      {error && (
+        <span className="text-sm text-[rgb(130,44,25)]">{error}</span>
+      )}
+    </label>
+  );
+}
+
 function PeriodPresetButton(props: {
   active: boolean;
   onClick: () => void;
@@ -632,13 +750,20 @@ function EntryRow(props: {
 }) {
   const { entry, isSaving, onUpdate, onDelete } = props;
   const [isEditing, setIsEditing] = useState(false);
-  const [workDate, setWorkDate] = useState(entry.workDate);
+  const [workDateAr, setWorkDateAr] = useState(isoToAr(entry.workDate));
   const [hours, setHours] = useState(entry.hours);
   const [notes, setNotes] = useState(entry.notes ?? '');
+  const [dateError, setDateError] = useState<string | null>(null);
 
   async function submit(): Promise<void> {
+    const iso = arToIso(workDateAr);
+    if (!iso) {
+      setDateError('Usá DD/MM/AAAA.');
+      return;
+    }
+    setDateError(null);
     const ok = await onUpdate(entry.id, {
-      workDate,
+      workDate: iso,
       hours,
       notes: notes || undefined,
     });
@@ -650,9 +775,15 @@ function EntryRow(props: {
       <div className="grid gap-3 rounded-[18px] border border-[rgba(0,102,132,0.18)] bg-brand-primary/6 p-3 min-[780px]:grid-cols-[150px_110px_minmax(0,1fr)_auto]">
         <input
           className={inputClassName}
-          type="date"
-          value={workDate}
-          onChange={(event) => setWorkDate(event.target.value)}
+          type="text"
+          inputMode="numeric"
+          placeholder="DD/MM/AAAA"
+          maxLength={10}
+          value={workDateAr}
+          onChange={(event) => {
+            setWorkDateAr(event.target.value);
+            if (dateError) setDateError(null);
+          }}
         />
         <input
           className={inputClassName}
@@ -686,6 +817,11 @@ function EntryRow(props: {
             Cancelar
           </button>
         </div>
+        {dateError && (
+          <p className="text-sm text-[rgb(130,44,25)] min-[780px]:col-span-4">
+            {dateError}
+          </p>
+        )}
       </div>
     );
   }
@@ -694,7 +830,7 @@ function EntryRow(props: {
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral px-3 py-2">
       <div className="grid gap-0.5">
         <strong className="text-brand-text">
-          {entry.workDate} · {entry.hours} h
+          {isoToAr(entry.workDate)} · {entry.hours} h
         </strong>
         {entry.notes && (
           <span className="text-sm text-brand-text-secondary">
@@ -757,10 +893,11 @@ function SettlementsListCard(props: {
               >
                 <span className="grid gap-0.5">
                   <strong className="text-brand-text">
-                    {settlement.periodStart} → {settlement.periodEnd}
+                    {isoToAr(settlement.periodStart)} →{' '}
+                    {isoToAr(settlement.periodEnd)}
                   </strong>
                   <span className="text-sm text-brand-text-secondary">
-                    Emitida {settlement.issuedAt.slice(0, 10)}
+                    Emitida {isoToAr(settlement.issuedAt)}
                   </span>
                 </span>
                 <span
@@ -807,7 +944,7 @@ function PreviewPanel(props: {
             Previsualización de liquidación
           </span>
           <h2 className="mt-1 text-[1.2rem] font-bold tracking-[-0.04em] text-brand-text">
-            {preview.periodStart} → {preview.periodEnd}
+            {isoToAr(preview.periodStart)} → {isoToAr(preview.periodEnd)}
           </h2>
         </div>
         <button
@@ -834,7 +971,7 @@ function PreviewPanel(props: {
                 key={line.entryId}
                 className="border-t border-[rgba(0,102,132,0.08)]"
               >
-                <td className="py-2">{line.workDate}</td>
+                <td className="py-2">{isoToAr(line.workDate)}</td>
                 <td>{line.hours}</td>
                 <td>
                   {line.appliedCurrency} {line.appliedRate}
@@ -917,8 +1054,8 @@ function SettlementDetailPanel(props: {
             {memberName}
           </h2>
           <p className="mt-1 text-sm text-brand-text-secondary">
-            Período {detail.periodStart} → {detail.periodEnd} · Emitida{' '}
-            {detail.issuedAt.slice(0, 10)}
+            Período {isoToAr(detail.periodStart)} →{' '}
+            {isoToAr(detail.periodEnd)} · Emitida {isoToAr(detail.issuedAt)}
           </p>
           {detail.notes && (
             <p className="mt-1 text-sm text-brand-text-muted">
@@ -984,7 +1121,7 @@ function SettlementDetailPanel(props: {
                 key={line.entryId}
                 className="border-t border-[rgba(0,102,132,0.08)]"
               >
-                <td className="py-2">{line.workDate}</td>
+                <td className="py-2">{isoToAr(line.workDate)}</td>
                 <td>{line.hours}</td>
                 <td>
                   {line.appliedCurrency} {line.appliedRate}
@@ -1010,12 +1147,12 @@ function SettlementDetailPanel(props: {
 
       {detail.status === 'paid' && detail.paidAt && (
         <p className="mt-3 text-sm text-[rgb(20,108,56)]">
-          Pagada el {detail.paidAt.slice(0, 10)}.
+          Pagada el {isoToAr(detail.paidAt)}.
         </p>
       )}
       {detail.status === 'cancelled' && detail.cancelledAt && (
         <p className="mt-3 text-sm text-[rgb(130,44,25)]">
-          Cancelada el {detail.cancelledAt.slice(0, 10)}. Las horas vuelven a
+          Cancelada el {isoToAr(detail.cancelledAt)}. Las horas vuelven a
           estar disponibles como borrador.
         </p>
       )}
