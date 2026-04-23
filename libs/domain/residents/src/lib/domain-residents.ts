@@ -248,7 +248,7 @@ export function createResidentSeed(
     birthDate: toIsoDateString('1942-05-19T00:00:00.000Z'),
     admissionDate: toIsoDateString('2024-11-03T12:00:00.000Z'),
     sex: 'femenino',
-    maritalStatus: 'Viuda',
+    maritalStatus: 'widowed',
     nationality: 'Argentina',
     email: 'marta.diaz@sin-email.local',
     room: 'A-101',
