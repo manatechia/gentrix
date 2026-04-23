@@ -264,7 +264,10 @@ export function WorkedHoursWorkspace({
       {activeSettlement && (
         <SettlementDetailPanel
           detail={activeSettlement}
-          memberName={selectedMember?.fullName ?? ''}
+          memberName={
+            externals.find((member) => member.id === activeSettlement.userId)
+              ?.fullName ?? selectedMember?.fullName ?? ''
+          }
           isSaving={isSaving}
           onClose={handleCloseSettlement}
           onMarkPaid={handleMarkPaid}

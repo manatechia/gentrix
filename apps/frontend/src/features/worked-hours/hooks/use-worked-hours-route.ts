@@ -191,6 +191,9 @@ export function useWorkedHoursRoute() {
       setSelectedUserId(userId);
       setNotice(null);
       setPreview(null);
+      // Cerrar detalle de liquidación abierto: pertenece al externo anterior
+      // y quedarse pegado genera confusión (nombre en el header no matcha).
+      setActiveSettlement(null);
       await loadExternal(userId);
     },
     [loadExternal, selectedUserId],
