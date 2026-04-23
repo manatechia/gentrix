@@ -360,7 +360,7 @@ function RateCard(props: {
           </label>
           <label className="grid gap-1.5">
             <span className="text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-              Desde (DD/MM/AAAA)
+              Desde
             </span>
             <input
               className={inputClassName}
@@ -519,7 +519,7 @@ function PeriodAndEntriesCard(props: {
       {period.preset === 'custom' && (
         <div className="mt-4 grid gap-3 min-[680px]:grid-cols-[180px_180px]">
           <PeriodBoundaryInput
-            label="Desde (DD/MM/AAAA)"
+            label="Desde"
             value={period.periodStart}
             onCommit={(iso) => {
               void onPeriodChange({
@@ -530,7 +530,7 @@ function PeriodAndEntriesCard(props: {
             }}
           />
           <PeriodBoundaryInput
-            label="Hasta (DD/MM/AAAA)"
+            label="Hasta"
             value={period.periodEnd}
             onCommit={(iso) => {
               void onPeriodChange({
@@ -546,7 +546,7 @@ function PeriodAndEntriesCard(props: {
       <div className="mt-4 grid gap-3 min-[780px]:grid-cols-[150px_110px_minmax(0,1fr)_auto]">
         <label className="grid gap-1.5">
           <span className="text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-            Fecha (DD/MM/AAAA)
+            Fecha
           </span>
           <input
             className={inputClassName}
