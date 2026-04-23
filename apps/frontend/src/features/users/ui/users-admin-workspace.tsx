@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import type {
@@ -92,6 +92,26 @@ export function UsersAdminWorkspace({
     null,
   );
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    tone: 'success' | 'error';
+  } | null>(null);
+
+  // Espejo de `userNotice` en un toast flotante: evita empujar el layout y
+  // auto-desaparece. Errores quedan visibles más tiempo para poder leerlos.
+  useEffect(() => {
+    if (!userNotice) return;
+    const message = userNotice;
+    const tone = userNoticeTone;
+    setToast({ message, tone });
+    const timeoutMs = tone === 'error' ? 8000 : 4000;
+    const timer = window.setTimeout(() => {
+      setToast((current) =>
+        current && current.message === message ? null : current,
+      );
+    }, timeoutMs);
+    return () => window.clearTimeout(timer);
+  }, [userNotice, userNoticeTone]);
 
   async function handleResetConfirmed(userId: string): Promise<void> {
     const result = await onPasswordReset(userId);
@@ -153,16 +173,39 @@ export function UsersAdminWorkspace({
       session={session}
       onLogout={onLogout}
     >
-      {(userNotice || formError) && (
+      {formError && (
         <section
-          className={`rounded-[28px] px-6 py-[22px] shadow-panel ${
-            formError || userNoticeTone === 'error'
-              ? 'border border-[rgba(168,43,17,0.16)] bg-[rgba(168,43,17,0.08)] text-[rgb(130,44,25)]'
-              : 'border border-[rgba(0,102,132,0.14)] bg-[rgba(0,102,132,0.08)] text-brand-secondary'
-          }`}
+          className="rounded-[28px] border border-[rgba(168,43,17,0.16)] bg-[rgba(168,43,17,0.08)] px-6 py-[22px] text-[rgb(130,44,25)] shadow-panel"
+          data-testid="users-admin-form-error"
         >
-          <span className="leading-[1.55]">{formError ?? userNotice}</span>
+          <span className="leading-[1.55]">{formError}</span>
         </section>
+      )}
+
+      {toast && (
+        <div
+          className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 sm:justify-end"
+          data-testid="users-admin-toast"
+        >
+          <div
+            role="status"
+            aria-live="polite"
+            className={`pointer-events-auto flex items-start gap-3 rounded-[20px] px-5 py-3 shadow-[0_18px_40px_rgba(0,0,0,0.14)] max-w-[360px] ${
+              toast.tone === 'error'
+                ? 'border border-[rgba(168,43,17,0.2)] bg-[rgb(255,246,243)] text-[rgb(130,44,25)]'
+                : 'border border-[rgba(0,102,132,0.18)] bg-[rgb(240,250,253)] text-brand-secondary'
+            }`}
+          >
+            <span className="flex-1 leading-[1.5]">{toast.message}</span>
+            <button
+              type="button"
+              className="shrink-0 text-sm underline underline-offset-2 opacity-70 hover:opacity-100"
+              onClick={() => setToast(null)}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
       )}
 
       {screenState === 'loading' && (
