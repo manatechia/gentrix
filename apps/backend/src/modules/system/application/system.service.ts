@@ -15,7 +15,7 @@ import {
   type MedicationExecutionRepository,
 } from '../../medication/domain/repositories/medication-execution.repository';
 import { ResidentsService } from '../../residents/application/residents.service';
-import { StaffService } from '../../staff/application/staff.service';
+import { UsersService } from '../../users/application/users.service';
 import { deriveDashboardAlerts } from './dashboard-alerts';
 import { deriveHandoffSnapshot } from './handoff-snapshot';
 
@@ -26,8 +26,8 @@ export class SystemService {
   constructor(
     @Inject(ResidentsService)
     private readonly residentsService: ResidentsService,
-    @Inject(StaffService)
-    private readonly staffService: StaffService,
+    @Inject(UsersService)
+    private readonly usersService: UsersService,
     @Inject(MedicationService)
     private readonly medicationService: MedicationService,
     @Inject(MEDICATION_EXECUTION_REPOSITORY)
@@ -44,7 +44,8 @@ export class SystemService {
         '/api/dashboard',
         '/api/handoff',
         '/api/residents',
-        '/api/staff',
+        '/api/users',
+        '/api/users/team',
         '/api/medications',
         '/api/medications/catalog',
       ],
@@ -56,17 +57,19 @@ export class SystemService {
     };
   }
 
-  async getHealthCheck(): Promise<HealthCheck> {
-    const [residents, staff] = await Promise.all([
-      this.residentsService.getResidents(),
-      this.staffService.getStaff(),
+  async getHealthCheck(organizationId?: AuthOrganization['id']): Promise<HealthCheck> {
+    // `team` sin organizationId no tiene sentido — healthcheck fuera de una
+    // sesión devuelve 0 equipo, que es la respuesta honesta.
+    const [residents, team] = await Promise.all([
+      this.residentsService.getResidents(organizationId),
+      organizationId ? this.usersService.getTeam(organizationId) : Promise.resolve([]),
     ]);
 
     return {
       status: 'ok',
       service: 'gentrix-backend',
       residents: residents.length,
-      staff: staff.length,
+      team: team.length,
       generatedAt: toIsoDateString(new Date()),
     };
   }
@@ -74,13 +77,13 @@ export class SystemService {
   async getDashboardSnapshot(
     organizationId?: AuthOrganization['id'],
   ): Promise<DashboardSnapshot> {
-    const { residents, staff, medications, medicationExecutions } =
+    const { residents, team, medications, medicationExecutions } =
       await this.getOperationalContext(organizationId);
 
     return {
       summary: {
         residentCount: residents.length,
-        staffOnDuty: staff.length,
+        teamOnDuty: team.length,
         activeMedicationCount: medications.filter((order) => order.active)
           .length,
         occupancyRate: Math.round((residents.length / FACILITY_CAPACITY) * 100),
@@ -89,7 +92,7 @@ export class SystemService {
         ).length,
       },
       residents,
-      staff,
+      team,
       medications,
       alerts: deriveDashboardAlerts({
         residents,
@@ -113,17 +116,19 @@ export class SystemService {
   }
 
   private async getOperationalContext(organizationId?: AuthOrganization['id']) {
-    const [residents, staff, medications, medicationExecutions] =
+    const [residents, team, medications, medicationExecutions] =
       await Promise.all([
         this.residentsService.getResidents(organizationId),
-        this.staffService.getStaff(organizationId),
+        organizationId
+          ? this.usersService.getTeam(organizationId)
+          : Promise.resolve([]),
         this.medicationService.getMedications(organizationId),
         this.medicationExecutionRepository.list(organizationId),
       ]);
 
     return {
       residents,
-      staff,
+      team,
       medications,
       medicationExecutions,
     };

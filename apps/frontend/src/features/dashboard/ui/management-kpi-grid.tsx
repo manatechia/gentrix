@@ -91,7 +91,7 @@ function buildKpis(dashboard: DashboardSnapshot): ManagementKpi[] {
     {
       id: 'staff-on-duty',
       label: 'Personal en turno',
-      value: dashboard.summary.staffOnDuty,
+      value: dashboard.summary.teamOnDuty,
       helper: 'activos',
       semaphore: 'neutral',
       tone: 'violet',

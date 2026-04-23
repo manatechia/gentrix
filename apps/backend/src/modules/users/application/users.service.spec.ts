@@ -41,8 +41,16 @@ class InMemoryUserRepository implements UserRepository {
     return Array.from(this.users.values());
   }
 
+  async listTeam(): Promise<never[]> {
+    return [];
+  }
+
   async findById(userId: string): Promise<UserOverview | null> {
     return this.users.get(userId) ?? null;
+  }
+
+  async findMembershipIdByUser(userId: string): Promise<string | null> {
+    return this.users.has(userId) ? `membership-${userId}` : null;
   }
 
   async findPasswordRecord(userId: string): Promise<UserPasswordRecord | null> {

@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 
-import type { StaffOverview } from '@gentrix/shared-types';
+import type { TeamMemberOverview } from '@gentrix/shared-types';
 
 import {
+  formatJobTitleLabel,
   formatShiftLabel,
-  formatStaffRole,
 } from '../../../shared/lib/display-labels';
 import {
   badgeBaseClassName,
@@ -13,21 +13,21 @@ import {
 } from '../../../shared/ui/class-names';
 
 interface ShiftCoveragePanelProps {
-  staff: StaffOverview[];
+  team: TeamMemberOverview[];
 }
 
 interface WardGroup {
   ward: string;
   total: number;
-  byShift: Map<string, StaffOverview[]>;
+  byShift: Map<string, TeamMemberOverview[]>;
 }
 
-function groupByWardAndShift(staff: StaffOverview[]): WardGroup[] {
-  const active = staff.filter((member) => member.status === 'active');
+function groupByWardAndShift(team: TeamMemberOverview[]): WardGroup[] {
+  const active = team.filter((member) => member.status === 'active');
   const wards = new Map<string, WardGroup>();
 
   for (const member of active) {
-    const wardLabel = member.ward?.trim() || 'Sin asignar';
+    const wardLabel = member.wardName?.trim() || 'Sin asignar';
     let ward = wards.get(wardLabel);
     if (!ward) {
       ward = { ward: wardLabel, total: 0, byShift: new Map() };
@@ -49,10 +49,10 @@ function groupByWardAndShift(staff: StaffOverview[]): WardGroup[] {
  * "¿dónde y cuándo hay gente?".
  *
  * TODO (cuando exista el modelo): mostrar faltantes contra un target, o
- * turnos incompletos basados en StaffSchedule.
+ * turnos incompletos basados en UserSchedule.
  */
-export function ShiftCoveragePanel({ staff }: ShiftCoveragePanelProps) {
-  const groups = groupByWardAndShift(staff);
+export function ShiftCoveragePanel({ team }: ShiftCoveragePanelProps) {
+  const groups = groupByWardAndShift(team);
 
   return (
     <section
@@ -107,7 +107,9 @@ export function ShiftCoveragePanel({ staff }: ShiftCoveragePanelProps) {
                   {shifts.map(([shift, members]) => {
                     const roleCounts = members.reduce<Record<string, number>>(
                       (acc, member) => {
-                        const label = formatStaffRole(member.role);
+                        const label =
+                          member.jobTitleLabel ??
+                          formatJobTitleLabel(member.jobTitleCode ?? '');
                         acc[label] = (acc[label] ?? 0) + 1;
                         return acc;
                       },

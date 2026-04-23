@@ -48,7 +48,7 @@ export function ManagementDashboard({
         />
       </section>
 
-      <ShiftCoveragePanel staff={dashboard.staff} />
+      <ShiftCoveragePanel team={dashboard.team} />
     </div>
   );
 }

@@ -10,6 +10,8 @@ import type {
   AuthRole,
   EntityStatus,
   IsoDateString,
+  ShiftWindow,
+  TeamMemberOverview,
   UserOverview,
 } from '@gentrix/shared-types';
 import { toIsoDateString } from '@gentrix/shared-utils';
@@ -30,12 +32,27 @@ type MembershipRecord = Prisma.OrganizationMembershipGetPayload<{
   };
 }>;
 
+type TeamMembershipRecord = Prisma.OrganizationMembershipGetPayload<{
+  include: {
+    user: true;
+    role: true;
+    jobTitle: true;
+    ward: true;
+  };
+}>;
+
 const authRoles = new Set<AuthRole>([
   'admin',
   'nurse',
   'assistant',
   'health-director',
   'external',
+]);
+
+const shiftWindows = new Set<ShiftWindow>([
+  'morning',
+  'afternoon',
+  'night',
 ]);
 
 @Injectable()
@@ -71,6 +88,32 @@ export class PrismaUserRepository implements UserRepository {
     return memberships.map(mapMembershipRecord);
   }
 
+  async listTeam(organizationId: string): Promise<TeamMemberOverview[]> {
+    const memberships = await this.prisma.organizationMembership.findMany({
+      where: {
+        organizationId,
+        deletedAt: null,
+        status: 'active',
+        user: {
+          deletedAt: null,
+        },
+      },
+      include: {
+        user: true,
+        role: true,
+        jobTitle: true,
+        ward: true,
+      },
+      orderBy: {
+        user: {
+          fullName: 'asc',
+        },
+      },
+    });
+
+    return memberships.map(mapTeamMembershipRecord);
+  }
+
   async findById(
     userId: string,
     organizationId: string,
@@ -91,6 +134,25 @@ export class PrismaUserRepository implements UserRepository {
     });
 
     return membership ? mapMembershipRecord(membership) : null;
+  }
+
+  async findMembershipIdByUser(
+    userId: string,
+    organizationId: string,
+  ): Promise<string | null> {
+    const membership = await this.prisma.organizationMembership.findFirst({
+      where: {
+        userId,
+        organizationId,
+        deletedAt: null,
+        user: {
+          deletedAt: null,
+        },
+      },
+      select: { id: true },
+    });
+
+    return membership?.id ?? null;
   }
 
   async findPasswordRecord(
@@ -262,8 +324,33 @@ function mapMembershipRecord(record: MembershipRecord): UserOverview {
   };
 }
 
+function mapTeamMembershipRecord(
+  record: TeamMembershipRecord,
+): TeamMemberOverview {
+  return {
+    id: record.user.id as TeamMemberOverview['id'],
+    fullName: record.user.fullName,
+    email: record.user.email,
+    role: normalizeAuthRole(record.role.code),
+    jobTitleCode: record.jobTitle?.code ?? null,
+    jobTitleLabel: record.jobTitle?.displayName ?? null,
+    wardName: record.ward?.name ?? null,
+    shift: normalizeShiftWindow(record.shift),
+    status: normalizeEntityStatus(record.user.status),
+  };
+}
+
 function normalizeAuthRole(value: string): AuthRole {
   return authRoles.has(value as AuthRole) ? (value as AuthRole) : 'assistant';
+}
+
+function normalizeShiftWindow(value: string | null): ShiftWindow | null {
+  if (!value) {
+    return null;
+  }
+  return shiftWindows.has(value as ShiftWindow)
+    ? (value as ShiftWindow)
+    : null;
 }
 
 function normalizeEntityStatus(value: string): EntityStatus {

@@ -2,16 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 
 import type {
   AuthSession,
-  StaffOverview,
-  StaffSchedule,
-  StaffScheduleCreateInput,
-  StaffScheduleUpdateInput,
+  TeamMemberOverview,
+  UserSchedule,
+  UserScheduleCreateInput,
+  UserScheduleUpdateInput,
 } from '@gentrix/shared-types';
 
 import {
   formatEntityStatus,
+  formatJobTitleLabel,
   formatShiftLabel,
-  formatStaffRole,
 } from '../../../shared/lib/display-labels';
 import {
   badgeBaseClassName,
@@ -30,23 +30,23 @@ interface StaffSchedulesWorkspaceProps {
   screenState: DashboardScreenState;
   session: AuthSession;
   residentCount: number;
-  staff: StaffOverview[];
-  selectedStaffId: string | null;
-  schedules: StaffSchedule[];
-  staffError: string | null;
+  team: TeamMemberOverview[];
+  selectedUserId: string | null;
+  schedules: UserSchedule[];
+  teamError: string | null;
   isLoadingSchedules: boolean;
   isSavingSchedule: boolean;
   scheduleNotice: string | null;
   scheduleNoticeTone: 'success' | 'error';
   canManageSchedules: boolean;
-  onSelectStaff: (staffId: string) => Promise<void>;
+  onSelectUser: (userId: string) => Promise<void>;
   onScheduleCreate: (
-    input: StaffScheduleCreateInput,
-  ) => Promise<StaffSchedule | null>;
+    input: UserScheduleCreateInput,
+  ) => Promise<UserSchedule | null>;
   onScheduleUpdate: (
     scheduleId: string,
-    input: StaffScheduleUpdateInput,
-  ) => Promise<StaffSchedule | null>;
+    input: UserScheduleUpdateInput,
+  ) => Promise<UserSchedule | null>;
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
 }
@@ -79,7 +79,7 @@ function createInitialScheduleFormState(): ScheduleFormState {
   };
 }
 
-function toScheduleFormState(schedule: StaffSchedule): ScheduleFormState {
+function toScheduleFormState(schedule: UserSchedule): ScheduleFormState {
   return {
     weekday: String(schedule.weekday),
     startTime: schedule.startTime,
@@ -125,16 +125,16 @@ export function StaffSchedulesWorkspace({
   screenState,
   session,
   residentCount,
-  staff,
-  selectedStaffId,
+  team,
+  selectedUserId,
   schedules,
-  staffError,
+  teamError,
   isLoadingSchedules,
   isSavingSchedule,
   scheduleNotice,
   scheduleNoticeTone,
   canManageSchedules,
-  onSelectStaff,
+  onSelectUser,
   onScheduleCreate,
   onScheduleUpdate,
   onLogout,
@@ -148,19 +148,19 @@ export function StaffSchedulesWorkspace({
   );
   const [formError, setFormError] = useState<string | null>(null);
 
-  const selectedStaff = useMemo(
-    () => staff.find((member) => member.id === selectedStaffId) ?? null,
-    [selectedStaffId, staff],
+  const selectedMember = useMemo(
+    () => team.find((member) => member.id === selectedUserId) ?? null,
+    [selectedUserId, team],
   );
 
   useEffect(() => {
     setEditingScheduleId(null);
     setFormState(createInitialScheduleFormState());
     setFormError(null);
-  }, [selectedStaffId]);
+  }, [selectedUserId]);
 
   async function handleSubmit(): Promise<void> {
-    if (!selectedStaff) {
+    if (!selectedMember) {
       setFormError('Selecciona un miembro del equipo para continuar.');
       return;
     }
@@ -237,7 +237,7 @@ export function StaffSchedulesWorkspace({
 
           <div className="flex flex-wrap items-center gap-3">
             <span className={primaryButtonClassName}>
-              {staff.length} perfiles
+              {team.length} perfiles
             </span>
             <span className={primaryButtonClassName}>
               {schedules.length} horarios
@@ -268,7 +268,7 @@ export function StaffSchedulesWorkspace({
       {screenState === 'error' && (
         <StatusNotice
           title="No pude cargar la cobertura del equipo."
-          message={staffError ?? 'Ocurrio un error inesperado.'}
+          message={teamError ?? 'Ocurrio un error inesperado.'}
           actions={[
             {
               label: 'Reintentar',
@@ -298,18 +298,18 @@ export function StaffSchedulesWorkspace({
               <span
                 className={`${badgeBaseClassName} bg-brand-primary/12 text-brand-primary`}
               >
-                {staff.length} activos
+                {team.length} activos
               </span>
             </div>
 
             <div className="grid gap-3">
-              {staff.length === 0 ? (
+              {team.length === 0 ? (
                 <div className="rounded-[22px] border border-dashed border-[rgba(0,102,132,0.22)] bg-brand-neutral px-4 py-5 text-brand-text-secondary">
                   No hay personal cargado todavia.
                 </div>
               ) : (
-                staff.map((member) => {
-                  const isSelected = member.id === selectedStaffId;
+                team.map((member) => {
+                  const isSelected = member.id === selectedUserId;
 
                   return (
                     <button
@@ -322,12 +322,12 @@ export function StaffSchedulesWorkspace({
                       }`}
                       type="button"
                       onClick={() => {
-                        void onSelectStaff(member.id);
+                        void onSelectUser(member.id);
                       }}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <strong className="text-brand-text">
-                          {member.name}
+                          {member.fullName}
                         </strong>
                         <span
                           className={`${badgeBaseClassName} ${
@@ -336,14 +336,13 @@ export function StaffSchedulesWorkspace({
                               : 'bg-brand-secondary/12 text-brand-secondary'
                           }`}
                         >
-                          {formatShiftLabel(member.shift)}
+                          {member.shift ? formatShiftLabel(member.shift) : '—'}
                         </span>
                       </div>
                       <span className="text-brand-text-secondary">
-                        {formatStaffRole(member.role)} / {member.ward}
-                      </span>
-                      <span className="text-[0.9rem] text-brand-text-muted">
-                        {member.assignment}
+                        {member.jobTitleLabel ??
+                          formatJobTitleLabel(member.jobTitleCode ?? '')}{' '}
+                        / {member.wardName ?? '—'}
                       </span>
                     </button>
                   );
@@ -360,26 +359,27 @@ export function StaffSchedulesWorkspace({
                     Miembro seleccionado
                   </span>
                   <h2 className="text-[1.2rem] font-bold tracking-[-0.04em] text-brand-text">
-                    {selectedStaff?.name ?? 'Selecciona un miembro del equipo'}
+                    {selectedMember?.fullName ?? 'Selecciona un miembro del equipo'}
                   </h2>
                 </div>
-                {selectedStaff && (
+                {selectedMember && (
                   <span
                     className={`${badgeBaseClassName} bg-brand-primary/12 text-brand-primary`}
                   >
-                    {formatEntityStatus(selectedStaff.status)}
+                    {formatEntityStatus(selectedMember.status)}
                   </span>
                 )}
               </div>
 
-              {selectedStaff ? (
+              {selectedMember ? (
                 <div className="mt-4 grid gap-3 text-brand-text-secondary min-[900px]:grid-cols-3">
                   <article className="rounded-[22px] bg-brand-neutral px-4 py-4">
                     <span className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
                       Rol
                     </span>
                     <strong className="mt-2 block text-brand-text">
-                      {formatStaffRole(selectedStaff.role)}
+                      {selectedMember.jobTitleLabel ??
+                        formatJobTitleLabel(selectedMember.jobTitleCode ?? '')}
                     </strong>
                   </article>
                   <article className="rounded-[22px] bg-brand-neutral px-4 py-4">
@@ -387,7 +387,7 @@ export function StaffSchedulesWorkspace({
                       Sector
                     </span>
                     <strong className="mt-2 block text-brand-text">
-                      {selectedStaff.ward}
+                      {selectedMember.wardName ?? '—'}
                     </strong>
                   </article>
                   <article className="rounded-[22px] bg-brand-neutral px-4 py-4">
@@ -395,7 +395,9 @@ export function StaffSchedulesWorkspace({
                       Turno base
                     </span>
                     <strong className="mt-2 block text-brand-text">
-                      {formatShiftLabel(selectedStaff.shift)}
+                      {selectedMember.shift
+                        ? formatShiftLabel(selectedMember.shift)
+                        : '—'}
                     </strong>
                   </article>
                 </div>
@@ -550,7 +552,7 @@ export function StaffSchedulesWorkspace({
                     data-testid="staff-schedule-submit-button"
                     className={primaryButtonClassName}
                     type="button"
-                    disabled={!selectedStaff || isSavingSchedule}
+                    disabled={!selectedMember || isSavingSchedule}
                     onClick={() => {
                       void handleSubmit();
                     }}
@@ -582,7 +584,7 @@ export function StaffSchedulesWorkspace({
                 )}
               </div>
 
-              {selectedStaff == null ? (
+              {selectedMember == null ? (
                 <p className="leading-[1.65] text-brand-text-secondary">
                   Selecciona un perfil para ver sus horarios.
                 </p>

@@ -31,6 +31,16 @@ export class UsersController {
     return this.usersService.getUsers(request.authSession!.activeOrganization.id);
   }
 
+  // Listado del equipo operativo para la org activa. Lo consume la shell
+  // (dashboard, horarios), así que cualquier usuario autenticado de la org
+  // puede verlo: reemplaza al viejo `GET /api/staff`.
+  @Get('team')
+  getTeam(@Req() request: RequestWithSession) {
+    return this.usersService.getTeam(
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
   @Post()
   createUser(
     @Body() body: CreateUserDto,

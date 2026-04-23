@@ -608,19 +608,27 @@ export interface ResidentLiveProfile {
   activeMedications: MedicationOverview[];
 }
 
-export interface StaffOverview {
+export type ShiftWindow = 'morning' | 'afternoon' | 'night';
+
+/// Miembro operativo del equipo dentro de una organización. Es una vista
+/// sobre `UserAccount` + la `OrganizationMembership` activa en la org del
+/// caller: incluye puesto laboral, sector y turno. El `id` es el `userId`,
+/// que es lo que exponemos hacia afuera como identidad canónica.
+export interface TeamMemberOverview {
   id: EntityId;
-  name: string;
-  role: string;
-  ward: string;
-  shift: string;
-  assignment: string;
+  fullName: string;
+  email: string;
+  role: AuthRole;
+  jobTitleCode: string | null;
+  jobTitleLabel: string | null;
+  wardName: string | null;
+  shift: ShiftWindow | null;
   status: EntityStatus;
 }
 
-export interface StaffSchedule {
+export interface UserSchedule {
   id: EntityId;
-  staffId: EntityId;
+  userId: EntityId;
   weekday: number;
   startTime: string;
   endTime: string;
@@ -629,7 +637,7 @@ export interface StaffSchedule {
   audit: AuditTrail;
 }
 
-export interface StaffScheduleCreateInput {
+export interface UserScheduleCreateInput {
   weekday: number;
   startTime: string;
   endTime: string;
@@ -637,7 +645,7 @@ export interface StaffScheduleCreateInput {
   coverageNote?: string;
 }
 
-export type StaffScheduleUpdateInput = StaffScheduleCreateInput;
+export type UserScheduleUpdateInput = UserScheduleCreateInput;
 
 export type MedicationRoute =
   | 'oral'
@@ -807,7 +815,7 @@ export interface DashboardAlert {
 
 export interface DashboardSummary {
   residentCount: number;
-  staffOnDuty: number;
+  teamOnDuty: number;
   activeMedicationCount: number;
   occupancyRate: number;
   memoryCareResidents: number;
@@ -816,7 +824,7 @@ export interface DashboardSummary {
 export interface DashboardSnapshot {
   summary: DashboardSummary;
   residents: ResidentOverview[];
-  staff: StaffOverview[];
+  team: TeamMemberOverview[];
   medications: MedicationOverview[];
   alerts: DashboardAlert[];
 }
@@ -874,6 +882,6 @@ export interface HealthCheck {
   status: 'ok';
   service: string;
   residents: number;
-  staff: number;
+  team: number;
   generatedAt: IsoDateString;
 }

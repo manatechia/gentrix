@@ -6,12 +6,12 @@ import {
 } from '@nestjs/common';
 
 import type {
-  StaffSchedule,
-  StaffScheduleCreateInput,
-  StaffScheduleUpdateInput,
+  UserSchedule,
+  UserScheduleCreateInput,
+  UserScheduleUpdateInput,
 } from '@gentrix/shared-types';
 
-import { StaffService } from '../../staff/application/staff.service';
+import { UsersService } from '../../users/application/users.service';
 import {
   SCHEDULE_REPOSITORY,
   type ScheduleRepository,
@@ -22,31 +22,39 @@ export class SchedulesService {
   constructor(
     @Inject(SCHEDULE_REPOSITORY)
     private readonly scheduleRepository: ScheduleRepository,
-    @Inject(StaffService)
-    private readonly staffService: StaffService,
+    @Inject(UsersService)
+    private readonly usersService: UsersService,
   ) {}
 
-  async listByStaffId(
-    staffId: string,
+  async listByUserId(
+    userId: string,
     organizationId: string,
-  ): Promise<StaffSchedule[]> {
-    // getStaffEntityById ahora scopea por organizationId — si el staff no
-    // pertenece a la org del caller tira 404 en vez de exponer datos.
-    await this.staffService.getStaffEntityById(staffId, organizationId);
-    return this.scheduleRepository.listByStaffId(staffId as StaffSchedule['staffId']);
+  ): Promise<UserSchedule[]> {
+    const membershipId = await this.usersService.getMembershipIdForUser(
+      userId,
+      organizationId,
+    );
+
+    return this.scheduleRepository.listByMembershipId(
+      membershipId as UserSchedule['userId'],
+    );
   }
 
   async create(
-    staffId: string,
-    input: StaffScheduleCreateInput,
+    userId: string,
+    input: UserScheduleCreateInput,
     actor: string,
     organizationId: string,
-  ): Promise<StaffSchedule> {
-    await this.staffService.getStaffEntityById(staffId, organizationId);
+  ): Promise<UserSchedule> {
+    const membershipId = await this.usersService.getMembershipIdForUser(
+      userId,
+      organizationId,
+    );
     validateScheduleInput(input);
 
     return this.scheduleRepository.create(
-      staffId as StaffSchedule['staffId'],
+      membershipId as UserSchedule['userId'],
+      userId as UserSchedule['userId'],
       normalizeScheduleInput(input),
       actor,
     );
@@ -54,28 +62,29 @@ export class SchedulesService {
 
   async update(
     scheduleId: string,
-    input: StaffScheduleUpdateInput,
+    input: UserScheduleUpdateInput,
     actor: string,
     organizationId: string,
-  ): Promise<StaffSchedule> {
+  ): Promise<UserSchedule> {
     const existingSchedule = await this.scheduleRepository.findById(
-      scheduleId as StaffSchedule['id'],
+      scheduleId as UserSchedule['id'],
     );
 
     if (!existingSchedule) {
       throw new NotFoundException('No encontre el horario solicitado.');
     }
 
-    // Verificamos que el staff del schedule sea de la misma org del caller
-    // antes de permitir el update.
-    await this.staffService.getStaffEntityById(
-      existingSchedule.staffId,
+    // Verifico que el usuario dueño del schedule pertenezca a la org del
+    // caller; si no, 404 en vez de exponer datos.
+    await this.usersService.getMembershipIdForUser(
+      existingSchedule.userId,
       organizationId,
     );
     validateScheduleInput(input);
 
     return this.scheduleRepository.update(
-      scheduleId as StaffSchedule['id'],
+      scheduleId as UserSchedule['id'],
+      existingSchedule.userId,
       normalizeScheduleInput(input),
       actor,
     );
@@ -83,7 +92,7 @@ export class SchedulesService {
 }
 
 function validateScheduleInput(
-  input: StaffScheduleCreateInput | StaffScheduleUpdateInput,
+  input: UserScheduleCreateInput | UserScheduleUpdateInput,
 ): void {
   if (input.weekday < 1 || input.weekday > 7) {
     throw new BadRequestException('El dia semanal debe estar entre 1 y 7.');
@@ -97,8 +106,8 @@ function validateScheduleInput(
 }
 
 function normalizeScheduleInput(
-  input: StaffScheduleCreateInput | StaffScheduleUpdateInput,
-): StaffScheduleCreateInput {
+  input: UserScheduleCreateInput | UserScheduleUpdateInput,
+): UserScheduleCreateInput {
   return {
     weekday: input.weekday,
     startTime: input.startTime.trim(),

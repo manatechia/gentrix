@@ -20,7 +20,7 @@ interface MetricsGridProps {
 
 export function MetricsGrid({ dashboard }: MetricsGridProps) {
   const values = [
-    dashboard.summary.staffOnDuty,
+    dashboard.summary.teamOnDuty,
     `${dashboard.summary.occupancyRate}%`,
   ];
 

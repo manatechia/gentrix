@@ -57,39 +57,24 @@ Opciones:
 - **Conservador:** tabla `Address` con FK desde Resident, Facility, etc. Permite reutilizar y geocode futuro.
 - **Mínimo:** un único shape tipado `{street, city, state, postalCode, country?}` consistente en todas, documentado en `@gentrix/shared-types`, y **dropear `Resident.address.room`** para eliminar la duplicación con `Resident.room`.
 
-### 4. `StaffMember.ward` + `StaffFacilityAssignment.ward` → tabla `Ward`
+### 4-5. `StaffMember` y `StaffFacilityAssignment` — ✅ cerrado 2026-04-25
 
-Strings `"Unidad A" | "Unidad B" | "Consultorio"` repetidos en dos tablas sin FK.
-Idéntico al problema de roles antes del PR #29: la misma unidad física vive como
-texto en varios lugares, sin garantía de consistencia.
+Ambas tablas fueron eliminadas. La identidad del personal pasó a vivir
+en `UserAccount` + `OrganizationMembership`, y los atributos operativos
+(`jobTitleId`, `wardId`, `shift`) se mudaron como columnas de la
+membership. Ver migración
+`20260425120000_drop_staff_member_consolidate_to_user` y la sección
+"Personal operativo" en `docs/domain-model.md`.
 
-```prisma
-model Ward {
-  id         String @id @default(uuid()) @db.Uuid
-  facilityId String @db.Uuid
-  code       String          // "A", "B", "consultorio"
-  name       String          // "Unidad A"
-  // audit
-  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Restrict)
-  @@unique([facilityId, code])
-}
-```
+Qué quedó como consecuencia:
 
-Es probablemente la reforma con más **upside operativo** post-roles: habilita
-ocupación por unidad, permisos por ala (`MembershipFacilityScope` con `wardId` opcional),
-reportes de staffing por ward.
-
-### 5. `StaffMember.role` + `StaffFacilityAssignment.assignmentRole` → tabla `JobTitle`
-
-Strings `nurse | doctor | caregiver` repetidos en dos tablas. Es **puesto laboral**,
-no permisos de login (esos ya viven en `Role`). Mismo vicio que los roles pre-PR #29.
-
-Dos caminos:
-
-- **Tabla propia `JobTitle`** por organización.
-- **Reusar `Role`** con un discriminante `kind: 'permission' | 'job'` — menos tablas pero mezcla conceptos.
-
-Sugerencia: tabla propia, son dominios distintos.
+- `Ward` sigue siendo tabla propia (cumplía además casos más allá de
+  staff); ahora referenciada por `OrganizationMembership.wardId`.
+- `JobTitle` sigue siendo tabla propia (catálogo por organización);
+  ahora referenciada por `OrganizationMembership.jobTitleId`.
+- `StaffSchedule` sobrevive como tabla con FK a
+  `OrganizationMembership.id`. El nombre "Staff" en la tabla queda como
+  legado; cambiarlo es puro rename y puede hacerse en otra pasada.
 
 ---
 
@@ -119,7 +104,7 @@ Recomendación default para esta lista: **enum postgres**.
 | `MembershipFacilityScope.scopeType` | `assigned` | `+managed, +read-only` |
 | `PasswordResetAudit.action` / `result` | — | eventos cerrados |
 | `Organization.status`, `Facility.status`, `MedicationCatalogItem.status` | `active` | mismos |
-| `StaffMember.shift` | `morning, afternoon` | `+night` |
+| `OrganizationMembership.shift` | `morning, afternoon` | `+night` |
 
 Se pueden agrupar en un único PR "enum postgres por toda la schema" —
 poco riesgo, mucho type safety, backfill trivial (las columnas ya sólo
@@ -177,7 +162,7 @@ Array postgres nativo para días 0-6. Idiomático, no tocar.
 1. **`Ward` como tabla** — upside operativo grande (ocupación, permisos por ala). 1-2 días.
 2. **`ResidentFamilyContact` como tabla** — habilita búsqueda, linkeo a eventos, auditoría de cambios. ~medio día.
 3. **Enums postgres para la tabla 🟡** — un único PR multi-columna. Medio día, bajo riesgo.
-4. **`JobTitle`** consolidando `StaffMember.role` + `StaffFacilityAssignment.assignmentRole`. Similar a roles, no urgente.
+4. **`JobTitle`** ya implementado; ahora vinculado a `OrganizationMembership`.
 5. **`Address`** como tabla o shape tipado único. Cuando se toque el flujo de edición.
 6. **`Country` lookup**. Cuando se soporten usuarios no-AR.
 

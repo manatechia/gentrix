@@ -9,11 +9,11 @@ import {
   Min,
 } from 'class-validator';
 
-import type { StaffScheduleCreateInput } from '@gentrix/shared-types';
+import type { UserScheduleCreateInput } from '@gentrix/shared-types';
 
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-export class CreateStaffScheduleDto implements StaffScheduleCreateInput {
+export class CreateUserScheduleDto implements UserScheduleCreateInput {
   @ApiProperty({ example: 1 })
   @IsInt()
   @Min(1)

@@ -92,7 +92,7 @@ const medicationExecutionResultLabels: Record<
   rejected: 'Rechazada',
 };
 
-const staffRoleLabels: Record<string, string> = {
+const jobTitleLabels: Record<string, string> = {
   nurse: 'Enfermeria',
   doctor: 'Medico',
   caregiver: 'Cuidador',
@@ -177,8 +177,8 @@ export function formatMedicationExecutionResult(
   return medicationExecutionResultLabels[result] ?? result;
 }
 
-export function formatStaffRole(role: string): string {
-  return staffRoleLabels[role] ?? role;
+export function formatJobTitleLabel(jobTitleCode: string): string {
+  return jobTitleLabels[jobTitleCode] ?? jobTitleCode;
 }
 
 export function formatShiftLabel(shift: string): string {
