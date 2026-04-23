@@ -647,6 +647,104 @@ export interface UserScheduleCreateInput {
 
 export type UserScheduleUpdateInput = UserScheduleCreateInput;
 
+/// --- Liquidación de horas (fase 1: externos) -----------------------------
+///
+/// Decimales viajan como string para no perder precisión en JSON. Las
+/// fechas de trabajo/vigencia usan `IsoDateString` pero en la práctica son
+/// date-only (`YYYY-MM-DD`); el backend las almacena en columnas `DATE`.
+export interface MembershipHourlyRate {
+  id: EntityId;
+  userId: EntityId;
+  rate: string;
+  currency: string;
+  effectiveFrom: IsoDateString;
+  effectiveTo: IsoDateString | null;
+  audit: AuditTrail;
+}
+
+export interface MembershipHourlyRateCreateInput {
+  rate: string;
+  currency: string;
+  effectiveFrom: IsoDateString;
+}
+
+export type MembershipHourlyRateUpdateInput = Partial<
+  Omit<MembershipHourlyRateCreateInput, 'effectiveFrom'>
+> & {
+  effectiveFrom?: IsoDateString;
+};
+
+export interface WorkedHourEntry {
+  id: EntityId;
+  userId: EntityId;
+  workDate: IsoDateString;
+  hours: string;
+  notes?: string;
+  settlementId: EntityId | null;
+  appliedRate: string | null;
+  appliedCurrency: string | null;
+  audit: AuditTrail;
+}
+
+export interface WorkedHourEntryCreateInput {
+  workDate: IsoDateString;
+  hours: string;
+  notes?: string;
+}
+
+export type WorkedHourEntryUpdateInput = WorkedHourEntryCreateInput;
+
+export type HourSettlementStatus = 'issued' | 'paid' | 'cancelled';
+
+export interface HourSettlement {
+  id: EntityId;
+  userId: EntityId;
+  periodStart: IsoDateString;
+  periodEnd: IsoDateString;
+  issuedAt: IsoDateString;
+  paidAt: IsoDateString | null;
+  cancelledAt: IsoDateString | null;
+  status: HourSettlementStatus;
+  notes?: string;
+  audit: AuditTrail;
+}
+
+export interface HourSettlementLine {
+  entryId: EntityId;
+  workDate: IsoDateString;
+  hours: string;
+  appliedRate: string;
+  appliedCurrency: string;
+  subtotal: string;
+  notes?: string;
+}
+
+export interface HourSettlementPreview {
+  userId: EntityId;
+  periodStart: IsoDateString;
+  periodEnd: IsoDateString;
+  lines: HourSettlementLine[];
+  totalHours: string;
+  totalAmount: string;
+  currency: string;
+}
+
+export interface HourSettlementDetail extends HourSettlement {
+  lines: HourSettlementLine[];
+  totalHours: string;
+  totalAmount: string;
+  currency: string;
+}
+
+export interface HourSettlementPeriodInput {
+  periodStart: IsoDateString;
+  periodEnd: IsoDateString;
+}
+
+export interface HourSettlementIssueInput extends HourSettlementPeriodInput {
+  notes?: string;
+}
+
 export type MedicationRoute =
   | 'oral'
   | 'intravenous'

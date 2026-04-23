@@ -69,6 +69,11 @@ const ForcePasswordChangeRoute = lazy(async () => {
 
   return { default: module.ForcePasswordChangeRoute };
 });
+const WorkedHoursRoute = lazy(async () => {
+  const module = await import('./routes/worked-hours-routes');
+
+  return { default: module.WorkedHoursRoute };
+});
 
 function renderRoute(element: ReactNode) {
   return <Suspense fallback={<AuthCheckingScreen />}>{element}</Suspense>;
@@ -123,6 +128,10 @@ export function AppRouter() {
       <Route
         path="/personal"
         element={renderRoute(gated(<StaffSchedulesRoute />))}
+      />
+      <Route
+        path="/horas"
+        element={renderRoute(gated(<WorkedHoursRoute />))}
       />
       <Route
         path="/medicacion"

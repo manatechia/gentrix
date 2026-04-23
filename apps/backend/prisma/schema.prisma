@@ -184,6 +184,9 @@ model OrganizationMembership {
   jobTitle       JobTitle?               @relation("MembershipJobTitle", fields: [jobTitleId], references: [id], onDelete: SetNull)
   ward           Ward?                   @relation("MembershipWard", fields: [wardId], references: [id], onDelete: SetNull)
   schedules      StaffSchedule[]
+  hourlyRates    MembershipHourlyRate[]
+  workedHourEntries WorkedHourEntry[]
+  hourSettlements HourSettlement[]
 
   @@unique([organizationId, userId])
   @@index([userId, status])
@@ -191,6 +194,86 @@ model OrganizationMembership {
   @@index([roleId])
   @@index([jobTitleId])
   @@index([wardId])
+  @@index([deletedAt])
+}
+
+/// Historial de tarifa horaria de una membresía. La tarifa vigente es la
+/// fila con `effectiveTo IS NULL` (convención: como máximo una activa por
+/// membership). Los chequeos de no-solapamiento se hacen en app, no en DB,
+/// porque Postgres no tiene constraint de rangos fuera de `btree_gist`.
+model MembershipHourlyRate {
+  id            String                 @id @default(uuid()) @db.Uuid
+  membershipId  String                 @db.Uuid
+  rate          Decimal                @db.Decimal(12, 2)
+  currency      String
+  effectiveFrom DateTime               @db.Date
+  effectiveTo   DateTime?              @db.Date
+  createdAt     DateTime
+  createdBy     String
+  updatedAt     DateTime
+  updatedBy     String
+  deletedAt     DateTime?
+  deletedBy     String?
+  membership    OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@index([membershipId, effectiveFrom])
+  @@index([membershipId, effectiveTo])
+  @@index([deletedAt])
+}
+
+/// Entrada de horas trabajadas (fase 1: sólo se cargan horas para
+/// externos). Mientras `settlementId IS NULL` está en draft y es editable;
+/// al liquidar se congela junto con la tarifa aplicada en `appliedRate` /
+/// `appliedCurrency`, y ya no puede modificarse salvo que se cancele el
+/// settlement (reverting entry a draft).
+model WorkedHourEntry {
+  id               String                 @id @default(uuid()) @db.Uuid
+  membershipId     String                 @db.Uuid
+  workDate         DateTime               @db.Date
+  hours            Decimal                @db.Decimal(5, 2)
+  notes            String?
+  settlementId     String?                @db.Uuid
+  appliedRate      Decimal?               @db.Decimal(12, 2)
+  appliedCurrency  String?
+  createdAt        DateTime
+  createdBy        String
+  updatedAt        DateTime
+  updatedBy        String
+  deletedAt        DateTime?
+  deletedBy        String?
+  membership       OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Restrict)
+  settlement       HourSettlement?        @relation(fields: [settlementId], references: [id], onDelete: SetNull)
+
+  @@index([membershipId, workDate])
+  @@index([settlementId])
+  @@index([deletedAt])
+}
+
+/// Liquidación de horas para una membresía en un rango cerrado. Los
+/// totales no se persisten (son `sum(entries.hours * entries.appliedRate)`
+/// del set de entries con `settlementId = this.id`); se computan al vuelo
+/// para respetar 3FN. Estado derivado de timestamps: `paidAt` -> paid,
+/// `cancelledAt` -> cancelled, en otro caso -> issued.
+model HourSettlement {
+  id            String                 @id @default(uuid()) @db.Uuid
+  membershipId  String                 @db.Uuid
+  periodStart   DateTime               @db.Date
+  periodEnd     DateTime               @db.Date
+  issuedAt      DateTime
+  paidAt        DateTime?
+  cancelledAt   DateTime?
+  notes         String?
+  createdAt     DateTime
+  createdBy     String
+  updatedAt     DateTime
+  updatedBy     String
+  deletedAt     DateTime?
+  deletedBy     String?
+  membership    OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Restrict)
+  entries       WorkedHourEntry[]
+
+  @@index([membershipId, periodStart, periodEnd])
+  @@index([membershipId, cancelledAt])
   @@index([deletedAt])
 }
 

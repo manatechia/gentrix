@@ -30,6 +30,7 @@ const ids = {
     mariaLopez: '183a5579-7a6f-4cb0-aa59-a1f7b833c424',
     mauroPaz: 'd8c09d82-f72a-4af6-98cf-a3440ed61cd9',
     luciaMendez: '54b355fb-6515-4800-9443-0b0577f52350',
+    pabloRuiz: '7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d',
   },
   memberships: {
     sofiaQuirogaDemo: '91000000-0000-4000-8000-000000000003',
@@ -37,6 +38,15 @@ const ids = {
     mariaLopezDemo: '91000000-0000-4000-8000-000000000005',
     mauroPazDemo: '91000000-0000-4000-8000-000000000006',
     luciaMendezDemo: '91000000-0000-4000-8000-000000000007',
+    pabloRuizDemo: '91000000-0000-4000-8000-000000000008',
+  },
+  hourlyRates: {
+    pabloRuizCurrent: '91000000-0000-4000-8000-000000000080',
+  },
+  workedHourEntries: {
+    pabloMonday: '91000000-0000-4000-8000-000000000090',
+    pabloWednesday: '91000000-0000-4000-8000-000000000091',
+    pabloFriday: '91000000-0000-4000-8000-000000000092',
   },
   roles: {
     admin: '91000000-0000-4000-8000-000000000020',
@@ -94,6 +104,9 @@ const ids = {
 
 export async function seedDatabase(prisma) {
   await prisma.authSession.deleteMany();
+  await prisma.workedHourEntry.deleteMany();
+  await prisma.hourSettlement.deleteMany();
+  await prisma.membershipHourlyRate.deleteMany();
   await prisma.staffSchedule.deleteMany();
   await prisma.residentObservationNote.deleteMany();
   await prisma.clinicalHistoryEvent.deleteMany();
@@ -375,6 +388,20 @@ export async function seedDatabase(prisma) {
     },
   });
 
+  await prisma.userAccount.create({
+    data: {
+      id: ids.users.pabloRuiz,
+      fullName: 'Pablo Ruiz',
+      email: 'pablo.ruiz@gentrix.local',
+      password: seedPasswordHash,
+      status: 'active',
+      createdAt: new Date('2026-03-01T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
   await prisma.organizationMembership.create({
     data: {
       id: ids.memberships.sofiaQuirogaDemo,
@@ -514,6 +541,79 @@ export async function seedDatabase(prisma) {
         },
       },
     },
+  });
+
+  // Pablo Ruiz: médico externo que cobra por hora. Se usa como caso base
+  // de la feature de liquidación de horas (fase 1).
+  await prisma.organizationMembership.create({
+    data: {
+      id: ids.memberships.pabloRuizDemo,
+      organizationId: ids.organizations.gentrixDemo,
+      userId: ids.users.pabloRuiz,
+      roleId: ids.roles.external,
+      jobTitleId: ids.jobTitles.doctor,
+      shift: null,
+      status: 'active',
+      isDefault: true,
+      joinedAt: new Date('2026-03-01T09:00:00.000Z'),
+      createdAt: new Date('2026-03-01T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
+  await prisma.membershipHourlyRate.create({
+    data: {
+      id: ids.hourlyRates.pabloRuizCurrent,
+      membershipId: ids.memberships.pabloRuizDemo,
+      rate: '15000.00',
+      currency: 'ARS',
+      effectiveFrom: new Date('2026-03-01T00:00:00.000Z'),
+      effectiveTo: null,
+      createdAt: new Date('2026-03-01T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-01T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
+  await prisma.workedHourEntry.createMany({
+    data: [
+      {
+        id: ids.workedHourEntries.pabloMonday,
+        membershipId: ids.memberships.pabloRuizDemo,
+        workDate: new Date('2026-04-06T00:00:00.000Z'),
+        hours: '4.00',
+        notes: 'Visita semanal — controles de residentes en observación.',
+        createdAt: new Date('2026-04-06T18:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-04-06T18:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.workedHourEntries.pabloWednesday,
+        membershipId: ids.memberships.pabloRuizDemo,
+        workDate: new Date('2026-04-08T00:00:00.000Z'),
+        hours: '2.50',
+        notes: 'Consulta puntual Raúl Benítez (indicación de enoxaparina).',
+        createdAt: new Date('2026-04-08T19:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-04-08T19:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.workedHourEntries.pabloFriday,
+        membershipId: ids.memberships.pabloRuizDemo,
+        workDate: new Date('2026-04-10T00:00:00.000Z'),
+        hours: '3.00',
+        notes: 'Revisión semanal — pase de sala.',
+        createdAt: new Date('2026-04-10T18:30:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-04-10T18:30:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+    ],
   });
 
   await prisma.resident.createMany({
