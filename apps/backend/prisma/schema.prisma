@@ -63,9 +63,33 @@ model Facility {
   residents        Resident[]
   sessions         AuthSession[]
   staffAssignments StaffFacilityAssignment[]
+  wards            Ward[]
 
   @@unique([organizationId, code])
   @@index([organizationId, deletedAt])
+  @@index([deletedAt])
+}
+
+/// Unidad física dentro de una residencia (ala, consultorio, piso). La
+/// normalización (etapa 2 del backlog) la desacopla del string libre que
+/// vivía en `StaffMember.ward` / `StaffFacilityAssignment.ward`.
+model Ward {
+  id               String                    @id @default(uuid()) @db.Uuid
+  facilityId       String                    @db.Uuid
+  code             String
+  name             String
+  createdAt        DateTime
+  createdBy        String
+  updatedAt        DateTime
+  updatedBy        String
+  deletedAt        DateTime?
+  deletedBy        String?
+  facility         Facility                  @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  staffMembers     StaffMember[]             @relation("StaffMemberWard")
+  staffAssignments StaffFacilityAssignment[] @relation("StaffAssignmentWard")
+
+  @@unique([facilityId, code])
+  @@index([facilityId, deletedAt])
   @@index([deletedAt])
 }
 
@@ -268,7 +292,7 @@ model StaffMember {
   firstName     String
   lastName      String
   role          String
-  ward          String
+  wardId        String?                  @db.Uuid
   shift         String
   status        String
   startDate     DateTime
@@ -281,9 +305,11 @@ model StaffMember {
   assignments   StaffFacilityAssignment[]
   organization  Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   schedules     StaffSchedule[]
+  ward          Ward?                    @relation("StaffMemberWard", fields: [wardId], references: [id], onDelete: SetNull)
 
   @@index([organizationId, deletedAt])
   @@index([deletedAt])
+  @@index([wardId])
 }
 
 model StaffFacilityAssignment {
@@ -291,7 +317,7 @@ model StaffFacilityAssignment {
   staffId        String      @db.Uuid
   facilityId     String      @db.Uuid
   assignmentRole String?
-  ward           String?
+  wardId         String?     @db.Uuid
   shift          String?
   startDate      DateTime
   endDate        DateTime?
@@ -304,10 +330,12 @@ model StaffFacilityAssignment {
   deletedBy      String?
   facility       Facility    @relation(fields: [facilityId], references: [id], onDelete: Restrict)
   staffMember    StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  ward           Ward?       @relation("StaffAssignmentWard", fields: [wardId], references: [id], onDelete: SetNull)
 
   @@index([staffId, status])
   @@index([facilityId, status])
   @@index([deletedAt])
+  @@index([wardId])
 }
 
 model MedicationCatalogItem {
