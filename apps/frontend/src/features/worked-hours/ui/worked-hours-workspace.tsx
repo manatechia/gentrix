@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import type { AuthSession } from '@gentrix/shared-types';
 
@@ -73,18 +74,27 @@ export function WorkedHoursWorkspace({
         className={`${shellCardClassName} grid gap-4 px-7 py-6`}
         data-testid="worked-hours-workspace"
       >
-        <div className="grid gap-2">
-          <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-            Externos
-          </span>
-          <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
-            Carga de horas y liquidaciones
-          </h1>
-          <p className="max-w-[64ch] leading-[1.6] text-brand-text-secondary">
-            Cargá las horas trabajadas por cada profesional externo y liquidá
-            el período para entregarle el resumen. La tarifa aplicada se
-            congela al emitir la liquidación.
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="grid gap-2">
+            <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
+              Personal · Externos
+            </span>
+            <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
+              Carga de horas y liquidaciones
+            </h1>
+            <p className="max-w-[64ch] leading-[1.6] text-brand-text-secondary">
+              Cargá las horas trabajadas por cada profesional externo y liquidá
+              el período para entregarle el resumen. La tarifa aplicada se
+              congela al emitir la liquidación.
+            </p>
+          </div>
+          <Link
+            to="/personal"
+            data-testid="worked-hours-back-to-personal"
+            className={secondaryButtonClassName}
+          >
+            ← Volver a Personal
+          </Link>
         </div>
       </section>
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import type {
   AuthSession,
@@ -184,6 +185,33 @@ export function UsersAdminWorkspace({
             },
           ]}
         />
+      )}
+
+      {screenState === 'ready' && (
+        <section
+          className={`${surfaceCardClassName} flex flex-wrap items-center justify-between gap-3 px-5 py-4`}
+          data-testid="users-admin-shortcuts"
+        >
+          <div className="grid gap-0.5">
+            <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+              Más en Personal
+            </span>
+            <strong className="text-brand-text">
+              Carga y liquidación de horas de externos
+            </strong>
+            <span className="text-sm text-brand-text-secondary">
+              Cargá horas trabajadas y emití liquidaciones para los
+              profesionales externos de la organización.
+            </span>
+          </div>
+          <Link
+            to="/personal/horas"
+            data-testid="users-admin-shortcut-horas"
+            className={primaryButtonClassName}
+          >
+            Ir a horas de externos
+          </Link>
+        </section>
       )}
 
       {screenState === 'ready' && (
