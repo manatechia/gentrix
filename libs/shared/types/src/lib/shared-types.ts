@@ -60,6 +60,51 @@ export type ResidentDocumentType =
 
 export type ResidentSex = 'femenino' | 'masculino' | 'x';
 
+/**
+ * Estado civil canónico del residente. El catálogo está acotado a nivel DB
+ * vía CHECK constraint en `Resident.maritalStatus`.
+ */
+export type ResidentMaritalStatus =
+  | 'single'
+  | 'married'
+  | 'widowed'
+  | 'divorced'
+  | 'domestic-partner';
+
+/**
+ * Tipos de evento del historial clínico del residente. Acotado a nivel DB
+ * vía CHECK constraint en `ClinicalHistoryEvent.eventType`.
+ */
+export type ClinicalHistoryEventType =
+  | 'admission-note'
+  | 'follow-up'
+  | 'medical-history';
+
+/**
+ * Acción aplicada por una excepción de serie de agenda: saltear esa
+ * ocurrencia o reemplazarla con un override puntual.
+ */
+export type ResidentAgendaSeriesExceptionAction = 'skip' | 'override';
+
+/**
+ * Alcance de un membership sobre una residencia: asignado (operativo),
+ * gerenciado (admin de esa residencia) o solo-lectura.
+ */
+export type MembershipFacilityScopeType =
+  | 'assigned'
+  | 'managed'
+  | 'read-only';
+
+/**
+ * Tipos de evento auditado para el flujo de reset de contraseña.
+ */
+export type PasswordResetAuditAction =
+  | 'admin-reset'
+  | 'forced-change-completed'
+  | 'forced-change-failed';
+
+export type PasswordResetAuditResult = 'success' | 'failure';
+
 export type ResidentAttachmentKind = 'image' | 'pdf';
 
 export interface ResidentMedicalHistoryEntryInput {
@@ -177,6 +222,7 @@ export interface ResidentBaseProfileInput {
   birthDate: IsoDateString;
   admissionDate: IsoDateString;
   sex: ResidentSex;
+  /** Valores canónicos en {@link ResidentMaritalStatus}; DB los enforza vía CHECK constraint. */
   maritalStatus?: string;
   nationality?: string;
   email?: string;
