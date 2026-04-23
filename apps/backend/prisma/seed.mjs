@@ -102,6 +102,7 @@ export async function seedDatabase(prisma) {
   await prisma.medicationOrder.deleteMany();
   await prisma.medicationCatalogItem.deleteMany();
   await prisma.staffMember.deleteMany();
+  await prisma.residentFamilyContact.deleteMany();
   await prisma.resident.deleteMany();
   await prisma.membershipFacilityScope.deleteMany();
   await prisma.organizationMembership.deleteMany();
@@ -445,17 +446,6 @@ export async function seedDatabase(prisma) {
           orthopedicBed: false,
           notes: 'Ropa de cambio, album familiar y calzado ortopedico.',
         },
-        familyContacts: [
-          {
-            id: 'resident-family-contact-marta-diaz',
-            fullName: 'Laura Perez',
-            relationship: 'Hija',
-            phone: '+54 11 5555-0101',
-            email: 'laura.perez@familia.local',
-            address: 'Paysandu 1402, CABA',
-            notes: 'Coordina tramites y acompanamiento en consultas.',
-          },
-        ],
         discharge: {},
         address: {
           street: 'Av. Siempreviva 742',
@@ -544,17 +534,6 @@ export async function seedDatabase(prisma) {
           orthopedicBed: false,
           notes: 'Caja organizadora de medicacion y manta personal.',
         },
-        familyContacts: [
-          {
-            id: 'resident-family-contact-elena-suarez',
-            fullName: 'Claudia Suarez',
-            relationship: 'Hija',
-            phone: '+54 11 5555-0132',
-            email: 'claudia.suarez@familia.local',
-            address: 'Av. Montes de Oca 1100, CABA',
-            notes: 'Referencia principal para tramites y acompanamiento.',
-          },
-        ],
         discharge: {},
         address: {
           street: 'Av. Siempreviva 742',
@@ -644,17 +623,6 @@ export async function seedDatabase(prisma) {
           orthopedicBed: true,
           notes: 'Baston plegable y documentacion de cobertura medica.',
         },
-        familyContacts: [
-          {
-            id: 'resident-family-contact-raul-benitez',
-            fullName: 'Nadia Benitez',
-            relationship: 'Hija',
-            phone: '+54 11 5555-0140',
-            email: 'nadia.benitez@familia.local',
-            address: 'Constitucion 944, CABA',
-            notes: 'Autoriza traslados y acompanamiento clinico.',
-          },
-        ],
         discharge: {},
         address: {
           street: 'Av. Siempreviva 742',
@@ -668,6 +636,50 @@ export async function seedDatabase(prisma) {
           relationship: 'Hija',
           phone: '+54 11 5555-0140',
         },
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+    ],
+  });
+
+  await prisma.residentFamilyContact.createMany({
+    data: [
+      {
+        residentId: ids.residents.martaDiaz,
+        fullName: 'Laura Perez',
+        relationship: 'Hija',
+        phone: '+54 11 5555-0101',
+        email: 'laura.perez@familia.local',
+        address: 'Paysandu 1402, CABA',
+        notes: 'Coordina tramites y acompanamiento en consultas.',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        residentId: ids.residents.elenaSuarez,
+        fullName: 'Claudia Suarez',
+        relationship: 'Hija',
+        phone: '+54 11 5555-0132',
+        email: 'claudia.suarez@familia.local',
+        address: 'Av. Montes de Oca 1100, CABA',
+        notes: 'Referencia principal para tramites y acompanamiento.',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        residentId: ids.residents.raulBenitez,
+        fullName: 'Nadia Benitez',
+        relationship: 'Hija',
+        phone: '+54 11 5555-0140',
+        email: 'nadia.benitez@familia.local',
+        address: 'Constitucion 944, CABA',
+        notes: 'Autoriza traslados y acompanamiento clinico.',
         createdAt: new Date('2026-01-10T09:00:00.000Z'),
         createdBy: 'seed-script',
         updatedAt: new Date('2026-03-20T09:00:00.000Z'),

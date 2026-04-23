@@ -261,7 +261,6 @@ model Resident {
   clinicalProfile        Json?
   geriatricAssessment    Json?
   belongings             Json?
-  familyContacts         Json?
   discharge              Json?
   address                Json
   emergencyContact       Json
@@ -276,6 +275,7 @@ model Resident {
   agendaSeries           ResidentAgendaSeries[]
   observationNotes       ResidentObservationNote[]
   facility               Facility               @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  familyContacts         ResidentFamilyContact[]
   medicationExecutions   MedicationExecution[]
   medications            MedicationOrder[]
   organization           Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
@@ -284,6 +284,30 @@ model Resident {
   @@index([organizationId, facilityId, deletedAt])
   @@index([deletedAt])
   @@index([organizationId, careStatus, deletedAt])
+}
+
+/// Contacto familiar del residente. Etapa 3 del backlog: expande el jsonb
+/// array `Resident.familyContacts` a una relación 1:N con identidad real
+/// (UUID), permitiendo búsqueda y FK desde eventos futuros.
+model ResidentFamilyContact {
+  id           String    @id @default(uuid()) @db.Uuid
+  residentId   String    @db.Uuid
+  fullName     String
+  relationship String
+  phone        String
+  email        String?
+  address      String?
+  notes        String?
+  createdAt    DateTime
+  createdBy    String
+  updatedAt    DateTime
+  updatedBy    String
+  deletedAt    DateTime?
+  deletedBy    String?
+  resident     Resident  @relation(fields: [residentId], references: [id], onDelete: Cascade)
+
+  @@index([residentId])
+  @@index([deletedAt])
 }
 
 model StaffMember {
