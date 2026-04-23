@@ -18,7 +18,6 @@ export interface Address {
   city: string;
   state: string;
   postalCode: string;
-  room?: string;
 }
 
 export interface ContactPerson {
