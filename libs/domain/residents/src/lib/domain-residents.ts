@@ -265,7 +265,7 @@ export function createResidentSeed(
     belongings: { ...baseBelongings },
     familyContacts: baseFamilyContacts.map((contact) => ({ ...contact })),
     discharge: {},
-    address: { ...baseAddress, room: 'A-101' },
+    address: { ...baseAddress },
     emergencyContact: { ...baseContact },
     audit: { ...baseAudit },
     ...overrides,
@@ -303,7 +303,7 @@ export function createResidentSeed(
       ...contact,
     })),
     discharge: { ...residentBase.discharge },
-    address: { ...baseAddress, room: residentBase.room, ...overrides.address },
+    address: { ...baseAddress, ...overrides.address },
     emergencyContact: { ...baseContact, ...overrides.emergencyContact },
     audit: { ...baseAudit, ...overrides.audit },
   };
@@ -331,7 +331,6 @@ export function createResidentFromIntake(
       city: '',
       state: '',
       postalCode: '',
-      room: editableFields.room,
     },
     emergencyContact: buildEmergencyContact(editableFields.familyContacts),
     audit: {
@@ -357,7 +356,6 @@ export function updateResidentBaseProfile(
     ...editableFields,
     address: {
       ...currentResident.address,
-      room: editableFields.room,
     },
     audit: {
       ...currentResident.audit,

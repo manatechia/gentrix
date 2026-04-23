@@ -512,7 +512,6 @@ export async function seedDatabase(prisma) {
           city: 'Buenos Aires',
           state: 'CABA',
           postalCode: 'C1405',
-          room: 'A-101',
         },
         emergencyContact: {
           fullName: 'Laura Perez',
@@ -600,7 +599,6 @@ export async function seedDatabase(prisma) {
           city: 'Buenos Aires',
           state: 'CABA',
           postalCode: 'C1405',
-          room: 'B-204',
         },
         emergencyContact: {
           fullName: 'Claudia Suarez',
@@ -689,7 +687,6 @@ export async function seedDatabase(prisma) {
           city: 'Buenos Aires',
           state: 'CABA',
           postalCode: 'C1405',
-          room: 'C-301',
         },
         emergencyContact: {
           fullName: 'Nadia Benitez',

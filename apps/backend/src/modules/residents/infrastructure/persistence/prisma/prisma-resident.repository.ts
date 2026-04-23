@@ -256,7 +256,6 @@ function mapResidentRecord(record: ResidentRecord): Resident {
     city: '',
     state: '',
     postalCode: '',
-    room: record.room,
   });
   const emergencyContact = fromJson<ContactPerson>(record.emergencyContact, {
     fullName: 'Contacto pendiente',
@@ -335,10 +334,7 @@ function mapResidentRecord(record: ResidentRecord): Resident {
       notes: contact.notes ?? undefined,
     })),
     discharge: fromJson<ResidentDischargeInfo>(record.discharge, {}),
-    address: {
-      ...address,
-      room: address.room ?? record.room,
-    },
+    address,
     emergencyContact,
     audit: {
       createdAt: toIsoDateString(record.createdAt),
