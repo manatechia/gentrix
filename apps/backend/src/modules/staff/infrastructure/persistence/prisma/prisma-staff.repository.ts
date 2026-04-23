@@ -9,10 +9,12 @@ import type { StaffRepository } from '../../../domain/repositories/staff.reposit
 
 type StaffRecord = Prisma.StaffMemberGetPayload<{
   include: {
+    jobTitle: true;
     ward: true;
     assignments: {
       include: {
         facility: true;
+        jobTitle: true;
         ward: true;
       };
     };
@@ -45,6 +47,7 @@ export class PrismaStaffRepository implements StaffRepository {
         organizationId: organizationId ?? undefined,
       },
       include: {
+        jobTitle: true,
         ward: true,
         assignments: {
           where: {
@@ -57,6 +60,7 @@ export class PrismaStaffRepository implements StaffRepository {
           },
           include: {
             facility: true,
+            jobTitle: true,
             ward: true,
           },
           orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
@@ -81,6 +85,7 @@ export class PrismaStaffRepository implements StaffRepository {
         organizationId: organizationId ?? undefined,
       },
       include: {
+        jobTitle: true,
         ward: true,
         assignments: {
           where: {
@@ -93,6 +98,7 @@ export class PrismaStaffRepository implements StaffRepository {
           },
           include: {
             facility: true,
+            jobTitle: true,
             ward: true,
           },
           orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
@@ -108,13 +114,15 @@ function mapStaffRecord(record: StaffRecord): DomainStaffMember {
   const primaryAssignment = record.assignments[0];
   const wardName =
     primaryAssignment?.ward?.name ?? record.ward?.name ?? '';
+  const jobTitleCode =
+    primaryAssignment?.jobTitle?.code ?? record.jobTitle?.code ?? 'caregiver';
 
   return {
     id: record.id as DomainStaffMember['id'],
     organizationId: record.organizationId as DomainStaffMember['organizationId'],
     firstName: record.firstName,
     lastName: record.lastName,
-    role: normalizeStaffRole(record.role),
+    role: normalizeStaffRole(jobTitleCode),
     ward: wardName,
     shift: normalizeShiftWindow(primaryAssignment?.shift ?? record.shift),
     status: normalizeEntityStatus(record.status),

@@ -26,6 +26,7 @@ model Organization {
   observationNotes ResidentObservationNote[]
   medicationExecutions MedicationExecution[]
   facilities       Facility[]
+  jobTitles        JobTitle[]
   medicationOrders MedicationOrder[]
   memberships      OrganizationMembership[]
   residents        Resident[]
@@ -315,7 +316,7 @@ model StaffMember {
   organizationId String                  @db.Uuid
   firstName     String
   lastName      String
-  role          String
+  jobTitleId    String?                  @db.Uuid
   wardId        String?                  @db.Uuid
   shift         String
   status        String
@@ -327,6 +328,7 @@ model StaffMember {
   deletedAt     DateTime?
   deletedBy     String?
   assignments   StaffFacilityAssignment[]
+  jobTitle      JobTitle?                @relation("StaffMemberJobTitle", fields: [jobTitleId], references: [id], onDelete: SetNull)
   organization  Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   schedules     StaffSchedule[]
   ward          Ward?                    @relation("StaffMemberWard", fields: [wardId], references: [id], onDelete: SetNull)
@@ -334,13 +336,14 @@ model StaffMember {
   @@index([organizationId, deletedAt])
   @@index([deletedAt])
   @@index([wardId])
+  @@index([jobTitleId])
 }
 
 model StaffFacilityAssignment {
   id             String      @id @default(uuid()) @db.Uuid
   staffId        String      @db.Uuid
   facilityId     String      @db.Uuid
-  assignmentRole String?
+  jobTitleId     String?     @db.Uuid
   wardId         String?     @db.Uuid
   shift          String?
   startDate      DateTime
@@ -353,6 +356,7 @@ model StaffFacilityAssignment {
   deletedAt      DateTime?
   deletedBy      String?
   facility       Facility    @relation(fields: [facilityId], references: [id], onDelete: Restrict)
+  jobTitle       JobTitle?   @relation("StaffAssignmentJobTitle", fields: [jobTitleId], references: [id], onDelete: SetNull)
   staffMember    StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
   ward           Ward?       @relation("StaffAssignmentWard", fields: [wardId], references: [id], onDelete: SetNull)
 
@@ -360,6 +364,32 @@ model StaffFacilityAssignment {
   @@index([facilityId, status])
   @@index([deletedAt])
   @@index([wardId])
+  @@index([jobTitleId])
+}
+
+/// Puesto laboral (job title) del personal: enfermería, médico, cuidador,
+/// coordinador, etc. Se modela por organización para permitir que cada
+/// geriátrico defina su propio catálogo. Distinto de `Role`, que modela
+/// permisos de login.
+model JobTitle {
+  id               String                    @id @default(uuid()) @db.Uuid
+  organizationId   String                    @db.Uuid
+  code             String
+  displayName      String
+  description      String?
+  createdAt        DateTime
+  createdBy        String
+  updatedAt        DateTime
+  updatedBy        String
+  deletedAt        DateTime?
+  deletedBy        String?
+  organization     Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  staffMembers     StaffMember[]             @relation("StaffMemberJobTitle")
+  staffAssignments StaffFacilityAssignment[] @relation("StaffAssignmentJobTitle")
+
+  @@unique([organizationId, code])
+  @@index([organizationId, deletedAt])
+  @@index([deletedAt])
 }
 
 model MedicationCatalogItem {
