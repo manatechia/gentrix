@@ -9,9 +9,11 @@ import type { StaffRepository } from '../../../domain/repositories/staff.reposit
 
 type StaffRecord = Prisma.StaffMemberGetPayload<{
   include: {
+    ward: true;
     assignments: {
       include: {
         facility: true;
+        ward: true;
       };
     };
   };
@@ -43,6 +45,7 @@ export class PrismaStaffRepository implements StaffRepository {
         organizationId: organizationId ?? undefined,
       },
       include: {
+        ward: true,
         assignments: {
           where: {
             deletedAt: null,
@@ -54,6 +57,7 @@ export class PrismaStaffRepository implements StaffRepository {
           },
           include: {
             facility: true,
+            ward: true,
           },
           orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
         },
@@ -77,6 +81,7 @@ export class PrismaStaffRepository implements StaffRepository {
         organizationId: organizationId ?? undefined,
       },
       include: {
+        ward: true,
         assignments: {
           where: {
             deletedAt: null,
@@ -88,6 +93,7 @@ export class PrismaStaffRepository implements StaffRepository {
           },
           include: {
             facility: true,
+            ward: true,
           },
           orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
         },
@@ -100,6 +106,8 @@ export class PrismaStaffRepository implements StaffRepository {
 
 function mapStaffRecord(record: StaffRecord): DomainStaffMember {
   const primaryAssignment = record.assignments[0];
+  const wardName =
+    primaryAssignment?.ward?.name ?? record.ward?.name ?? '';
 
   return {
     id: record.id as DomainStaffMember['id'],
@@ -107,7 +115,7 @@ function mapStaffRecord(record: StaffRecord): DomainStaffMember {
     firstName: record.firstName,
     lastName: record.lastName,
     role: normalizeStaffRole(record.role),
-    ward: primaryAssignment?.ward ?? record.ward,
+    ward: wardName,
     shift: normalizeShiftWindow(primaryAssignment?.shift ?? record.shift),
     status: normalizeEntityStatus(record.status),
     startDate: toIsoDateString(record.startDate),
