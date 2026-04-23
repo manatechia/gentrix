@@ -51,6 +51,11 @@ const ids = {
     mauroPaz: 'dcd490ca-605b-4adb-8a4d-7d83972db84a',
     luciaMendez: '54b355fb-6515-4800-9443-0b0577f52350',
   },
+  wards: {
+    centralUnidadA: '91000000-0000-4000-8000-000000000030',
+    centralUnidadB: '91000000-0000-4000-8000-000000000031',
+    centralConsultorio: '91000000-0000-4000-8000-000000000032',
+  },
   medicationCatalog: {
     paracetamol: '11111111-1111-4111-8111-111111111111',
     donepezil: '22222222-2222-4222-8222-222222222222',
@@ -101,6 +106,7 @@ export async function seedDatabase(prisma) {
   await prisma.membershipFacilityScope.deleteMany();
   await prisma.organizationMembership.deleteMany();
   await prisma.role.deleteMany();
+  await prisma.ward.deleteMany();
   await prisma.facility.deleteMany();
   await prisma.organization.deleteMany();
   await prisma.userAccount.deleteMany();
@@ -145,6 +151,41 @@ export async function seedDatabase(prisma) {
       updatedAt: new Date('2026-03-20T09:00:00.000Z'),
       updatedBy: 'seed-script',
     },
+  });
+
+  await prisma.ward.createMany({
+    data: [
+      {
+        id: ids.wards.centralUnidadA,
+        facilityId: ids.facilities.residenciaCentral,
+        code: 'unidad-a',
+        name: 'Unidad A',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.wards.centralUnidadB,
+        facilityId: ids.facilities.residenciaCentral,
+        code: 'unidad-b',
+        name: 'Unidad B',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.wards.centralConsultorio,
+        facilityId: ids.facilities.residenciaCentral,
+        code: 'consultorio',
+        name: 'Consultorio',
+        createdAt: new Date('2026-01-10T09:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+    ],
   });
 
   await prisma.role.createMany({
@@ -643,7 +684,7 @@ export async function seedDatabase(prisma) {
         firstName: 'Ana',
         lastName: 'Gomez',
         role: 'nurse',
-        ward: 'Unidad A',
+        wardId: ids.wards.centralUnidadA,
         shift: 'morning',
         status: 'active',
         startDate: new Date('2025-02-01T08:00:00.000Z'),
@@ -658,7 +699,7 @@ export async function seedDatabase(prisma) {
         firstName: 'Mauro',
         lastName: 'Paz',
         role: 'caregiver',
-        ward: 'Unidad B',
+        wardId: ids.wards.centralUnidadB,
         shift: 'afternoon',
         status: 'active',
         startDate: new Date('2025-02-01T08:00:00.000Z'),
@@ -673,7 +714,7 @@ export async function seedDatabase(prisma) {
         firstName: 'Lucia',
         lastName: 'Mendez',
         role: 'doctor',
-        ward: 'Consultorio',
+        wardId: ids.wards.centralConsultorio,
         shift: 'morning',
         status: 'active',
         startDate: new Date('2025-02-01T08:00:00.000Z'),
@@ -692,7 +733,7 @@ export async function seedDatabase(prisma) {
         staffId: ids.staff.anaGomez,
         facilityId: ids.facilities.residenciaCentral,
         assignmentRole: 'nurse',
-        ward: 'Unidad A',
+        wardId: ids.wards.centralUnidadA,
         shift: 'morning',
         startDate: new Date('2025-02-01T08:00:00.000Z'),
         status: 'active',
@@ -706,7 +747,7 @@ export async function seedDatabase(prisma) {
         staffId: ids.staff.mauroPaz,
         facilityId: ids.facilities.residenciaCentral,
         assignmentRole: 'caregiver',
-        ward: 'Unidad B',
+        wardId: ids.wards.centralUnidadB,
         shift: 'afternoon',
         startDate: new Date('2025-02-01T08:00:00.000Z'),
         status: 'active',
@@ -720,7 +761,7 @@ export async function seedDatabase(prisma) {
         staffId: ids.staff.luciaMendez,
         facilityId: ids.facilities.residenciaCentral,
         assignmentRole: 'doctor',
-        ward: 'Consultorio',
+        wardId: ids.wards.centralConsultorio,
         shift: 'morning',
         startDate: new Date('2025-02-01T08:00:00.000Z'),
         status: 'active',
