@@ -38,6 +38,15 @@ export const sidebarSections: ReadonlyArray<SidebarSection> = [
     visibleTo: ['admin'] satisfies AuthRole[],
   },
   {
+    testId: 'workspace-sidebar-link-worked-hours',
+    label: 'Horas externos',
+    meta: 'carga y liquidación',
+    badge: 'HX',
+    path: '/horas',
+    end: false,
+    visibleTo: ['admin'] satisfies AuthRole[],
+  },
+  {
     testId: 'workspace-sidebar-link-handoff',
     label: 'Pase',
     meta: 'turno y pendientes',

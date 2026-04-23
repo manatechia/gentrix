@@ -21,6 +21,7 @@ import { ResidentsModule } from './modules/residents/residents.module';
 import { SchedulesModule } from './modules/schedules/schedules.module';
 import { SystemModule } from './modules/system/system.module';
 import { UsersModule } from './modules/users/users.module';
+import { WorkedHoursModule } from './modules/worked-hours/worked-hours.module';
 import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
@@ -45,6 +46,7 @@ import { LoggerModule } from './common/logger/logger.module';
     MedicationModule,
     SystemModule,
     UsersModule,
+    WorkedHoursModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: ApiExceptionFilter },
