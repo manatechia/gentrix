@@ -35,7 +35,7 @@ export function useHandoffRoute() {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude cargar el pase de turno.',
+        'No se pudo cargar el pase de turno.',
       );
 
       if (message === 'Unauthorized.') {

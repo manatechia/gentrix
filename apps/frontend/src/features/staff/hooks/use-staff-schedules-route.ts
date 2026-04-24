@@ -67,7 +67,7 @@ export function useStaffSchedulesRoute() {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude cargar el equipo y sus horarios.',
+        'No se pudo cargar el equipo y sus horarios.',
       );
 
       if (message === 'Unauthorized.') {
@@ -104,7 +104,7 @@ export function useStaffSchedulesRoute() {
       } catch (error) {
         const message = getApiErrorMessage(
           error,
-          'No pude cargar los horarios del miembro seleccionado.',
+          'No se pudo cargar los horarios del miembro seleccionado.',
         );
 
         if (message === 'Unauthorized.') {
@@ -128,7 +128,7 @@ export function useStaffSchedulesRoute() {
     ): Promise<UserSchedule | null> => {
       if (!selectedUserId) {
         setScheduleNoticeTone('error');
-        setScheduleNotice('Selecciona un miembro del equipo primero.');
+        setScheduleNotice('Seleccione un miembro del equipo primero.');
         return null;
       }
 
@@ -155,7 +155,7 @@ export function useStaffSchedulesRoute() {
       } catch (error) {
         const message = getApiErrorMessage(
           error,
-          'No pude guardar el horario.',
+          'No se pudo guardar el horario.',
         );
 
         if (message === 'Unauthorized.') {
@@ -204,7 +204,7 @@ export function useStaffSchedulesRoute() {
       } catch (error) {
         const message = getApiErrorMessage(
           error,
-          'No pude actualizar el horario.',
+          'No se pudo actualizar el horario.',
         );
 
         if (message === 'Unauthorized.') {

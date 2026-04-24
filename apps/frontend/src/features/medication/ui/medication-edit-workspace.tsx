@@ -53,31 +53,31 @@ export function MedicationEditWorkspace({
         <div className="grid gap-2.5">
           <div className="flex items-center gap-3">
             <BackChevronButton
-              title="Volver a medicacion"
+              title="Volver a medicación"
               fallbackTo="/medicacion"
             />
             <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-              Medicacion
+              Medicación
             </span>
           </div>
           <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
-            Editar orden de medicacion
+            Editar orden de medicación
           </h1>
           <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
-            Ajusta la dosis, la agenda o el estado de la indicacion y conserva el
-            mismo flujo operativo del tablero clinico.
+            Ajuste la dosis, la agenda o el estado de la indicación y conserve el
+            mismo flujo operativo del tablero clínico.
           </p>
         </div>
       </section>
 
       {screenState === 'loading' && (
-        <StatusNotice message="Cargando la orden de medicacion seleccionada." />
+        <StatusNotice message="Cargando la orden de medicación seleccionada." />
       )}
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No pude cargar la orden."
-          message={medicationError ?? 'Ocurrio un error inesperado.'}
+          title="No se pudo cargar la orden."
+          message={medicationError ?? 'Ocurrió un error inesperado.'}
           actions={[
             {
               label: 'Reintentar',
@@ -101,9 +101,9 @@ export function MedicationEditWorkspace({
           isSavingMedication={isSavingMedication}
           medicationNoticeTone={medicationNoticeTone}
           medicationNotice={medicationNotice}
-          panelEyebrow="Edicion"
+          panelEyebrow="Edición"
           panelTitle={`Editar ${medication.medicationName}`}
-          panelDescription={`Actualiza la orden asociada a ${medication.residentName} y ajusta horarios, vigencia o estado segun la necesidad clinica.`}
+          panelDescription={`Actualice la orden asociada a ${medication.residentName} y ajuste horarios, vigencia o estado según la necesidad clínica.`}
           panelBadgeText={medication.active ? 'Activa hoy' : 'Orden guardada'}
           submitLabel="Guardar cambios"
           secondaryAction={{ href: '/medicacion', label: 'Volver al listado' }}

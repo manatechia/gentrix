@@ -11,7 +11,7 @@ const medicalHistoryEntrySchema = Yup.object({
     .required('La fecha del antecedente es obligatoria.')
     .test(
       'valid-history-date',
-      'Ingresa la fecha con formato DD/MM/YYYY.',
+      'Ingrese la fecha con formato DD/MM/YYYY.',
       (value) => !value || toResidentDateIso(value) !== null,
     )
     .test(
@@ -21,7 +21,7 @@ const medicalHistoryEntrySchema = Yup.object({
     ),
   title: Yup.string()
     .trim()
-    .required('El titulo del antecedente es obligatorio.'),
+    .required('El título del antecedente es obligatorio.'),
   notes: Yup.string()
     .trim()
     .required('El detalle del antecedente es obligatorio.'),
@@ -43,11 +43,11 @@ const familyContactSchema = Yup.object({
     .required('El nombre del familiar es obligatorio.'),
   relationship: Yup.string()
     .trim()
-    .required('La relacion con el paciente es obligatoria.'),
-  phone: Yup.string().trim().required('El telefono del familiar es obligatorio.'),
+    .required('La relación con el paciente es obligatoria.'),
+  phone: Yup.string().trim().required('El teléfono del familiar es obligatorio.'),
   email: Yup.string()
     .trim()
-    .email('Ingresa un correo electronico valido.')
+    .email('Ingrese un correo electrónico válido.')
     .optional(),
   address: Yup.string().trim(),
   notes: Yup.string().trim(),
@@ -86,7 +86,7 @@ const clinicalProfileSchema = Yup.object({
     .trim()
     .test(
       'weight-is-numeric',
-      'Ingresa el peso como numero, por ejemplo 62.5.',
+      'Ingrese el peso como número, por ejemplo 62.5.',
       (value) => {
         if (!value?.trim()) {
           return true;
@@ -158,7 +158,7 @@ const dischargeSchema = Yup.object({
     .trim()
     .test(
       'valid-discharge-date',
-      'Ingresa la fecha con formato DD/MM/YYYY.',
+      'Ingrese la fecha con formato DD/MM/YYYY.',
       (value) => !value || toResidentDateIso(value) !== null,
     )
     .test(
@@ -173,17 +173,17 @@ const residentBaseFormShape = {
   documentType: Yup.string().required('El tipo de documento es obligatorio.'),
   documentNumber: Yup.string()
     .trim()
-    .required('El numero de documento es obligatorio.'),
+    .required('El número de documento es obligatorio.'),
   documentIssuingCountry: Yup.string()
     .trim()
-    .required('El pais emisor del documento es obligatorio.'),
+    .required('El país emisor del documento es obligatorio.'),
   procedureNumber: Yup.string().trim(),
   cuitPrefix: Yup.string()
     .trim()
-    .matches(/^\d{0,2}$/, 'El prefijo del CUIT debe tener 2 digitos.'),
+    .matches(/^\d{0,2}$/, 'El prefijo del CUIT debe tener 2 dígitos.'),
   cuitSuffix: Yup.string()
     .trim()
-    .matches(/^\d{0,1}$/, 'El digito final del CUIT debe tener 1 digito.'),
+    .matches(/^\d{0,1}$/, 'El dígito final del CUIT debe tener 1 dígito.'),
   firstName: Yup.string().trim().required('El nombre es obligatorio.'),
   middleNames: Yup.string().trim(),
   lastName: Yup.string().trim().required('El apellido es obligatorio.'),
@@ -192,7 +192,7 @@ const residentBaseFormShape = {
     .required('La fecha de nacimiento es obligatoria.')
     .test(
       'valid-birth-date',
-      'Ingresa la fecha con formato DD/MM/YYYY.',
+      'Ingrese la fecha con formato DD/MM/YYYY.',
       (value) => !value || toResidentDateIso(value) !== null,
     )
     .test(
@@ -204,7 +204,7 @@ const residentBaseFormShape = {
     .required('La fecha de ingreso es obligatoria.')
     .test(
       'valid-admission-date',
-      'Ingresa la fecha con formato DD/MM/YYYY.',
+      'Ingrese la fecha con formato DD/MM/YYYY.',
       (value) => !value || toResidentDateIso(value) !== null,
     )
     .test(
@@ -217,9 +217,9 @@ const residentBaseFormShape = {
   nationality: Yup.string().trim(),
   email: Yup.string()
     .trim()
-    .email('Ingresa un correo electronico valido.')
+    .email('Ingrese un correo electrónico válido.')
     .optional(),
-  room: Yup.string().trim().required('La habitacion es obligatoria.'),
+  room: Yup.string().trim().required('La habitación es obligatoria.'),
   careLevel: Yup.string().required('El nivel de cuidado es obligatorio.'),
 };
 
@@ -228,7 +228,7 @@ export const residentBaseUpdateSchema = Yup.object({
   geriatricAssessment: geriatricAssessmentSchema.required(),
 }).test(
   'cuit-complete',
-  'Completa el CUIT con 2 digitos iniciales y 1 digito final.',
+  'Complete el CUIT con 2 dígitos iniciales y 1 dígito final.',
   (values, context) => {
     const prefix = values?.cuitPrefix?.trim() ?? '';
     const suffix = values?.cuitSuffix?.trim() ?? '';
@@ -240,14 +240,14 @@ export const residentBaseUpdateSchema = Yup.object({
     if (prefix.length !== 2) {
       return context.createError({
         path: 'cuitPrefix',
-        message: 'Ingresa los 2 primeros digitos del CUIT.',
+        message: 'Ingrese los 2 primeros dígitos del CUIT.',
       });
     }
 
     if (suffix.length !== 1) {
       return context.createError({
         path: 'cuitSuffix',
-        message: 'Ingresa el ultimo digito del CUIT.',
+        message: 'Ingrese el último dígito del CUIT.',
       });
     }
 
@@ -265,17 +265,17 @@ export const residentIntakeSchema = Yup.object({
   belongings: belongingsSchema.required(),
   familyContacts: Yup.array()
     .of(familyContactSchema)
-    .max(6, 'Puedes cargar hasta 6 familiares o contactos.'),
+    .max(6, 'Puede cargar hasta 6 familiares o contactos.'),
   discharge: dischargeSchema.required(),
   medicalHistory: Yup.array()
     .of(medicalHistoryEntrySchema)
-    .max(10, 'Puedes cargar hasta 10 antecedentes medicos.'),
+    .max(10, 'Puede cargar hasta 10 antecedentes medicos.'),
   attachments: Yup.array()
     .of(attachmentSchema)
-    .max(6, 'Puedes cargar hasta 6 adjuntos.'),
+    .max(6, 'Puede cargar hasta 6 adjuntos.'),
 }).test(
   'cuit-complete',
-  'Completa el CUIT con 2 digitos iniciales y 1 digito final.',
+  'Complete el CUIT con 2 dígitos iniciales y 1 dígito final.',
   (values, context) => {
     const prefix = values?.cuitPrefix?.trim() ?? '';
     const suffix = values?.cuitSuffix?.trim() ?? '';
@@ -287,14 +287,14 @@ export const residentIntakeSchema = Yup.object({
     if (prefix.length !== 2) {
       return context.createError({
         path: 'cuitPrefix',
-        message: 'Ingresa los 2 primeros digitos del CUIT.',
+        message: 'Ingrese los 2 primeros dígitos del CUIT.',
       });
     }
 
     if (suffix.length !== 1) {
       return context.createError({
         path: 'cuitSuffix',
-        message: 'Ingresa el ultimo digito del CUIT.',
+        message: 'Ingrese el último dígito del CUIT.',
       });
     }
 

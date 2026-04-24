@@ -50,7 +50,7 @@ export function useResidentAgenda(residentId: string | undefined) {
     } catch (caught) {
       const message = getApiErrorMessage(
         caught,
-        'No pude cargar la agenda del residente.',
+        'No se pudo cargar la agenda del residente.',
       );
       if (message === 'Unauthorized.') {
         await logout();
@@ -110,7 +110,7 @@ export function useResidentAgenda(residentId: string | undefined) {
       return withMutation(
         'create-event',
         'Evento agendado correctamente.',
-        'No pude guardar el evento.',
+        'No se pudo guardar el evento.',
         async () => {
           const payload = await residentsService.createResidentAgendaEvent(
             residentId as string,
@@ -132,7 +132,7 @@ export function useResidentAgenda(residentId: string | undefined) {
       return withMutation(
         `event:${eventId}`,
         'Evento actualizado.',
-        'No pude actualizar el evento.',
+        'No se pudo actualizar el evento.',
         async () => {
           const payload = await residentsService.updateResidentAgendaEvent(
             residentId as string,
@@ -152,7 +152,7 @@ export function useResidentAgenda(residentId: string | undefined) {
       const result = await withMutation(
         `event:${eventId}`,
         'Evento eliminado.',
-        'No pude eliminar el evento.',
+        'No se pudo eliminar el evento.',
         async () => {
           await residentsService.deleteResidentAgendaEvent(
             residentId as string,
@@ -174,7 +174,7 @@ export function useResidentAgenda(residentId: string | undefined) {
       return withMutation(
         'create-series',
         'Serie recurrente creada.',
-        'No pude crear la serie.',
+        'No se pudo crear la serie.',
         async () => {
           const payload = await residentsService.createResidentAgendaSeries(
             residentId as string,
@@ -196,7 +196,7 @@ export function useResidentAgenda(residentId: string | undefined) {
       return withMutation(
         `series:${seriesId}`,
         'Serie actualizada.',
-        'No pude actualizar la serie.',
+        'No se pudo actualizar la serie.',
         async () => {
           const payload = await residentsService.updateResidentAgendaSeries(
             residentId as string,
@@ -216,7 +216,7 @@ export function useResidentAgenda(residentId: string | undefined) {
       const result = await withMutation(
         `series:${seriesId}`,
         'Serie eliminada.',
-        'No pude eliminar la serie.',
+        'No se pudo eliminar la serie.',
         async () => {
           await residentsService.deleteResidentAgendaSeries(
             residentId as string,
@@ -236,7 +236,7 @@ export function useResidentAgenda(residentId: string | undefined) {
       const result = await withMutation(
         `occurrence:${seriesId}:${occurrenceDate}`,
         'Ocurrencia de hoy eliminada.',
-        'No pude saltear la ocurrencia.',
+        'No se pudo saltear la ocurrencia.',
         async () => {
           await residentsService.skipResidentAgendaOccurrence(
             residentId as string,
@@ -261,7 +261,7 @@ export function useResidentAgenda(residentId: string | undefined) {
       const result = await withMutation(
         `occurrence:${seriesId}:${occurrenceDate}`,
         'Ocurrencia de hoy actualizada.',
-        'No pude actualizar la ocurrencia.',
+        'No se pudo actualizar la ocurrencia.',
         async () => {
           await residentsService.overrideResidentAgendaOccurrence(
             residentId as string,

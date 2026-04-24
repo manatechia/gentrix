@@ -48,7 +48,7 @@ export function useDashboardRoute() {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude cargar el tablero.',
+        'No se pudo cargar el tablero.',
       );
 
       if (message === 'Unauthorized.') {

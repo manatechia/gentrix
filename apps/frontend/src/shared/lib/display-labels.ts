@@ -30,14 +30,14 @@ const residentCareLevelLabels: Record<ResidentCareLevel, string> = {
 
 const residentCareStatusLabels: Record<ResidentCareStatus, string> = {
   normal: 'Normal',
-  en_observacion: 'En observacion',
+  en_observacion: 'En observación',
 };
 
 const residentDocumentTypeLabels: Record<ResidentDocumentType, string> = {
   dni: 'DNI',
   pasaporte: 'Pasaporte',
-  cedula: 'Cedula',
-  'libreta-civica': 'Libreta civica',
+  cedula: 'Cédula',
+  'libreta-civica': 'Libreta cívica',
   otro: 'Otro',
 };
 
@@ -72,15 +72,15 @@ const authRoleLabels: Record<AuthRole, string> = {
 const medicationRouteLabels: Record<MedicationRoute, string> = {
   oral: 'Oral',
   intravenous: 'Intravenosa',
-  subcutaneous: 'Subcutanea',
-  topical: 'Topica',
+  subcutaneous: 'Subcutánea',
+  topical: 'Tópica',
 };
 
 const medicationFrequencyLabels: Record<MedicationFrequency, string> = {
   daily: 'A diario',
-  'twice-daily': 'Dos veces al dia',
+  'twice-daily': 'Dos veces al día',
   nightly: 'Por la noche',
-  'as-needed': 'Segun necesidad',
+  'as-needed': 'Según necesidad',
 };
 
 const medicationExecutionResultLabels: Record<
@@ -93,14 +93,14 @@ const medicationExecutionResultLabels: Record<
 };
 
 const jobTitleLabels: Record<string, string> = {
-  nurse: 'Enfermeria',
-  doctor: 'Medico',
+  nurse: 'Enfermería',
+  doctor: 'Médico',
   caregiver: 'Cuidador',
-  coordinator: 'Coordinacion',
+  coordinator: 'Coordinación',
 };
 
 const shiftLabels: Record<string, string> = {
-  morning: 'Manana',
+  morning: 'Mañana',
   afternoon: 'Tarde',
   night: 'Noche',
 };
@@ -108,13 +108,13 @@ const shiftLabels: Record<string, string> = {
 const dashboardAlertSeverityLabels: Record<DashboardAlertSeverity, string> = {
   info: 'Info',
   warning: 'Seguimiento',
-  critical: 'Critica',
+  critical: 'Crítica',
 };
 
 const dashboardAlertSourceLabels: Record<DashboardAlertSource, string> = {
   'resident-care-level': 'Cuidado',
-  'medication-order': 'Medicacion',
-  'medication-execution': 'Ejecucion',
+  'medication-order': 'Medicación',
+  'medication-execution': 'Ejecución',
 };
 
 const handoffMedicationStatusLabels: Record<HandoffMedicationStatus, string> = {

@@ -42,7 +42,7 @@ function getMobilePageContext(pathname: string): string {
     pathname.startsWith('/medicacion') ||
     pathname.startsWith('/medicaciones')
   ) {
-    return 'Medicacion';
+    return 'Medicación';
   }
 
   return 'Resumen';

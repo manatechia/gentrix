@@ -355,8 +355,8 @@ function HealthAndMedicalSection({
     <FieldArray name="medicalHistory">
       {({ push, remove }) => (
         <CollapsibleSection
-          title="Salud y seguimiento medico"
-          description="Alergias, medico de cabecera, patologias, habitos y antecedentes del paciente."
+          title="Salud y seguimiento médico"
+          description="Alergias, médico de cabecera, patologías, hábitos y antecedentes del paciente."
           defaultOpen
         >
           <article className={innerPanelClassName}>
@@ -377,7 +377,7 @@ function HealthAndMedicalSection({
 
               <label className="grid gap-2.5">
                 <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                  Lugar atencion emergencia
+                  Lugar atención emergencia
                 </span>
                 <input
                   className={inputClassName}
@@ -392,7 +392,7 @@ function HealthAndMedicalSection({
 
               <label className="grid gap-2.5">
                 <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                  Hist clinica
+                  Hist clínica
                 </span>
                 <input
                   className={inputClassName}
@@ -409,7 +409,7 @@ function HealthAndMedicalSection({
             <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-3">
               <label className="grid gap-2.5">
                 <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                  Medico cabecera
+                  Médico cabecera
                 </span>
                 <input
                   className={inputClassName}
@@ -439,7 +439,7 @@ function HealthAndMedicalSection({
 
               <label className="grid gap-2.5">
                 <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                  Telefono consultorio
+                  Teléfono consultorio
                 </span>
                 <input
                   className={inputClassName}
@@ -470,7 +470,7 @@ function HealthAndMedicalSection({
 
               <label className="grid gap-2.5">
                 <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                  Operaciones, cirugias y otros antecedentes
+                  Operaciones, cirugías y otros antecedentes
                 </span>
                 <textarea
                   className={textareaClassName}
@@ -556,7 +556,7 @@ function HealthAndMedicalSection({
             <article className={innerPanelClassName}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                  Historial medico
+                  Historial médico
                 </span>
                 <button
                   className={secondaryButtonClassName}
@@ -573,8 +573,8 @@ function HealthAndMedicalSection({
 
               {values.medicalHistory.length === 0 ? (
                 <div className="rounded-[24px] border border-dashed border-[rgba(0,102,132,0.22)] bg-white/70 px-5 py-5 text-brand-text-secondary">
-                  Todavia no cargaste antecedentes. Puedes sumar diagnosticos,
-                  cirugias, internaciones o notas clinicas relevantes para el
+                  Todavía no cargó antecedentes. Puede sumar diagnósticos,
+                  cirugías, internaciones o notas clínicas relevantes para el
                   ingreso.
                 </div>
               ) : (
@@ -701,11 +701,11 @@ function HealthAndMedicalSection({
           ) : (
             <article className={innerPanelClassName}>
               <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                Historial medico
+                Historial médico
               </span>
               <p className="mt-3 leading-[1.65] text-brand-text-secondary">
                 El historial cronologico ya no se edita desde este formulario.
-                Puedes agregar nuevos eventos desde la ficha del residente para
+                Puede agregar nuevos eventos desde la ficha del residente para
                 conservar el registro append-only.
               </p>
             </article>
@@ -827,7 +827,7 @@ function GeriatricAssessmentSection({
               value={values.geriatricAssessment.supportEquipment}
               onBlur={handleBlur}
               onChange={handleChange}
-              placeholder="Ej. Andador, silla de ruedas, supervision en traslados"
+              placeholder="Ej. Andador, silla de ruedas, supervisión en traslados"
             />
             <ValidationMessage />
           </label>
@@ -860,7 +860,7 @@ function FamilyContactsSection({ form }: FamilyContactsSectionProps) {
       {({ push, remove }) => (
         <CollapsibleSection
           title="Familiares y contactos"
-          description="Permite cargar uno o varios contactos de referencia con parentesco, telefono, direccion y notas."
+          description="Permite cargar uno o varios contactos de referencia con parentesco, teléfono, dirección y notas."
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
@@ -881,7 +881,7 @@ function FamilyContactsSection({ form }: FamilyContactsSectionProps) {
 
           {values.familyContacts.length === 0 ? (
             <div className="rounded-[24px] border border-dashed border-[rgba(0,102,132,0.22)] bg-brand-neutral/60 px-5 py-5 text-brand-text-secondary">
-              Aun no cargaste familiares. Puedes agregar hijos, apoderados,
+              Aún no cargó familiares. Puede agregar hijos, apoderados,
               referentes o cualquier contacto relevante.
             </div>
           ) : (
@@ -932,7 +932,7 @@ function FamilyContactsSection({ form }: FamilyContactsSectionProps) {
 
                       <label className="grid gap-2.5">
                         <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                          Relacion
+                          Relación
                         </span>
                         <input
                           className={inputClassName}
@@ -953,7 +953,7 @@ function FamilyContactsSection({ form }: FamilyContactsSectionProps) {
 
                       <label className="grid gap-2.5">
                         <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                          Telefono
+                          Teléfono
                         </span>
                         <input
                           className={inputClassName}
@@ -976,7 +976,7 @@ function FamilyContactsSection({ form }: FamilyContactsSectionProps) {
                     <div className="mt-[14px] grid gap-[14px] min-[980px]:grid-cols-2">
                       <label className="grid gap-2.5">
                         <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                          Correo electronico
+                          Correo electrónico
                         </span>
                         <input
                           className={inputClassName}
@@ -997,7 +997,7 @@ function FamilyContactsSection({ form }: FamilyContactsSectionProps) {
 
                       <label className="grid gap-2.5">
                         <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                          Direccion
+                          Dirección
                         </span>
                         <input
                           className={inputClassName}
@@ -1063,14 +1063,14 @@ export function AdmissionsPanel({
   const [cuitDocumentSegment, setCuitDocumentSegment] = useState(
     getResidentDocumentDigits(formInitialValues.documentNumber),
   );
-  const resolvedPanelEyebrow = panelEyebrow ?? (mode === 'edit' ? 'Edicion' : 'Alta');
+  const resolvedPanelEyebrow = panelEyebrow ?? (mode === 'edit' ? 'Edición' : 'Alta');
   const resolvedPanelTitle =
     panelTitle ?? (mode === 'edit' ? 'Editar paciente' : 'Agregar paciente');
   const resolvedPanelDescription =
     panelDescription ??
     (mode === 'edit'
-      ? 'La edicion mantiene el perfil base y la VGI inicial del residente. Los antecedentes, contactos, adjuntos y otros registros de ingreso se conservan sin reescribirse desde este formulario.'
-      : 'El alta ahora se completa por bloques desplegables para separar identificacion, contacto, VGI, cobertura, salud, pertenencias, familiares y adjuntos. La fecha de ingreso se precarga con hoy y la edad se calcula automaticamente desde la fecha de nacimiento.');
+      ? 'La edición mantiene el perfil base y la VGI inicial del residente. Los antecedentes, contactos, adjuntos y otros registros de ingreso se conservan sin reescribirse desde este formulario.'
+      : 'El alta ahora se completa por bloques desplegables para separar identificación, contacto, VGI, cobertura, salud, pertenencias, familiares y adjuntos. La fecha de ingreso se precarga con hoy y la edad se calcula automáticamente desde la fecha de nacimiento.');
   const resolvedSubmitLabel =
     submitLabel ?? (mode === 'edit' ? 'Guardar cambios' : 'Guardar paciente');
   const isCreateMode = mode === 'create';
@@ -1170,7 +1170,7 @@ export function AdmissionsPanel({
               setFieldTouched('attachments', true, false);
               setFieldError(
                 'attachments',
-                `Puedes cargar hasta ${maxResidentAttachmentCount} adjuntos entre imagenes y PDF.`,
+                `Puede cargar hasta ${maxResidentAttachmentCount} adjuntos entre imágenes y PDF.`,
               );
               return;
             }
@@ -1192,7 +1192,7 @@ export function AdmissionsPanel({
                 'attachments',
                 error instanceof Error
                   ? error.message
-                  : 'No pude cargar los adjuntos seleccionados.',
+                  : 'No se pudo cargar los adjuntos seleccionados.',
               );
             }
           }
@@ -1211,8 +1211,8 @@ export function AdmissionsPanel({
               }}
             >
               <CollapsibleSection
-                title="Identificacion e ingreso"
-                description="Documento, tramite, CUIT, fecha de ingreso y ubicacion del paciente."
+                title="Identificación e ingreso"
+                description="Documento, trámite, CUIT, fecha de ingreso y ubicación del paciente."
                 defaultOpen
               >
                 <div className="grid gap-[14px] min-[980px]:grid-cols-3">
@@ -1248,7 +1248,7 @@ export function AdmissionsPanel({
 
                   <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                      Habitacion / cama
+                      Habitación / cama
                     </span>
                     <input
                       data-testid="resident-room-input"
@@ -1364,7 +1364,7 @@ export function AdmissionsPanel({
                 <div className="grid gap-[14px] min-[980px]:grid-cols-2">
                   <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                      Num de tramite
+                      Num de trámite
                     </span>
                     <input
                       className={inputClassName}
@@ -1601,7 +1601,7 @@ export function AdmissionsPanel({
 
                   <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                      Correo electronico
+                      Correo electrónico
                     </span>
                     <input
                       className={inputClassName}
@@ -1711,7 +1711,7 @@ export function AdmissionsPanel({
 
                       <label className="grid gap-2.5">
                         <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                          Telefono traslado
+                          Teléfono traslado
                         </span>
                         <input
                           className={inputClassName}
@@ -1748,7 +1748,7 @@ export function AdmissionsPanel({
 
                       <label className="grid gap-2.5">
                         <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                          Lugar de atencion
+                          Lugar de atención
                         </span>
                         <input
                           className={inputClassName}
@@ -1778,7 +1778,7 @@ export function AdmissionsPanel({
 
                       <label className="grid gap-2.5">
                         <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                          Telefono
+                          Teléfono
                         </span>
                         <input
                           className={inputClassName}
@@ -1822,7 +1822,7 @@ export function AdmissionsPanel({
 
               <CollapsibleSection
                 title="Pertenencias"
-                description="Marca lo que trae el paciente al ingreso y deja registradas observaciones utiles."
+                description="Marque lo que trae el paciente al ingreso y deje registradas observaciones útiles."
               >
                 <article className={innerPanelClassName}>
                   <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
@@ -1880,8 +1880,8 @@ export function AdmissionsPanel({
               </CollapsibleSection>
 
               <CollapsibleSection
-                title="Adjuntos clinicos"
-                description="Sube imagenes o PDF de estudios, ordenes, carnets, informes y documentos relevantes."
+                title="Adjuntos clínicos"
+                description="Suba imágenes o PDF de estudios, órdenes, carnets, informes y documentos relevantes."
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
@@ -1894,7 +1894,7 @@ export function AdmissionsPanel({
 
                 <label className="grid gap-2.5">
                   <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                    Imagenes o PDF
+                    Imágenes o PDF
                   </span>
                   <input
                     className={`${inputClassName} py-3`}
@@ -1906,7 +1906,7 @@ export function AdmissionsPanel({
                     }}
                   />
                   <span className="text-[0.9rem] leading-[1.5] text-brand-text-secondary">
-                    Usa esta seccion para subir estudios, fotos, ordenes,
+                    Use esta sección para subir estudios, fotos, órdenes,
                     informes o PDFs relevantes para el ingreso. Cada archivo
                     puede pesar hasta 5 MB.
                   </span>
