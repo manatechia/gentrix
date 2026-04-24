@@ -56,7 +56,7 @@ export function useResidentObservations(
     } catch (caught) {
       const message = getApiErrorMessage(
         caught,
-        'No pude cargar las observaciones del residente.',
+        'No se pudo cargar las observaciones del residente.',
       );
       if (message === 'Unauthorized.') {
         await logout();
@@ -95,17 +95,17 @@ export function useResidentObservations(
         setNoticeTone('success');
         if (result.careStatusChanged) {
           setNotice(
-            'Observacion registrada y residente puesto en observacion.',
+            'Observación registrada y residente puesto en observacion.',
           );
           options.onCareStatusChanged?.();
         } else {
-          setNotice('Observacion registrada.');
+          setNotice('Observación registrada.');
         }
         return result;
       } catch (caught) {
         const message = getApiErrorMessage(
           caught,
-          'No pude guardar la observacion.',
+          'No se pudo guardar la observacion.',
         );
         if (message === 'Unauthorized.') {
           await logout();
@@ -136,12 +136,12 @@ export function useResidentObservations(
         );
         await load();
         setNoticeTone('success');
-        setNotice('Observacion eliminada.');
+        setNotice('Observación eliminada.');
         return true;
       } catch (caught) {
         const message = getApiErrorMessage(
           caught,
-          'No pude eliminar la observacion.',
+          'No se pudo eliminar la observacion.',
         );
         if (message === 'Unauthorized.') {
           await logout();

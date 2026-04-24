@@ -74,7 +74,7 @@ export function QuickObservationModal({
       onSuccess(message);
     } catch (caught) {
       setError(
-        getApiErrorMessage(caught, 'No pude guardar la observación.'),
+        getApiErrorMessage(caught, 'No se pudo guardar la observación.'),
       );
     } finally {
       setIsSaving(false);
@@ -121,7 +121,7 @@ export function QuickObservationModal({
             }}
             disabled={isSaving}
           >
-            <option value="">Seleccioná un residente…</option>
+            <option value="">Seleccione un residente…</option>
             {residents.map((resident) => (
               <option key={resident.id} value={resident.id}>
                 {resident.fullName} — Habitación {resident.room}

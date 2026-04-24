@@ -63,13 +63,13 @@ export function Sidebar({
               Gentrix MVP
             </strong>
             <span className="mt-1 block text-[0.78rem] uppercase tracking-[0.12em] text-white/72">
-              OPERACION CENTRALIZADA
+              OPERACIÓN CENTRALIZADA
             </span>
           </div>
         </div>
 
         <button
-          aria-label="Cerrar menu lateral"
+          aria-label="Cerrar menú lateral"
           className="grid h-11 w-11 place-items-center rounded-2xl border border-white/14 bg-white/8 text-white transition hover:bg-white/12 min-[1181px]:hidden"
           type="button"
           onClick={onClose}
@@ -168,7 +168,7 @@ export function Sidebar({
             void onLogout();
           }}
         >
-          Cerrar sesion
+          Cerrar sesión
         </button>
       </div>
     </aside>

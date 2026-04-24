@@ -111,7 +111,7 @@ export function MedicationOrdersPanel({
   canManageMedicationOrders,
   filterSummary,
   isFiltered = false,
-  emptyStateMessage = 'Todavia no hay ordenes de medicacion cargadas.',
+  emptyStateMessage = 'Todavía no hay órdenes de medicación cargadas.',
 }: MedicationOrdersPanelProps) {
   const pendingMedicationCount = Math.max(
     medications.length - activeMedicationCount,
@@ -123,10 +123,10 @@ export function MedicationOrdersPanel({
       <div className="mb-[18px] flex flex-wrap items-start justify-between gap-4">
         <div>
           <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-            Medicacion
+            Medicación
           </span>
           <h2 className="mt-1 text-[1.35rem] font-bold tracking-[-0.04em] text-brand-text">
-            Ordenes activas y programadas
+            Órdenes activas y programadas
           </h2>
         </div>
 
@@ -154,7 +154,7 @@ export function MedicationOrdersPanel({
             values={selectedResidentIds}
             options={residentOptions}
             placeholder="Todos los pacientes"
-            searchPlaceholder="Buscar paciente o habitacion"
+            searchPlaceholder="Buscar paciente o habitación"
             onChange={onSelectedResidentIdsChange}
           />
         </label>
@@ -180,7 +180,7 @@ export function MedicationOrdersPanel({
 
       <div className="grid gap-3 min-[860px]:grid-cols-3">
         <SummaryTile
-          label={isFiltered ? 'Ordenes visibles' : 'Ordenes totales'}
+          label={isFiltered ? 'Órdenes visibles' : 'Órdenes totales'}
           value={medications.length}
         />
         <SummaryTile
@@ -257,7 +257,7 @@ export function MedicationOrdersPanel({
 
                   <div className="grid gap-1">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-                      Via
+                      Vía
                     </span>
                     <span className="text-brand-text">
                       {formatMedicationRoute(order.route)}
@@ -295,7 +295,7 @@ export function MedicationOrdersPanel({
                     Prescripto por {order.prescribedBy}
                   </span>
                   <span className="text-brand-text-secondary">
-                    Ultima actualizacion: {order.audit.updatedBy} el{' '}
+                    Última actualización: {order.audit.updatedBy} el{' '}
                     {formatExecutionDateTime(order.audit.updatedAt)}
                   </span>
                 </div>
@@ -307,8 +307,8 @@ export function MedicationOrdersPanel({
                         Registro operativo
                       </span>
                       <p className="max-w-[58ch] leading-[1.55] text-brand-text-secondary">
-                        Marca una toma sin editar la orden base. Cada accion
-                        queda registrada como ejecucion independiente.
+                        Marque una toma sin editar la orden base. Cada acción
+                        queda registrada como ejecución independiente.
                       </p>
                     </div>
 
@@ -335,7 +335,7 @@ export function MedicationOrdersPanel({
                       </div>
                     ) : (
                       <p className="max-w-[32ch] text-right leading-[1.55] text-brand-text-secondary">
-                        La orden no esta activa hoy, por eso no admite nuevas
+                        La orden no está activa hoy, por eso no admite nuevas
                         ejecuciones.
                       </p>
                     )}
@@ -344,7 +344,7 @@ export function MedicationOrdersPanel({
                   <div className="grid gap-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-text-muted">
-                        Ultimas ejecuciones
+                        Últimas ejecuciones
                       </span>
                       <span className="text-[0.9rem] text-brand-text-secondary">
                         {executions.length === 0
@@ -355,7 +355,7 @@ export function MedicationOrdersPanel({
 
                     {executions.length === 0 ? (
                       <div className="rounded-[20px] border border-dashed border-[rgba(0,102,132,0.18)] bg-brand-neutral/45 px-4 py-4 text-brand-text-secondary">
-                        Todavia no hay ejecuciones registradas para esta orden.
+                        Todavía no hay ejecuciones registradas para esta orden.
                       </div>
                     ) : (
                       <div className="grid gap-2.5">

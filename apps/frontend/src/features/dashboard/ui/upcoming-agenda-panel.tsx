@@ -31,10 +31,10 @@ export function UpcomingAgendaPanel({ occurrences }: UpcomingAgendaPanelProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="grid gap-1">
           <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-            Proximas tareas
+            Próximas tareas
           </span>
           <p className="max-w-[60ch] leading-[1.55] text-brand-text-secondary">
-            Agenda operativa del dia: medicaciones, turnos y actividades de
+            Agenda operativa del día: medicaciones, turnos y actividades de
             todos los residentes.
           </p>
         </div>
@@ -67,7 +67,7 @@ export function UpcomingAgendaPanel({ occurrences }: UpcomingAgendaPanelProps) {
                   <span className="grid gap-1">
                     <strong className="text-brand-text">{occurrence.title}</strong>
                     <span className="text-[0.86rem] text-brand-text-secondary">
-                      {occurrence.residentFullName} — Habitacion{' '}
+                      {occurrence.residentFullName} — Habitación{' '}
                       {occurrence.residentRoom}
                       {recurrenceLabel && (
                         <span className="ml-2 rounded-full bg-brand-primary/10 px-2 py-0.5 text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-brand-primary">

@@ -41,13 +41,13 @@ export function DashboardWorkspace({
       onLogout={onLogout}
     >
       {screenState === 'loading' && (
-        <StatusNotice message="Cargando el tablero con la sesion activa." />
+        <StatusNotice message="Cargando el tablero con la sesión activa." />
       )}
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No pude cargar el tablero."
-          message={authError ?? 'Ocurrio un error inesperado.'}
+          title="No se pudo cargar el tablero."
+          message={authError ?? 'Ocurrió un error inesperado.'}
           actions={[
             {
               label: 'Reintentar',

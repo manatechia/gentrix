@@ -33,7 +33,7 @@ export function useUpcomingAgenda() {
     } catch (caught) {
       const message = getApiErrorMessage(
         caught,
-        'No pude cargar las proximas tareas.',
+        'No se pudo cargar las próximas tareas.',
       );
       if (message === 'Unauthorized.') {
         await logout();
