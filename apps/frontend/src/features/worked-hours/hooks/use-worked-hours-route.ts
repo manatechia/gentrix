@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import type {
   HourSettlement,
@@ -62,15 +63,15 @@ export function computePeriod(
       periodEnd: toIso(new Date(Date.UTC(y, m + 1, 0))),
     };
   }
-  // custom: por defecto últimos 30 días.
-  return {
-    periodStart: toIso(new Date(Date.UTC(y, m, d - 29))),
-    periodEnd: toIso(new Date(Date.UTC(y, m, d))),
-  };
+  // custom → "Día": un único día, start = end.
+  const today = toIso(new Date(Date.UTC(y, m, d)));
+  return { periodStart: today, periodEnd: today };
 }
 
 export function useWorkedHoursRoute() {
   const { logout, status, token } = useAuthSession();
+  const [searchParams] = useSearchParams();
+  const requestedExternalId = searchParams.get('externalId');
   const [screenState, setScreenState] = useState<ScreenState>('loading');
   const [team, setTeam] = useState<TeamMemberOverview[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -78,8 +79,8 @@ export function useWorkedHoursRoute() {
   const [entries, setEntries] = useState<WorkedHourEntry[]>([]);
   const [settlements, setSettlements] = useState<HourSettlement[]>([]);
   const [period, setPeriod] = useState<PeriodSelection>(() => {
-    const computed = computePeriod('fortnight');
-    return { preset: 'fortnight', ...computed };
+    const computed = computePeriod('month');
+    return { preset: 'month', ...computed };
   });
   const [notice, setNotice] = useState<{
     message: string;
@@ -161,8 +162,11 @@ export function useWorkedHoursRoute() {
         (member) => member.role === 'external',
       );
       const nextSelected =
-        nextExternals.find((member) => member.id === selectedUserId)?.id ??
-        nextExternals[0]?.id ??
+        (requestedExternalId &&
+          nextExternals.find((member) => member.id === requestedExternalId)
+            ?.id) ||
+        nextExternals.find((member) => member.id === selectedUserId)?.id ||
+        nextExternals[0]?.id ||
         null;
       setSelectedUserId(nextSelected);
       if (nextSelected) {
@@ -183,7 +187,7 @@ export function useWorkedHoursRoute() {
         setScreenState('error');
       }
     }
-  }, [handleApiError, loadExternal, selectedUserId, token]);
+  }, [handleApiError, loadExternal, requestedExternalId, selectedUserId, token]);
 
   const handleSelectExternal = useCallback(
     async (userId: string): Promise<void> => {
@@ -353,7 +357,6 @@ export function useWorkedHoursRoute() {
           } as HourSettlementIssueInput,
         );
         const detail = unwrapEnvelope(payload);
-        setActiveSettlement(detail);
         setPreview(null);
         if (selectedUserId) await loadExternal(selectedUserId);
         setNotice({
