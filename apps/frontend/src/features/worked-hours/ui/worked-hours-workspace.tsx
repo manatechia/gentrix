@@ -159,7 +159,7 @@ export function WorkedHoursWorkspace({
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No pude cargar la pantalla."
+          title="No se pudo cargar la pantalla."
           message={loadError ?? 'Ocurrió un error inesperado.'}
           actions={[
             { label: 'Reintentar', onClick: handleRetry },

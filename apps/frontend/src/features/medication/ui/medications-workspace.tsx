@@ -108,13 +108,13 @@ export function MedicationsWorkspace({
   );
 
   const visibleMedicationCount = filteredMedications.length;
-  const heroBadgeText = `${medicationCount} ordenes`;
+  const heroBadgeText = `${medicationCount} órdenes`;
   const filterSummary =
     selectedResidentOptions.length === 0
-      ? 'Busca y selecciona uno o varios residentes para revisar su medicacion en conjunto.'
+      ? 'Busque y seleccione uno o varios residentes para revisar su medicación en conjunto.'
       : selectedResidentOptions.length === 1
-        ? `Mostrando ${visibleMedicationCount} de ${medicationCount} ordenes para ${selectedResidentOptions[0].label}.`
-        : `Mostrando ${visibleMedicationCount} de ${medicationCount} ordenes para ${selectedResidentOptions.length} pacientes seleccionados.`;
+        ? `Mostrando ${visibleMedicationCount} de ${medicationCount} órdenes para ${selectedResidentOptions[0].label}.`
+        : `Mostrando ${visibleMedicationCount} de ${medicationCount} órdenes para ${selectedResidentOptions.length} pacientes seleccionados.`;
 
   useEffect(() => {
     if (!routeMedicationNotice) {
@@ -137,15 +137,15 @@ export function MedicationsWorkspace({
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="grid gap-2.5">
             <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-              Medicacion
+              Medicación
             </span>
             <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
-              Agenda clinica de medicamentos
+              Agenda clínica de medicamentos
             </h1>
             <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
               {isStaffSession
-                ? 'Revisa ordenes por residente y registra administraciones, omisiones o rechazos sin modificar la prescripcion.'
-                : 'Gestiona ordenes por residente, revisa horarios, cambia estados y abre una subpagina dedicada para cargar o editar cada indicacion.'}
+                ? 'Revise órdenes por residente y registre administraciones, omisiones o rechazos sin modificar la prescripción.'
+                : 'Gestione órdenes por residente, revise horarios, cambie estados y abra una subpágina dedicada para cargar o editar cada indicación.'}
             </p>
           </div>
 
@@ -179,13 +179,13 @@ export function MedicationsWorkspace({
       )}
 
       {screenState === 'loading' && (
-        <StatusNotice message="Cargando medicacion y residentes de la sesion activa." />
+        <StatusNotice message="Cargando medicación y residentes de la sesión activa." />
       )}
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No pude cargar la medicacion."
-          message={authError ?? 'Ocurrio un error inesperado.'}
+          title="No se pudo cargar la medicación."
+          message={authError ?? 'Ocurrió un error inesperado.'}
           actions={[
             {
               label: 'Reintentar',
@@ -221,10 +221,10 @@ export function MedicationsWorkspace({
           isFiltered={selectedResidentIds.length > 0}
           emptyStateMessage={
             selectedResidentOptions.length === 1
-              ? `No hay ordenes de medicacion para ${selectedResidentOptions[0].label}.`
+              ? `No hay órdenes de medicación para ${selectedResidentOptions[0].label}.`
               : selectedResidentOptions.length > 1
-                ? 'No hay ordenes de medicacion para los pacientes seleccionados.'
-                : 'Todavia no hay ordenes de medicacion cargadas.'
+                ? 'No hay órdenes de medicación para los pacientes seleccionados.'
+                : 'Todavía no hay órdenes de medicación cargadas.'
           }
         />
       )}

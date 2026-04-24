@@ -136,7 +136,7 @@ export function useWorkedHoursRoute() {
       } catch (error) {
         const message = await handleApiError(
           error,
-          'No pude cargar los datos del externo.',
+          'No se pudo cargar los datos del externo.',
         );
         if (message) {
           setNotice({ message, tone: 'error' });
@@ -176,7 +176,7 @@ export function useWorkedHoursRoute() {
     } catch (error) {
       const message = await handleApiError(
         error,
-        'No pude cargar el listado de externos.',
+        'No se pudo cargar el listado de externos.',
       );
       if (message) {
         setLoadError(message);
@@ -212,7 +212,7 @@ export function useWorkedHoursRoute() {
       } catch (error) {
         const message = await handleApiError(
           error,
-          'No pude recargar las horas del período.',
+          'No se pudo recargar las horas del período.',
         );
         if (message) setNotice({ message, tone: 'error' });
       }
@@ -233,7 +233,7 @@ export function useWorkedHoursRoute() {
       } catch (error) {
         const message = await handleApiError(
           error,
-          'No pude guardar la tarifa.',
+          'No se pudo guardar la tarifa.',
         );
         if (message) setNotice({ message, tone: 'error' });
         return false;
@@ -257,7 +257,7 @@ export function useWorkedHoursRoute() {
       } catch (error) {
         const message = await handleApiError(
           error,
-          'No pude cargar las horas.',
+          'No se pudo cargar las horas.',
         );
         if (message) setNotice({ message, tone: 'error' });
         return false;
@@ -283,7 +283,7 @@ export function useWorkedHoursRoute() {
       } catch (error) {
         const message = await handleApiError(
           error,
-          'No pude actualizar la entrada.',
+          'No se pudo actualizar la entrada.',
         );
         if (message) setNotice({ message, tone: 'error' });
         return false;
@@ -306,7 +306,7 @@ export function useWorkedHoursRoute() {
       } catch (error) {
         const message = await handleApiError(
           error,
-          'No pude eliminar la entrada.',
+          'No se pudo eliminar la entrada.',
         );
         if (message) setNotice({ message, tone: 'error' });
         return false;
@@ -332,7 +332,7 @@ export function useWorkedHoursRoute() {
     } catch (error) {
       const message = await handleApiError(
         error,
-        'No pude generar la vista previa de la liquidación.',
+        'No se pudo generar la vista previa de la liquidación.',
       );
       if (message) setNotice({ message, tone: 'error' });
     }
@@ -364,7 +364,7 @@ export function useWorkedHoursRoute() {
       } catch (error) {
         const message = await handleApiError(
           error,
-          'No pude emitir la liquidación.',
+          'No se pudo emitir la liquidación.',
         );
         if (message) setNotice({ message, tone: 'error' });
         return false;
@@ -391,7 +391,7 @@ export function useWorkedHoursRoute() {
       } catch (error) {
         const message = await handleApiError(
           error,
-          'No pude abrir la liquidación.',
+          'No se pudo abrir la liquidación.',
         );
         if (message) setNotice({ message, tone: 'error' });
       }
@@ -411,7 +411,7 @@ export function useWorkedHoursRoute() {
       } catch (error) {
         const message = await handleApiError(
           error,
-          'No pude marcar la liquidación como pagada.',
+          'No se pudo marcar la liquidación como pagada.',
         );
         if (message) setNotice({ message, tone: 'error' });
       } finally {
@@ -433,7 +433,7 @@ export function useWorkedHoursRoute() {
       } catch (error) {
         const message = await handleApiError(
           error,
-          'No pude cancelar la liquidación.',
+          'No se pudo cancelar la liquidación.',
         );
         if (message) setNotice({ message, tone: 'error' });
       } finally {

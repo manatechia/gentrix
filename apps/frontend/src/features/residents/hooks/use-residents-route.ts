@@ -55,7 +55,7 @@ export function useResidentsRoute() {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude cargar los residentes.',
+        'No se pudo cargar los residentes.',
       );
 
       if (message === 'Unauthorized.') {
@@ -115,7 +115,7 @@ export function useResidentsRoute() {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude guardar el paciente.',
+        'No se pudo guardar el paciente.',
       );
 
       if (message === 'Unauthorized.') {

@@ -26,7 +26,7 @@ export function useMedicationEditRoute(medicationId: string | undefined) {
   ): Promise<MedicationDetail | null> {
     if (!medicationId) {
       setMedicationNoticeTone('error');
-      setMedicationNotice('No encontre la medicacion solicitada.');
+      setMedicationNotice('No se encontró la medicación solicitada.');
       return null;
     }
 
@@ -54,7 +54,7 @@ export function useMedicationEditRoute(medicationId: string | undefined) {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude guardar los cambios de la medicacion.',
+        'No se pudo guardar los cambios de la medicación.',
       );
 
       if (message === 'Unauthorized.') {

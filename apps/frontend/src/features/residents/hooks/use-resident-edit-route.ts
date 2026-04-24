@@ -26,7 +26,7 @@ export function useResidentEditRoute(residentId: string | undefined) {
   ): Promise<ResidentDetail | null> {
     if (!residentId) {
       setResidentNoticeTone('error');
-      setResidentNotice('No encontre el residente solicitado.');
+      setResidentNotice('No se encontró el residente solicitado.');
       return null;
     }
 
@@ -54,7 +54,7 @@ export function useResidentEditRoute(residentId: string | undefined) {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude guardar los cambios del paciente.',
+        'No se pudo guardar los cambios del paciente.',
       );
 
       if (message === 'Unauthorized.') {

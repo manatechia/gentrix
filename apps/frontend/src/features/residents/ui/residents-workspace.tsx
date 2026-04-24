@@ -84,13 +84,13 @@ export function ResidentsWorkspace({
       </section>
 
       {screenState === 'loading' && (
-        <StatusNotice message="Cargando residentes con la sesion activa." />
+        <StatusNotice message="Cargando residentes con la sesión activa." />
       )}
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No pude cargar los residentes."
-          message={authError ?? 'Ocurrio un error inesperado.'}
+          title="No se pudo cargar los residentes."
+          message={authError ?? 'Ocurrió un error inesperado.'}
           actions={[
             {
               label: 'Reintentar',

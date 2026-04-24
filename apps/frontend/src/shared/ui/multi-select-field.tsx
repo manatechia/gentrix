@@ -238,7 +238,7 @@ export function MultiSelectField({
           <button
             type="button"
             className="inline-flex h-8 w-8 items-center justify-center rounded-full text-brand-primary transition hover:bg-[rgba(0,102,132,0.08)]"
-            aria-label="Cerrar busqueda"
+            aria-label="Cerrar búsqueda"
             onClick={() => {
               closeDropdown({ focusTrigger: true });
             }}
@@ -305,7 +305,7 @@ export function MultiSelectField({
 
             {filteredOptions.length === 0 ? (
               <div className="rounded-[18px] border border-dashed border-[rgba(0,102,132,0.18)] bg-brand-neutral/60 px-4 py-4 text-brand-text-secondary">
-                No encontre residentes para esa busqueda.
+                No se encontró residentes para esa búsqueda.
               </div>
             ) : (
               <ul

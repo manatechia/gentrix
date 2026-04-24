@@ -117,7 +117,7 @@ function toExceptionDateIso(value: string): string | undefined {
 function formatWeekdayLabel(weekday: number): string {
   return (
     weekdayOptions.find((option) => Number(option.value) === weekday)?.label ??
-    `Dia ${weekday}`
+    `Día ${weekday}`
   );
 }
 
@@ -161,7 +161,7 @@ export function StaffSchedulesWorkspace({
 
   async function handleSubmit(): Promise<void> {
     if (!selectedMember) {
-      setFormError('Selecciona un miembro del equipo para continuar.');
+      setFormError('Seleccione un miembro del equipo para continuar.');
       return;
     }
 
@@ -169,17 +169,17 @@ export function StaffSchedulesWorkspace({
     const exceptionDate = toExceptionDateIso(formState.exceptionDate);
 
     if (!Number.isInteger(weekday) || weekday < 1 || weekday > 7) {
-      setFormError('Selecciona un dia valido para el horario.');
+      setFormError('Seleccione un día válido para el horario.');
       return;
     }
 
     if (!formState.startTime || !formState.endTime) {
-      setFormError('Define la hora de inicio y fin del horario.');
+      setFormError('Defina la hora de inicio y fin del horario.');
       return;
     }
 
     if (!exceptionDate && formState.exceptionDate) {
-      setFormError('La fecha puntual no es valida.');
+      setFormError('La fecha puntual no es válida.');
       return;
     }
 
@@ -230,8 +230,8 @@ export function StaffSchedulesWorkspace({
             </h1>
             <p className="max-w-[60ch] leading-[1.65] text-brand-text-secondary">
               {canManageSchedules
-                ? 'Selecciona un miembro del equipo, revisa sus guardias semanales y agrega coberturas puntuales desde un solo workspace.'
-                : 'Consulta la cobertura del equipo y revisa guardias semanales sin modificar horarios globales.'}
+                ? 'Seleccione un miembro del equipo, revisa sus guardias semanales y agrega coberturas puntuales desde un solo workspace.'
+                : 'Consulte la cobertura del equipo y revise guardias semanales sin modificar horarios globales.'}
             </p>
           </div>
 
@@ -262,20 +262,20 @@ export function StaffSchedulesWorkspace({
       )}
 
       {screenState === 'loading' && (
-        <StatusNotice message="Cargando personal y horarios desde la sesion activa." />
+        <StatusNotice message="Cargando personal y horarios desde la sesión activa." />
       )}
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No pude cargar la cobertura del equipo."
-          message={teamError ?? 'Ocurrio un error inesperado.'}
+          title="No se pudo cargar la cobertura del equipo."
+          message={teamError ?? 'Ocurrió un error inesperado.'}
           actions={[
             {
               label: 'Reintentar',
               onClick: onRetry,
             },
             {
-              label: 'Cerrar sesion',
+              label: 'Cerrar sesión',
               onClick: onLogout,
               variant: 'secondary',
             },
@@ -359,7 +359,7 @@ export function StaffSchedulesWorkspace({
                     Miembro seleccionado
                   </span>
                   <h2 className="text-[1.2rem] font-bold tracking-[-0.04em] text-brand-text">
-                    {selectedMember?.fullName ?? 'Selecciona un miembro del equipo'}
+                    {selectedMember?.fullName ?? 'Seleccione un miembro del equipo'}
                   </h2>
                 </div>
                 {selectedMember && (
@@ -442,15 +442,15 @@ export function StaffSchedulesWorkspace({
               {!canManageSchedules && (
                 <p className="mt-4 leading-[1.6] text-brand-text-secondary">
                   El personal puede revisar la cobertura del equipo, pero la
-                  carga y edicion de horarios queda reservada a administracion y
-                  coordinacion.
+                  carga y edición de horarios queda reservada a administración y
+                  coordinación.
                 </p>
               )}
 
               <div className="mt-4 grid gap-[14px] min-[980px]:grid-cols-[220px_160px_160px]">
                 <label className="grid gap-2.5">
                   <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                    Dia semanal
+                    Día semanal
                   </span>
                   <SelectField
                     name="schedule.weekday"
@@ -586,11 +586,11 @@ export function StaffSchedulesWorkspace({
 
               {selectedMember == null ? (
                 <p className="leading-[1.65] text-brand-text-secondary">
-                  Selecciona un perfil para ver sus horarios.
+                  Seleccione un perfil para ver sus horarios.
                 </p>
               ) : schedules.length === 0 ? (
                 <div className="rounded-[22px] border border-dashed border-[rgba(0,102,132,0.22)] bg-brand-neutral px-4 py-5 text-brand-text-secondary">
-                  Este miembro del equipo todavia no tiene horarios cargados.
+                  Este miembro del equipo todavía no tiene horarios cargados.
                 </div>
               ) : (
                 <div className="grid gap-3">

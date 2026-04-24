@@ -50,27 +50,27 @@ export function MedicationCreateWorkspace({
         <div className="grid gap-2.5">
           <div className="flex items-center gap-3">
             <BackChevronButton
-              title="Volver a medicacion"
+              title="Volver a medicación"
               fallbackTo="/medicacion"
             />
             <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-              Medicacion
+              Medicación
             </span>
           </div>
           <h1 className="text-[clamp(2rem,3.2vw,2.6rem)] font-bold tracking-[-0.04em] text-brand-text">
-            Nueva orden de medicacion
+            Nueva orden de medicación
           </h1>
           <p className="max-w-[58ch] leading-[1.65] text-brand-text-secondary">
-            Carga una indicacion nueva, define su agenda y vincula la orden con
-            el residente correcto sin salir del modulo.
+            Cargue una indicación nueva, defina su agenda y vincule la orden con
+            el residente correcto sin salir del módulo.
           </p>
         </div>
       </section>
 
       {screenState === 'error' && authError && (
         <StatusNotice
-          title="No pude actualizar el modulo."
-          message={`${authError} Revisa la conexion antes de guardar una nueva orden.`}
+          title="No se pudo actualizar el módulo."
+          message={`${authError} Revise la conexión antes de guardar una nueva orden.`}
         />
       )}
 
@@ -80,7 +80,7 @@ export function MedicationCreateWorkspace({
         isSavingMedication={isSavingMedication}
         medicationNoticeTone={medicationNoticeTone}
         medicationNotice={medicationNotice}
-        panelBadgeText={`${medicationCount} ordenes`}
+        panelBadgeText={`${medicationCount} órdenes`}
         secondaryAction={{ href: '/medicacion', label: 'Cancelar' }}
         onSubmit={onMedicationCreate}
       />

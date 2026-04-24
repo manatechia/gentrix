@@ -62,8 +62,8 @@ export function ResidentEditWorkspace({
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No pude cargar el formulario de edicion."
-          message={residentError ?? 'Ocurrio un error inesperado.'}
+          title="No se pudo cargar el formulario de edición."
+          message={residentError ?? 'Ocurrió un error inesperado.'}
           actions={[
             {
               label: 'Reintentar',

@@ -128,7 +128,7 @@ export function UsersAdminWorkspace({
       await navigator.clipboard.writeText(password);
       setCopyFeedback('Copiada al portapapeles.');
     } catch {
-      setCopyFeedback('No pude copiarla automáticamente. Copiala manualmente.');
+      setCopyFeedback('No se pudo copiarla automáticamente. Copiala manualmente.');
     }
   }
 
@@ -214,15 +214,15 @@ export function UsersAdminWorkspace({
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No pude cargar los usuarios."
-          message={usersError ?? 'Ocurrio un error inesperado.'}
+          title="No se pudo cargar los usuarios."
+          message={usersError ?? 'Ocurrió un error inesperado.'}
           actions={[
             {
               label: 'Reintentar',
               onClick: onRetry,
             },
             {
-              label: 'Cerrar sesion',
+              label: 'Cerrar sesión',
               onClick: onLogout,
               variant: 'secondary',
             },
@@ -492,7 +492,7 @@ export function UsersAdminWorkspace({
               Contraseña temporal generada
             </h3>
             <p className="text-brand-text-secondary">
-              Compartila con el usuario por un canal seguro. Sólo podrás verla
+              Compártala con el usuario por un canal seguro. Sólo podrá verla
               ahora. Deberá cambiarla al iniciar sesión.
             </p>
             <code

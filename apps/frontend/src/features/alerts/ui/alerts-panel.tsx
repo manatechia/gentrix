@@ -59,7 +59,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
             Alertas del turno
           </h2>
           <p className="mt-2 max-w-[26rem] text-[0.95rem] leading-[1.55] text-brand-text-muted">
-            Senales derivadas del perfil vivo, la medicacion activa y las
+            Señales derivadas del perfil vivo, la medicación activa y las
             ejecuciones reales registradas.
           </p>
         </div>
@@ -82,7 +82,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
 
       {alerts.length === 0 ? (
         <article className="rounded-[22px] border border-dashed border-[rgba(0,102,132,0.18)] bg-brand-neutral px-[18px] py-5 text-[0.95rem] leading-[1.6] text-brand-text-muted">
-          No hay alertas derivadas para este turno con la informacion
+          No hay alertas derivadas para este turno con la información
           disponible.
         </article>
       ) : (

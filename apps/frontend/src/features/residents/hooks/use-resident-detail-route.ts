@@ -27,7 +27,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
     if (!residentId) {
       setResident(null);
       setResidentLiveProfile(null);
-      setResidentError('No encontre el residente solicitado.');
+      setResidentError('No se encontró el residente solicitado.');
       setScreenState('error');
       return;
     }
@@ -55,7 +55,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude cargar el detalle del residente.',
+        'No se pudo cargar el detalle del residente.',
       );
 
       if (message === 'Unauthorized.') {
@@ -80,7 +80,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
     async (toStatus: ResidentCareStatus): Promise<boolean> => {
       if (!residentId) {
         setCareStatusNoticeTone('error');
-        setCareStatusNotice('No encontre el residente solicitado.');
+        setCareStatusNotice('No se encontró el residente solicitado.');
         return false;
       }
 
@@ -115,7 +115,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
       } catch (error) {
         const message = getApiErrorMessage(
           error,
-          'No pude actualizar el estado del residente.',
+          'No se pudo actualizar el estado del residente.',
         );
 
         if (message === 'Unauthorized.') {

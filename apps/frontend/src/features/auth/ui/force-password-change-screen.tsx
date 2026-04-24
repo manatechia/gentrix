@@ -66,7 +66,7 @@ export function ForcePasswordChangeScreen({
       await onCompleted();
     } catch (error) {
       setFormError(
-        getApiErrorMessage(error, 'No pude actualizar la contraseña.'),
+        getApiErrorMessage(error, 'No se pudo actualizar la contraseña.'),
       );
     } finally {
       setIsSubmitting(false);
@@ -90,7 +90,7 @@ export function ForcePasswordChangeScreen({
             Tenés que cambiar tu contraseña
           </h1>
           <p className="text-brand-text-secondary">
-            Por seguridad, no podés navegar el sistema hasta establecer una
+            Por seguridad, no puede navegar el sistema hasta establecer una
             contraseña nueva.
           </p>
         </header>

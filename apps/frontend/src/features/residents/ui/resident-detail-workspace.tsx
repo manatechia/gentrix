@@ -312,8 +312,8 @@ export function ResidentDetailWorkspace({
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No pude cargar la ficha del residente."
-          message={residentError ?? 'Ocurrio un error inesperado.'}
+          title="No se pudo cargar la ficha del residente."
+          message={residentError ?? 'Ocurrió un error inesperado.'}
           actions={[
             {
               label: 'Reintentar',
@@ -368,7 +368,7 @@ export function ResidentDetailWorkspace({
                   >
                     {isUpdatingCareStatus
                       ? 'Actualizando...'
-                      : 'Quitar de observacion'}
+                      : 'Quitar de observación'}
                   </button>
                 )}
               </div>
@@ -507,19 +507,19 @@ export function ResidentDetailWorkspace({
             <CollapsibleDetailSection title="Médico de cabecera">
               <div className="grid gap-3 text-brand-text-secondary">
                 <DetailField
-                  label="Historia clinica"
+                  label="Historia clínica"
                   value={showValue(
                     resident.clinicalProfile.clinicalRecordNumber,
                   )}
                 />
                 <DetailField
-                  label="Lugar de atencion de emergencia"
+                  label="Lugar de atención de emergencia"
                   value={showValue(
                     resident.clinicalProfile.emergencyCareLocation,
                   )}
                 />
                 <DetailField
-                  label="Medico"
+                  label="Médico"
                   value={showValue(resident.clinicalProfile.primaryDoctorName)}
                 />
                 <DetailField
@@ -529,7 +529,7 @@ export function ResidentDetailWorkspace({
                   )}
                 />
                 <DetailField
-                  label="Telefono consultorio"
+                  label="Teléfono consultorio"
                   value={showValue(
                     resident.clinicalProfile.primaryDoctorOfficePhone,
                   )}
@@ -626,7 +626,7 @@ export function ResidentDetailWorkspace({
                       value={showValue(resident.documentIssuingCountry)}
                     />
                     <DetailField
-                      label="Numero de tramite"
+                      label="Numero de trámite"
                       value={showValue(resident.procedureNumber)}
                     />
                     <DetailField
@@ -661,7 +661,7 @@ export function ResidentDetailWorkspace({
                       value={showValue(resident.nationality)}
                     />
                     <DetailField
-                      label="Correo electronico"
+                      label="Correo electrónico"
                       value={showValue(resident.email)}
                     />
                   </div>
@@ -670,7 +670,7 @@ export function ResidentDetailWorkspace({
                 <CollapsibleDetailSection title="Ingreso y salida">
                   <div className="grid gap-3 text-brand-text-secondary">
                     <DetailField
-                      label="Habitacion"
+                      label="Habitación"
                       value={showValue(resident.room)}
                     />
                     <DetailField
@@ -711,7 +711,7 @@ export function ResidentDetailWorkspace({
                       value={showValue(resident.transfer.address)}
                     />
                     <DetailField
-                      label="Telefono de traslado"
+                      label="Teléfono de traslado"
                       value={showValue(resident.transfer.phone)}
                     />
                   </div>

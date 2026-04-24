@@ -45,7 +45,7 @@ export function useUsersRoute() {
       setUsers(sortUsers(unwrapEnvelope(payload)));
       setScreenState('ready');
     } catch (error) {
-      const message = getApiErrorMessage(error, 'No pude cargar los usuarios.');
+      const message = getApiErrorMessage(error, 'No se pudo cargar los usuarios.');
 
       if (message === 'Unauthorized.') {
         await logout();
@@ -91,7 +91,7 @@ export function useUsersRoute() {
       } catch (error) {
         const message = getApiErrorMessage(
           error,
-          'No pude crear el usuario.',
+          'No se pudo crear el usuario.',
         );
 
         if (message === 'Unauthorized.') {
@@ -141,7 +141,7 @@ export function useUsersRoute() {
       } catch (error) {
         const message = getApiErrorMessage(
           error,
-          'No pude reiniciar la contraseña.',
+          'No se pudo reiniciar la contraseña.',
         );
         if (message === 'Unauthorized.') {
           await logout();

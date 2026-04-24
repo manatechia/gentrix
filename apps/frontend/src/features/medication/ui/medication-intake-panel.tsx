@@ -110,12 +110,12 @@ export function MedicationIntakePanel({
     [createInitialValues, initialValues],
   );
   const resolvedPanelEyebrow =
-    panelEyebrow ?? (isEditMode ? 'Edicion' : 'Nueva orden');
+    panelEyebrow ?? (isEditMode ? 'Edición' : 'Nueva orden');
   const resolvedPanelTitle =
-    panelTitle ?? (isEditMode ? 'Editar medicacion' : 'Cargar medicacion');
+    panelTitle ?? (isEditMode ? 'Editar medicación' : 'Cargar medicación');
   const resolvedPanelDescription =
     panelDescription ??
-    'Registra la prescripcion vigente del residente con dosis, via, horarios previstos, profesional tratante y vigencia de la orden.';
+    'Registre la prescripción vigente del residente con dosis, vía, horarios previstos, profesional tratante y vigencia de la orden.';
   const resolvedSubmitLabel =
     submitLabel ?? (isEditMode ? 'Guardar cambios' : 'Guardar orden');
   const routeFrequencyGridClassName = isEditMode
@@ -148,8 +148,8 @@ export function MedicationIntakePanel({
       </p>
 
       <div className="mt-4 rounded-[18px] border border-[rgba(0,102,132,0.14)] bg-[rgba(0,102,132,0.08)] px-4 py-3.5 text-[0.95rem] leading-[1.55] text-brand-secondary">
-        Esta pantalla define la orden vigente. La administracion, omision o
-        rechazo de cada toma se registrara en un flujo separado de ejecucion.
+        Esta pantalla define la orden vigente. La administración, omisión o
+        rechazo de cada toma se registrará en un flujo separado de ejecución.
       </div>
 
       {medicationNotice && (
@@ -278,7 +278,7 @@ export function MedicationIntakePanel({
                 <div className={routeFrequencyGridClassName}>
                   <label className="grid gap-2.5">
                     <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                      Via
+                      Vía
                     </span>
                     <SelectField
                       name="route"
@@ -412,9 +412,9 @@ export function MedicationIntakePanel({
                           Horarios
                         </span>
                         <span className="leading-[1.55] text-brand-text-secondary">
-                          Si la frecuencia es segun necesidad, puedes dejar la
-                          prescripcion sin horarios fijos. La ejecucion concreta
-                          de cada toma se registrara aparte.
+                          Si la frecuencia es según necesidad, puede dejar la
+                          prescripción sin horarios fijos. La ejecución concreta
+                          de cada toma se registrará aparte.
                         </span>
                       </div>
 
