@@ -4,26 +4,20 @@ import { Link } from 'react-router-dom';
 import type {
   AuthSession,
   PasswordResetResponse,
-  UserCreateRole,
   UserCreateInput,
   UserOverview,
 } from '@gentrix/shared-types';
 
 import {
-  formatAuthRole,
-  formatEntityStatus,
-} from '../../../shared/lib/display-labels';
-import {
-  badgeBaseClassName,
-  inputClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
   surfaceCardClassName,
 } from '../../../shared/ui/class-names';
-import { SelectField } from '../../../shared/ui/select-field';
 import { WorkspaceShell } from '../../dashboard/ui/workspace-shell';
 import { StatusNotice } from '../../dashboard/ui/status-notice';
 import type { DashboardScreenState } from '../../dashboard/types/dashboard-screen-state';
+import { UserCreateDrawer } from './user-create-drawer';
+import { UsersList } from './users-list';
 
 interface UsersAdminWorkspaceProps {
   screenState: DashboardScreenState;
@@ -41,29 +35,6 @@ interface UsersAdminWorkspaceProps {
   onClearResetResult: () => void;
   onLogout: () => void | Promise<void>;
   onRetry: () => void | Promise<void>;
-}
-
-interface UserFormState {
-  fullName: string;
-  email: string;
-  role: UserCreateRole;
-  password: string;
-}
-
-const roleOptions: Array<{ value: UserCreateRole; label: string }> = [
-  { value: 'nurse', label: 'Enfermeras/os' },
-  { value: 'assistant', label: 'Asistentes' },
-  { value: 'health-director', label: 'Director de salud' },
-  { value: 'external', label: 'Externos' },
-];
-
-function createInitialUserFormState(): UserFormState {
-  return {
-    fullName: '',
-    email: '',
-    role: 'assistant',
-    password: '',
-  };
 }
 
 export function UsersAdminWorkspace({
@@ -84,10 +55,7 @@ export function UsersAdminWorkspace({
   onRetry,
 }: UsersAdminWorkspaceProps) {
   const visibleUsers = users.filter((user) => user.role !== 'admin');
-  const [formState, setFormState] = useState<UserFormState>(
-    createInitialUserFormState,
-  );
-  const [formError, setFormError] = useState<string | null>(null);
+  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
   const [pendingResetUser, setPendingResetUser] = useState<UserOverview | null>(
     null,
   );
@@ -116,8 +84,6 @@ export function UsersAdminWorkspace({
   async function handleResetConfirmed(userId: string): Promise<void> {
     const result = await onPasswordReset(userId);
     setPendingResetUser(null);
-    // The temporary password is rendered once by the notice; we don't need
-    // additional state here, but keep a local copy-feedback flag clean.
     if (result) {
       setCopyFeedback(null);
     }
@@ -132,40 +98,7 @@ export function UsersAdminWorkspace({
     }
   }
 
-  async function handleSubmit(): Promise<void> {
-    const fullName = formState.fullName.trim();
-    const email = formState.email.trim().toLowerCase();
-    const password = formState.password.trim();
-
-    if (!fullName) {
-      setFormError('El nombre completo es obligatorio.');
-      return;
-    }
-
-    if (!email) {
-      setFormError('El email es obligatorio.');
-      return;
-    }
-
-    if (!password) {
-      setFormError('La contrasena es obligatoria.');
-      return;
-    }
-
-    setFormError(null);
-    const createdUser = await onUserCreate({
-      fullName,
-      email,
-      role: formState.role,
-      password,
-    });
-
-    if (!createdUser) {
-      return;
-    }
-
-    setFormState(createInitialUserFormState());
-  }
+  const canInteract = screenState === 'ready';
 
   return (
     <WorkspaceShell
@@ -173,15 +106,6 @@ export function UsersAdminWorkspace({
       session={session}
       onLogout={onLogout}
     >
-      {formError && (
-        <section
-          className="rounded-[28px] border border-[rgba(168,43,17,0.16)] bg-[rgba(168,43,17,0.08)] px-6 py-[22px] text-[rgb(130,44,25)] shadow-panel"
-          data-testid="users-admin-form-error"
-        >
-          <span className="leading-[1.55]">{formError}</span>
-        </section>
-      )}
-
       {toast && (
         <div
           className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 sm:justify-end"
@@ -208,13 +132,52 @@ export function UsersAdminWorkspace({
         </div>
       )}
 
+      <section
+        className={`${surfaceCardClassName} grid gap-4`}
+        data-testid="users-admin-header"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="grid gap-1.5">
+            <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+              Personal
+            </span>
+            <h1 className="text-[1.45rem] font-bold tracking-[-0.04em] text-brand-text">
+              Equipo de la organización
+            </h1>
+            <p className="max-w-[620px] text-brand-text-secondary">
+              Administrá al personal de la organización, su tipo de
+              contratación y su acceso al sistema. Desde acá podés cargar las
+              horas trabajadas de los externos.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              data-testid="users-admin-add-button"
+              className={primaryButtonClassName}
+              disabled={!canInteract}
+              onClick={() => setIsCreateDrawerOpen(true)}
+            >
+              + Agregar personal
+            </button>
+            <Link
+              to="/personal/horas"
+              data-testid="users-admin-shortcut-horas"
+              className={secondaryButtonClassName}
+            >
+              Ir a carga de horas
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {screenState === 'loading' && (
-        <StatusNotice message="Cargando usuarios de la organizacion activa." />
+        <StatusNotice message="Cargando personal de la organización activa." />
       )}
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No se pudo cargar los usuarios."
+          title="No se pudo cargar el personal."
           message={usersError ?? 'Ocurrió un error inesperado.'}
           actions={[
             {
@@ -232,211 +195,41 @@ export function UsersAdminWorkspace({
 
       {screenState === 'ready' && (
         <section
-          className={`${surfaceCardClassName} flex flex-wrap items-center justify-between gap-3 px-5 py-4`}
-          data-testid="users-admin-shortcuts"
-        >
-          <div className="grid gap-0.5">
-            <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-              Más en Personal
-            </span>
-            <strong className="text-brand-text">
-              Carga y liquidación de horas de externos
-            </strong>
-            <span className="text-sm text-brand-text-secondary">
-              Cargá horas trabajadas y emití liquidaciones para los
-              profesionales externos de la organización.
-            </span>
-          </div>
-          <Link
-            to="/personal/horas"
-            data-testid="users-admin-shortcut-horas"
-            className={primaryButtonClassName}
-          >
-            Ir a horas de externos
-          </Link>
-        </section>
-      )}
-
-      {screenState === 'ready' && (
-        <section
-          className="grid gap-[18px] min-[1080px]:grid-cols-[minmax(320px,0.88fr)_minmax(0,1.12fr)]"
+          className={surfaceCardClassName}
           data-testid="users-admin-workspace"
         >
-          <article className={surfaceCardClassName}>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="grid gap-1.5">
-                <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                  Alta rapida
-                </span>
-                <h2 className="text-[1.2rem] font-bold tracking-[-0.04em] text-brand-text">
-                  Nuevo usuario
-                </h2>
-              </div>
-              <span className={secondaryButtonClassName}>Email + password</span>
-            </div>
-
-            <div className="mt-4 grid gap-[14px]">
-              <label className="grid gap-2.5">
-                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                  Nombre completo
-                </span>
-                <input
-                  data-testid="users-form-full-name-input"
-                  className={inputClassName}
-                  type="text"
-                  value={formState.fullName}
-                  onChange={(event) => {
-                    setFormState((current) => ({
-                      ...current,
-                      fullName: event.target.value,
-                    }));
-                  }}
-                />
-              </label>
-
-              <label className="grid gap-2.5">
-                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                  Email
-                </span>
-                <input
-                  data-testid="users-form-email-input"
-                  className={inputClassName}
-                  type="email"
-                  value={formState.email}
-                  onChange={(event) => {
-                    setFormState((current) => ({
-                      ...current,
-                      email: event.target.value,
-                    }));
-                  }}
-                />
-              </label>
-
-              <label className="grid gap-2.5">
-                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                  Rol
-                </span>
-                <SelectField
-                  name="users.role"
-                  testId="users-form-role-select"
-                  value={formState.role}
-                  options={roleOptions}
-                  onChange={(nextValue) => {
-                    setFormState((current) => ({
-                      ...current,
-                      role: nextValue as UserCreateRole,
-                    }));
-                  }}
-                />
-              </label>
-
-              <label className="grid gap-2.5">
-                <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                  Contrasena
-                </span>
-                <input
-                  data-testid="users-form-password-input"
-                  className={inputClassName}
-                  type="text"
-                  value={formState.password}
-                  onChange={(event) => {
-                    setFormState((current) => ({
-                      ...current,
-                      password: event.target.value,
-                    }));
-                  }}
-                />
-              </label>
-            </div>
-
-            <div className="mt-5 flex justify-end">
-              <button
-                data-testid="users-form-submit-button"
-                className={primaryButtonClassName}
-                type="button"
-                disabled={isSavingUser}
-                onClick={() => {
-                  void handleSubmit();
-                }}
-              >
-                {isSavingUser ? 'Guardando...' : 'Crear usuario'}
-              </button>
-            </div>
-          </article>
-
-          <article className={surfaceCardClassName}>
-            <div className="mb-[18px] flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                  Accesos activos
-                </span>
-                <h2 className="mt-1 text-[1.2rem] font-bold tracking-[-0.04em] text-brand-text">
-                  Listado de usuarios
-                </h2>
-              </div>
-              <span
-                className={`${badgeBaseClassName} bg-brand-secondary/12 text-brand-secondary`}
-              >
-                Organizacion actual
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
+                Personal de la organización
               </span>
+              <h2 className="mt-1 text-[1.15rem] font-bold tracking-[-0.04em] text-brand-text">
+                {visibleUsers.length === 1
+                  ? '1 persona'
+                  : `${visibleUsers.length} personas`}
+              </h2>
             </div>
+          </div>
 
-            <div className="grid gap-3">
-              {visibleUsers.length === 0 ? (
-                <div className="rounded-[22px] border border-dashed border-[rgba(0,102,132,0.22)] bg-brand-neutral px-4 py-5 text-brand-text-secondary">
-                  No hay usuarios cargados todavia.
-                </div>
-              ) : (
-                visibleUsers.map((user) => (
-                  <article
-                    key={user.id}
-                    data-testid={`user-row-${user.id}`}
-                    className="grid gap-2 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral px-4 py-4"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <strong className="text-brand-text">{user.fullName}</strong>
-                      <span
-                        className={`${badgeBaseClassName} bg-brand-primary/12 text-brand-primary`}
-                      >
-                        {formatAuthRole(user.role)}
-                      </span>
-                    </div>
-                    <span className="text-brand-text-secondary">{user.email}</span>
-                    <span className="text-[0.9rem] text-brand-text-muted">
-                      Estado: {formatEntityStatus(user.status)}
-                    </span>
-                    {user.forcePasswordChange && (
-                      <span
-                        className={`${badgeBaseClassName} w-max bg-[rgba(168,108,17,0.12)] text-[rgb(130,77,25)]`}
-                        data-testid={`user-row-${user.id}-force-flag`}
-                      >
-                        Pendiente de cambio de contraseña
-                      </span>
-                    )}
-                    <div className="mt-1 flex flex-wrap justify-end gap-2">
-                      <button
-                        type="button"
-                        data-testid={`user-row-${user.id}-reset-button`}
-                        className={secondaryButtonClassName}
-                        disabled={resettingUserId === user.id}
-                        onClick={() => {
-                          setPendingResetUser(user);
-                          setCopyFeedback(null);
-                          onClearResetResult();
-                        }}
-                      >
-                        {resettingUserId === user.id
-                          ? 'Reiniciando…'
-                          : 'Reiniciar contraseña'}
-                      </button>
-                    </div>
-                  </article>
-                ))
-              )}
-            </div>
-          </article>
+          <UsersList
+            users={visibleUsers}
+            resettingUserId={resettingUserId}
+            onResetClick={(user) => {
+              setPendingResetUser(user);
+              setCopyFeedback(null);
+              onClearResetResult();
+            }}
+            onAddClick={() => setIsCreateDrawerOpen(true)}
+          />
         </section>
       )}
+
+      <UserCreateDrawer
+        isOpen={isCreateDrawerOpen}
+        isSavingUser={isSavingUser}
+        onClose={() => setIsCreateDrawerOpen(false)}
+        onCreate={onUserCreate}
+      />
 
       {pendingResetUser && (
         <div
@@ -447,10 +240,10 @@ export function UsersAdminWorkspace({
         >
           <div className="grid w-full max-w-[440px] gap-4 rounded-[28px] bg-white px-6 py-6 shadow-panel">
             <h3 className="text-[1.2rem] font-bold tracking-[-0.03em] text-brand-text">
-              ¿Reiniciar la contraseña de {pendingResetUser.fullName}?
+              ¿Restablecer el acceso de {pendingResetUser.fullName}?
             </h3>
             <p className="text-brand-text-secondary">
-              Se generará una contraseña temporal. El usuario deberá
+              Se generará una contraseña temporal. La persona deberá
               establecer una nueva al iniciar sesión.
             </p>
             <div className="flex flex-wrap justify-end gap-3">
@@ -472,8 +265,8 @@ export function UsersAdminWorkspace({
                 }}
               >
                 {resettingUserId === pendingResetUser.id
-                  ? 'Reiniciando…'
-                  : 'Confirmar reinicio'}
+                  ? 'Restableciendo…'
+                  : 'Confirmar'}
               </button>
             </div>
           </div>
@@ -492,7 +285,7 @@ export function UsersAdminWorkspace({
               Contraseña temporal generada
             </h3>
             <p className="text-brand-text-secondary">
-              Compártala con el usuario por un canal seguro. Sólo podrá verla
+              Compártala con la persona por un canal seguro. Sólo podrá verla
               ahora. Deberá cambiarla al iniciar sesión.
             </p>
             <code

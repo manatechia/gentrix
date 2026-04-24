@@ -31,7 +31,7 @@ export const sidebarSections: ReadonlyArray<SidebarSection> = [
   {
     testId: 'workspace-sidebar-link-users',
     label: 'Personal',
-    meta: 'equipo y horas de externos',
+    meta: 'gestión de personal',
     badge: 'PE',
     path: '/personal',
     end: false,
