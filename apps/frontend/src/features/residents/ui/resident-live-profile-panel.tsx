@@ -44,7 +44,7 @@ export function ResidentLiveProfilePanel({
               Ficha viva minima
             </span>
             <p className="max-w-[62ch] leading-[1.65] text-brand-text-secondary">
-              Lectura agregada del residente con perfil base y medicacion activa.
+              Lectura agregada del residente con perfil base y medicación activa.
             </p>
           </div>
           {profile && (
@@ -58,7 +58,7 @@ export function ResidentLiveProfilePanel({
 
         {!profile ? (
           <p className="mt-4 leading-[1.65] text-brand-text-secondary">
-            No pude cargar la lectura agregada de ficha viva.
+            No se pudo cargar la lectura agregada de ficha viva.
           </p>
         ) : (
           <div className="mt-5 grid gap-3 min-[720px]:grid-cols-2 min-[1100px]:grid-cols-3">
@@ -71,7 +71,7 @@ export function ResidentLiveProfilePanel({
               value={`${formatResidentDocumentType(profile.resident.documentType)} ${profile.resident.documentNumber}`}
             />
             <SummaryCard
-              label="Habitacion actual"
+              label="Habitación actual"
               value={showValue(profile.resident.room)}
             />
             <SummaryCard
@@ -94,10 +94,10 @@ export function ResidentLiveProfilePanel({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="grid gap-1.5">
             <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-              Medicacion activa
+              Medicación activa
             </span>
             <p className="leading-[1.6] text-brand-text-secondary">
-              Ordenes vigentes para la operacion diaria del residente.
+              Órdenes vigentes para la operación diaria del residente.
             </p>
           </div>
           {profile && (
@@ -109,7 +109,7 @@ export function ResidentLiveProfilePanel({
 
         {!profile || profile.activeMedications.length === 0 ? (
           <p className="mt-4 leading-[1.65] text-brand-text-secondary">
-            No hay medicacion activa para este residente.
+            No hay medicación activa para este residente.
           </p>
         ) : (
           <div className="mt-4 grid gap-3">

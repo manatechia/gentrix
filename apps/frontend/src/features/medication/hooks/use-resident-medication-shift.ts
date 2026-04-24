@@ -41,7 +41,7 @@ export function useResidentMedicationShift(residentId: string | undefined) {
     } catch (caught) {
       const message = getApiErrorMessage(
         caught,
-        'No pude cargar la medicación del turno.',
+        'No se pudo cargar la medicación del turno.',
       );
       if (message === 'Unauthorized.') {
         await logout();
@@ -96,7 +96,7 @@ export function useResidentMedicationShift(residentId: string | undefined) {
       } catch (caught) {
         const message = getApiErrorMessage(
           caught,
-          'No pude registrar la dosis.',
+          'No se pudo registrar la dosis.',
         );
         if (message === 'Unauthorized.') {
           await logout();

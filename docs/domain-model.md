@@ -28,8 +28,9 @@ Fecha de referencia original: 2026-03-24.
 - `MembershipFacilityScope`: residencias a las que ese membership puede operar.
 - `PatientRecord`: ficha del paciente dentro de una organizacion.
 - `FacilityStay`: estadia, admision o permanencia de un paciente en una residencia.
-- `StaffRecord`: ficha laboral o profesional del personal.
-- `StaffFacilityAssignment`: asignacion del personal a residencias.
+- El personal operativo vive en `UserAccount` + `OrganizationMembership`
+  (con `jobTitleId`, `wardId`, `shift`). No hay una tabla `StaffMember`
+  separada: la identidad del personal es la identidad de login.
 - `ClinicalEvent`: evento clinico o administrativo append-only sobre el paciente.
 - `PatientRelationship`: relacion entre un paciente y una persona vinculada.
 - `PatientAccessGrant`: permiso explicito para que una persona vinculada vea o haga algo.
@@ -62,8 +63,7 @@ Pacientes, personal, estadias y atenciones.
 - `PatientRecord`
 - `FacilityStay`
 - `ClinicalEvent`
-- `StaffRecord`
-- `StaffFacilityAssignment`
+- Personal operativo: `UserAccount` + `OrganizationMembership`
 - `MedicationCatalogItem`
 - `MedicationOrder`
 - `MedicationExecution`
@@ -94,7 +94,7 @@ Representa al tenant real.
 
 Campos clave: `id`, `slug` unico, `legalName`, `displayName`, `taxId?`, `status`, `timezone`, `defaultLocale`, auditoria.
 
-Relaciones: 1:N con `Facility`, `OrganizationMembership`, `PatientRecord`, `StaffRecord`, `Invoice`.
+Relaciones: 1:N con `Facility`, `OrganizationMembership`, `PatientRecord`, `Invoice`.
 
 ### Facility
 
@@ -104,7 +104,7 @@ Campos clave: `id`, `organizationId`, `code`, `name`, `status`, `address?`, `pho
 
 Unique compuesto: `[organizationId, code]`.
 
-Relaciones: N:1 con `Organization`; 1:N con `FacilityStay`, `StaffFacilityAssignment`; N:M con `OrganizationMembership` via `MembershipFacilityScope`.
+Relaciones: N:1 con `Organization`; 1:N con `FacilityStay`; N:M con `OrganizationMembership` via `MembershipFacilityScope`.
 
 ### Person
 
@@ -187,21 +187,22 @@ Campos clave: `id`, `patientRecordId`, `facilityId?`, `eventType`, `title`, `des
 
 Regla: modelo append-only. `visibilityLevel` deja abierta la puerta a resumir o no ciertos eventos para familiares.
 
-### StaffRecord
+### Personal operativo
 
-Ficha del personal dentro de una organizacion.
+No existe una tabla `StaffMember` / `StaffRecord` separada. La identidad
+del personal es la del `UserAccount` + su `OrganizationMembership` por
+organización. Los atributos laborales (puesto, sector, turno) viven
+directamente en `OrganizationMembership`:
 
-Campos clave: `id`, `organizationId`, `personId`, `employmentType?`, `professionalRole`, `licenseNumber?`, `status`, `hireDate?`, `endDate?`, auditoria.
+- `jobTitleId` FK → `JobTitle` (puesto laboral: nurse, doctor, caregiver, coordinator).
+- `wardId` FK → `Ward` (sector físico).
+- `shift` (`morning` / `afternoon` / `night`).
+- `joinedAt` / `leftAt` cubren el ciclo laboral.
+- El alcance por residencia sigue viviendo en `MembershipFacilityScope`.
 
-Un mismo `Person` puede tener mas de un `StaffRecord` en organizaciones distintas.
-
-### StaffFacilityAssignment
-
-Asignacion del personal a residencias concretas.
-
-Campos clave: `id`, `staffRecordId`, `facilityId`, `assignmentRole?`, `shift?`, `startDate`, `endDate?`, `status`.
-
-Permite staff sin residencia fija y rotando por varias residencias.
+Cuando aparezca `Person` como identidad global, la ficha laboral se
+podrá ampliar a una tabla dedicada si el negocio lo pide; por ahora no
+hay suficiente contenido específico para justificarlo.
 
 ### PatientRelationship
 
@@ -299,8 +300,13 @@ Nombres tecnicos reales en Prisma hoy vs. modelo objetivo:
 - `Resident` → hoy es el agregado operativo completo; direccion: split en `Person` + `PatientRecord` + `FacilityStay`.
 - `ClinicalHistoryEvent` → `ClinicalEvent`.
 - `ResidentObservationNote` → simplificacion operativa actual; se evaluara su evolucion.
-- `StaffMember` → `StaffRecord`.
-- `StaffSchedule` → subentidad de `StaffFacilityAssignment` o `StaffRecord`.
+- `StaffMember` → **eliminado**; el personal opera sobre `UserAccount` +
+  `OrganizationMembership`. Ver sección "Personal operativo" arriba.
+- `StaffFacilityAssignment` → **eliminado**; lo cubren
+  `OrganizationMembership.jobTitleId/wardId/shift` y
+  `MembershipFacilityScope`.
+- `StaffSchedule` → sigue existiendo pero apunta a
+  `OrganizationMembership.id`, no al viejo `StaffMember.id`.
 - `MedicationCatalogItem` → se mantiene; agregar `scopeType` y `organizationId?` a futuro.
 - `MedicationOrder` → agregar `prescribedByStaffRecordId` y evolucionar de `residentId` a `patientRecordId`.
 - `MedicationExecution` → ya implementado; el contrato de resultado sigue evolucionando.
@@ -318,8 +324,9 @@ Nombres tecnicos reales en Prisma hoy vs. modelo objetivo:
 - `ClinicalHistoryEvent` con `organizationId` obligatorio
 - `MedicationOrder` con `organizationId` y `facilityId`
 - `MedicationExecution` con `result`, `occurredAt`, link a orden y residente
-- `StaffMember` con `organizationId`
-- `StaffFacilityAssignment`, `StaffSchedule`
+- Personal operativo como extensión de `OrganizationMembership`
+  (`jobTitleId`, `wardId`, `shift`)
+- `StaffSchedule` (tabla aún llamada así) ligada a `OrganizationMembership.id`
 - `ResidentAgendaEvent`, `ResidentAgendaSeries`, `ResidentAgendaSeriesException` (agenda operativa recurrente)
 - `ResidentObservationNote` (nota operativa simple)
 - `PasswordResetAudit` (auditoria de reset de passwords)

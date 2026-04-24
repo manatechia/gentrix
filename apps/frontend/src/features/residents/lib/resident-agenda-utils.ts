@@ -147,7 +147,7 @@ export function formatAgendaRecurrenceBadge(
     }
     case 'monthly': {
       const day = startsOn ? startsOn.slice(8, 10) : '?';
-      return `mensual dia ${Number.parseInt(day, 10)}`;
+      return `mensual día ${Number.parseInt(day, 10)}`;
     }
     case 'yearly': {
       const month = startsOn ? startsOn.slice(5, 7) : '?';

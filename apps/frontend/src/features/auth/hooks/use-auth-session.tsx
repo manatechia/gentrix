@@ -169,7 +169,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
         });
       }
     } catch (error) {
-      setAuthError(getApiErrorMessage(error, 'No pude iniciar sesion.'));
+      setAuthError(getApiErrorMessage(error, 'No se pudo iniciar sesión.'));
       setStatus('anonymous');
 
       if (import.meta.env.DEV) {

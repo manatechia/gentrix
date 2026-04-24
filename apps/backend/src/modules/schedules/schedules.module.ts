@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 
-import { StaffModule } from '../staff/staff.module';
+import { UsersModule } from '../users/users.module';
 import { SchedulesService } from './application/schedules.service';
 import {
   SCHEDULE_REPOSITORY,
@@ -9,7 +9,7 @@ import { PrismaScheduleRepository } from './infrastructure/persistence/prisma/pr
 import { SchedulesController } from './presentation/controllers/schedules.controller';
 
 @Module({
-  imports: [StaffModule],
+  imports: [UsersModule],
   controllers: [SchedulesController],
   providers: [
     SchedulesService,

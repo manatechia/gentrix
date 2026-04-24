@@ -608,19 +608,27 @@ export interface ResidentLiveProfile {
   activeMedications: MedicationOverview[];
 }
 
-export interface StaffOverview {
+export type ShiftWindow = 'morning' | 'afternoon' | 'night';
+
+/// Miembro operativo del equipo dentro de una organización. Es una vista
+/// sobre `UserAccount` + la `OrganizationMembership` activa en la org del
+/// caller: incluye puesto laboral, sector y turno. El `id` es el `userId`,
+/// que es lo que exponemos hacia afuera como identidad canónica.
+export interface TeamMemberOverview {
   id: EntityId;
-  name: string;
-  role: string;
-  ward: string;
-  shift: string;
-  assignment: string;
+  fullName: string;
+  email: string;
+  role: AuthRole;
+  jobTitleCode: string | null;
+  jobTitleLabel: string | null;
+  wardName: string | null;
+  shift: ShiftWindow | null;
   status: EntityStatus;
 }
 
-export interface StaffSchedule {
+export interface UserSchedule {
   id: EntityId;
-  staffId: EntityId;
+  userId: EntityId;
   weekday: number;
   startTime: string;
   endTime: string;
@@ -629,7 +637,7 @@ export interface StaffSchedule {
   audit: AuditTrail;
 }
 
-export interface StaffScheduleCreateInput {
+export interface UserScheduleCreateInput {
   weekday: number;
   startTime: string;
   endTime: string;
@@ -637,7 +645,105 @@ export interface StaffScheduleCreateInput {
   coverageNote?: string;
 }
 
-export type StaffScheduleUpdateInput = StaffScheduleCreateInput;
+export type UserScheduleUpdateInput = UserScheduleCreateInput;
+
+/// --- Liquidación de horas (fase 1: externos) -----------------------------
+///
+/// Decimales viajan como string para no perder precisión en JSON. Las
+/// fechas de trabajo/vigencia usan `IsoDateString` pero en la práctica son
+/// date-only (`YYYY-MM-DD`); el backend las almacena en columnas `DATE`.
+export interface MembershipHourlyRate {
+  id: EntityId;
+  userId: EntityId;
+  rate: string;
+  currency: string;
+  effectiveFrom: IsoDateString;
+  effectiveTo: IsoDateString | null;
+  audit: AuditTrail;
+}
+
+export interface MembershipHourlyRateCreateInput {
+  rate: string;
+  currency: string;
+  effectiveFrom: IsoDateString;
+}
+
+export type MembershipHourlyRateUpdateInput = Partial<
+  Omit<MembershipHourlyRateCreateInput, 'effectiveFrom'>
+> & {
+  effectiveFrom?: IsoDateString;
+};
+
+export interface WorkedHourEntry {
+  id: EntityId;
+  userId: EntityId;
+  workDate: IsoDateString;
+  hours: string;
+  notes?: string;
+  settlementId: EntityId | null;
+  appliedRate: string | null;
+  appliedCurrency: string | null;
+  audit: AuditTrail;
+}
+
+export interface WorkedHourEntryCreateInput {
+  workDate: IsoDateString;
+  hours: string;
+  notes?: string;
+}
+
+export type WorkedHourEntryUpdateInput = WorkedHourEntryCreateInput;
+
+export type HourSettlementStatus = 'issued' | 'paid' | 'cancelled';
+
+export interface HourSettlement {
+  id: EntityId;
+  userId: EntityId;
+  periodStart: IsoDateString;
+  periodEnd: IsoDateString;
+  issuedAt: IsoDateString;
+  paidAt: IsoDateString | null;
+  cancelledAt: IsoDateString | null;
+  status: HourSettlementStatus;
+  notes?: string;
+  audit: AuditTrail;
+}
+
+export interface HourSettlementLine {
+  entryId: EntityId;
+  workDate: IsoDateString;
+  hours: string;
+  appliedRate: string;
+  appliedCurrency: string;
+  subtotal: string;
+  notes?: string;
+}
+
+export interface HourSettlementPreview {
+  userId: EntityId;
+  periodStart: IsoDateString;
+  periodEnd: IsoDateString;
+  lines: HourSettlementLine[];
+  totalHours: string;
+  totalAmount: string;
+  currency: string;
+}
+
+export interface HourSettlementDetail extends HourSettlement {
+  lines: HourSettlementLine[];
+  totalHours: string;
+  totalAmount: string;
+  currency: string;
+}
+
+export interface HourSettlementPeriodInput {
+  periodStart: IsoDateString;
+  periodEnd: IsoDateString;
+}
+
+export interface HourSettlementIssueInput extends HourSettlementPeriodInput {
+  notes?: string;
+}
 
 export type MedicationRoute =
   | 'oral'
@@ -807,7 +913,7 @@ export interface DashboardAlert {
 
 export interface DashboardSummary {
   residentCount: number;
-  staffOnDuty: number;
+  teamOnDuty: number;
   activeMedicationCount: number;
   occupancyRate: number;
   memoryCareResidents: number;
@@ -816,7 +922,7 @@ export interface DashboardSummary {
 export interface DashboardSnapshot {
   summary: DashboardSummary;
   residents: ResidentOverview[];
-  staff: StaffOverview[];
+  team: TeamMemberOverview[];
   medications: MedicationOverview[];
   alerts: DashboardAlert[];
 }
@@ -874,6 +980,6 @@ export interface HealthCheck {
   status: 'ok';
   service: string;
   residents: number;
-  staff: number;
+  team: number;
   generatedAt: IsoDateString;
 }

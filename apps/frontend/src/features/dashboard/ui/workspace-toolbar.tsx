@@ -26,7 +26,7 @@ export function WorkspaceToolbar({
         <input
           className="min-h-full w-full border-0 bg-transparent p-0 text-brand-text outline-none"
           type="search"
-          placeholder="Paciente, habitacion o nivel de cuidado"
+          placeholder="Paciente, habitación o nivel de cuidado"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
         />

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type {
-  StaffOverview,
-  StaffSchedule,
-  StaffScheduleCreateInput,
-  StaffScheduleUpdateInput,
+  TeamMemberOverview,
+  UserSchedule,
+  UserScheduleCreateInput,
+  UserScheduleUpdateInput,
 } from '@gentrix/shared-types';
 
 import { useAuthSession } from '../../auth/hooks/use-auth-session';
@@ -19,10 +19,10 @@ export function useStaffSchedulesRoute() {
   const { logout, status, token } = useAuthSession();
   const [screenState, setScreenState] =
     useState<DashboardScreenState>('loading');
-  const [staff, setStaff] = useState<StaffOverview[]>([]);
-  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
-  const [schedules, setSchedules] = useState<StaffSchedule[]>([]);
-  const [staffError, setStaffError] = useState<string | null>(null);
+  const [team, setTeam] = useState<TeamMemberOverview[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [schedules, setSchedules] = useState<UserSchedule[]>([]);
+  const [teamError, setTeamError] = useState<string | null>(null);
   const [isLoadingSchedules, setIsLoadingSchedules] = useState(false);
   const [isSavingSchedule, setIsSavingSchedule] = useState(false);
   const [scheduleNotice, setScheduleNotice] = useState<string | null>(null);
@@ -30,44 +30,44 @@ export function useStaffSchedulesRoute() {
     'success' | 'error'
   >('success');
 
-  const loadStaffWorkspace = useCallback(async (): Promise<void> => {
+  const loadWorkspace = useCallback(async (): Promise<void> => {
     if (!token) {
-      setStaff([]);
-      setSelectedStaffId(null);
+      setTeam([]);
+      setSelectedUserId(null);
       setSchedules([]);
-      setStaffError(null);
+      setTeamError(null);
       setScreenState('loading');
       return;
     }
 
     setScreenState('loading');
-    setStaffError(null);
+    setTeamError(null);
 
     try {
-      const staffPayload = await staffService.getStaff();
-      const nextStaff = unwrapEnvelope(staffPayload);
-      const nextSelectedStaffId =
-        nextStaff.find((member) => member.id === selectedStaffId)?.id ??
-        nextStaff[0]?.id ??
+      const teamPayload = await staffService.getTeam();
+      const nextTeam = unwrapEnvelope(teamPayload);
+      const nextSelectedUserId =
+        nextTeam.find((member) => member.id === selectedUserId)?.id ??
+        nextTeam[0]?.id ??
         null;
 
-      setStaff(nextStaff);
-      setSelectedStaffId(nextSelectedStaffId);
+      setTeam(nextTeam);
+      setSelectedUserId(nextSelectedUserId);
 
-      if (!nextSelectedStaffId) {
+      if (!nextSelectedUserId) {
         setSchedules([]);
         setScreenState('ready');
         return;
       }
 
       const schedulesPayload =
-        await staffService.getStaffSchedules(nextSelectedStaffId);
+        await staffService.getUserSchedules(nextSelectedUserId);
       setSchedules(sortSchedules(unwrapEnvelope(schedulesPayload)));
       setScreenState('ready');
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude cargar el personal y sus horarios.',
+        'No se pudo cargar el equipo y sus horarios.',
       );
 
       if (message === 'Unauthorized.') {
@@ -75,17 +75,17 @@ export function useStaffSchedulesRoute() {
         return;
       }
 
-      setStaff([]);
-      setSelectedStaffId(null);
+      setTeam([]);
+      setSelectedUserId(null);
       setSchedules([]);
-      setStaffError(message);
+      setTeamError(message);
       setScreenState('error');
     }
-  }, [logout, selectedStaffId, token]);
+  }, [logout, selectedUserId, token]);
 
-  const handleSelectStaff = useCallback(
-    async (staffId: string): Promise<void> => {
-      if (staffId === selectedStaffId) {
+  const handleSelectUser = useCallback(
+    async (userId: string): Promise<void> => {
+      if (userId === selectedUserId) {
         return;
       }
 
@@ -94,17 +94,17 @@ export function useStaffSchedulesRoute() {
         return;
       }
 
-      setSelectedStaffId(staffId);
+      setSelectedUserId(userId);
       setIsLoadingSchedules(true);
       setScheduleNotice(null);
 
       try {
-        const payload = await staffService.getStaffSchedules(staffId);
+        const payload = await staffService.getUserSchedules(userId);
         setSchedules(sortSchedules(unwrapEnvelope(payload)));
       } catch (error) {
         const message = getApiErrorMessage(
           error,
-          'No pude cargar los horarios del personal seleccionado.',
+          'No se pudo cargar los horarios del miembro seleccionado.',
         );
 
         if (message === 'Unauthorized.') {
@@ -119,16 +119,16 @@ export function useStaffSchedulesRoute() {
         setIsLoadingSchedules(false);
       }
     },
-    [logout, selectedStaffId, token],
+    [logout, selectedUserId, token],
   );
 
   const handleScheduleCreate = useCallback(
     async (
-      input: StaffScheduleCreateInput,
-    ): Promise<StaffSchedule | null> => {
-      if (!selectedStaffId) {
+      input: UserScheduleCreateInput,
+    ): Promise<UserSchedule | null> => {
+      if (!selectedUserId) {
         setScheduleNoticeTone('error');
-        setScheduleNotice('Selecciona un miembro del equipo primero.');
+        setScheduleNotice('Seleccione un miembro del equipo primero.');
         return null;
       }
 
@@ -141,8 +141,8 @@ export function useStaffSchedulesRoute() {
       setScheduleNotice(null);
 
       try {
-        const payload = await staffService.createStaffSchedule(
-          selectedStaffId,
+        const payload = await staffService.createUserSchedule(
+          selectedUserId,
           input,
         );
         const createdSchedule = unwrapEnvelope(payload);
@@ -155,7 +155,7 @@ export function useStaffSchedulesRoute() {
       } catch (error) {
         const message = getApiErrorMessage(
           error,
-          'No pude guardar el horario.',
+          'No se pudo guardar el horario.',
         );
 
         if (message === 'Unauthorized.') {
@@ -170,14 +170,14 @@ export function useStaffSchedulesRoute() {
         setIsSavingSchedule(false);
       }
     },
-    [logout, selectedStaffId, token],
+    [logout, selectedUserId, token],
   );
 
   const handleScheduleUpdate = useCallback(
     async (
       scheduleId: string,
-      input: StaffScheduleUpdateInput,
-    ): Promise<StaffSchedule | null> => {
+      input: UserScheduleUpdateInput,
+    ): Promise<UserSchedule | null> => {
       if (!token) {
         await logout();
         return null;
@@ -187,7 +187,7 @@ export function useStaffSchedulesRoute() {
       setScheduleNotice(null);
 
       try {
-        const payload = await staffService.updateStaffSchedule(scheduleId, input);
+        const payload = await staffService.updateUserSchedule(scheduleId, input);
         const updatedSchedule = unwrapEnvelope(payload);
 
         setSchedules((current) =>
@@ -204,7 +204,7 @@ export function useStaffSchedulesRoute() {
       } catch (error) {
         const message = getApiErrorMessage(
           error,
-          'No pude actualizar el horario.',
+          'No se pudo actualizar el horario.',
         );
 
         if (message === 'Unauthorized.') {
@@ -224,35 +224,35 @@ export function useStaffSchedulesRoute() {
 
   useEffect(() => {
     if (status !== 'authenticated' || !token) {
-      setStaff([]);
-      setSelectedStaffId(null);
+      setTeam([]);
+      setSelectedUserId(null);
       setSchedules([]);
-      setStaffError(null);
+      setTeamError(null);
       setScreenState('loading');
       return;
     }
 
-    void loadStaffWorkspace();
-  }, [loadStaffWorkspace, status, token]);
+    void loadWorkspace();
+  }, [loadWorkspace, status, token]);
 
   return {
     screenState,
-    staff,
-    selectedStaffId,
+    team,
+    selectedUserId,
     schedules,
-    staffError,
+    teamError,
     isLoadingSchedules,
     isSavingSchedule,
     scheduleNotice,
     scheduleNoticeTone,
-    handleRetry: loadStaffWorkspace,
-    handleSelectStaff,
+    handleRetry: loadWorkspace,
+    handleSelectUser,
     handleScheduleCreate,
     handleScheduleUpdate,
   };
 }
 
-function sortSchedules(items: StaffSchedule[]): StaffSchedule[] {
+function sortSchedules(items: UserSchedule[]): UserSchedule[] {
   return [...items].sort((left, right) => {
     const leftExceptionDate = left.exceptionDate ?? '';
     const rightExceptionDate = right.exceptionDate ?? '';

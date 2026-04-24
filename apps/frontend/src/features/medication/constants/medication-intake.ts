@@ -26,15 +26,15 @@ export function createMedicationScheduleTime(
 export const medicationRouteOptions: ReadonlyArray<SelectFieldOption> = [
   { value: 'oral', label: 'Oral' },
   { value: 'intravenous', label: 'Intravenosa' },
-  { value: 'subcutaneous', label: 'Subcutanea' },
-  { value: 'topical', label: 'Topica' },
+  { value: 'subcutaneous', label: 'Subcutánea' },
+  { value: 'topical', label: 'Tópica' },
 ];
 
 export const medicationFrequencyOptions: ReadonlyArray<SelectFieldOption> = [
   { value: 'daily', label: 'A diario' },
-  { value: 'twice-daily', label: 'Dos veces al dia' },
+  { value: 'twice-daily', label: 'Dos veces al día' },
   { value: 'nightly', label: 'Por la noche' },
-  { value: 'as-needed', label: 'Segun necesidad' },
+  { value: 'as-needed', label: 'Según necesidad' },
 ];
 
 export const medicationStatusOptions: ReadonlyArray<SelectFieldOption> = [

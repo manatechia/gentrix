@@ -3,16 +3,32 @@ import { Prisma } from '@prisma/client';
 
 import type {
   EntityId,
-  StaffSchedule,
-  StaffScheduleCreateInput,
-  StaffScheduleUpdateInput,
+  UserSchedule,
+  UserScheduleCreateInput,
+  UserScheduleUpdateInput,
 } from '@gentrix/shared-types';
 import { createRandomEntityId, toIsoDateString } from '@gentrix/shared-utils';
 
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
 import type { ScheduleRepository } from '../../../domain/repositories/schedule.repository';
 
-type StaffScheduleRecord = Prisma.StaffScheduleGetPayload<Record<string, never>>;
+type ScheduleWithMembership = Prisma.StaffScheduleGetPayload<{
+  include: {
+    membership: {
+      include: {
+        user: true;
+      };
+    };
+  };
+}>;
+
+const scheduleInclude = {
+  membership: {
+    include: {
+      user: true,
+    },
+  },
+} as const;
 
 @Injectable()
 export class PrismaScheduleRepository implements ScheduleRepository {
@@ -21,12 +37,13 @@ export class PrismaScheduleRepository implements ScheduleRepository {
     private readonly prisma: PrismaService,
   ) {}
 
-  async listByStaffId(staffId: EntityId): Promise<StaffSchedule[]> {
+  async listByMembershipId(membershipId: EntityId): Promise<UserSchedule[]> {
     const schedules = await this.prisma.staffSchedule.findMany({
       where: {
-        staffId,
+        membershipId,
         deletedAt: null,
       },
+      include: scheduleInclude,
       orderBy: [
         { exceptionDate: 'asc' },
         { weekday: 'asc' },
@@ -37,27 +54,29 @@ export class PrismaScheduleRepository implements ScheduleRepository {
     return schedules.map(mapScheduleRecord);
   }
 
-  async findById(scheduleId: EntityId): Promise<StaffSchedule | null> {
+  async findById(scheduleId: EntityId): Promise<UserSchedule | null> {
     const schedule = await this.prisma.staffSchedule.findFirst({
       where: {
         id: scheduleId,
         deletedAt: null,
       },
+      include: scheduleInclude,
     });
 
     return schedule ? mapScheduleRecord(schedule) : null;
   }
 
   async create(
-    staffId: EntityId,
-    input: StaffScheduleCreateInput,
+    membershipId: EntityId,
+    _userId: EntityId,
+    input: UserScheduleCreateInput,
     actor: string,
-  ): Promise<StaffSchedule> {
+  ): Promise<UserSchedule> {
     const now = new Date();
     const created = await this.prisma.staffSchedule.create({
       data: {
         id: createRandomEntityId(),
-        staffId,
+        membershipId,
         weekday: input.weekday,
         startTime: input.startTime,
         endTime: input.endTime,
@@ -68,6 +87,7 @@ export class PrismaScheduleRepository implements ScheduleRepository {
         updatedAt: now,
         updatedBy: actor,
       },
+      include: scheduleInclude,
     });
 
     return mapScheduleRecord(created);
@@ -75,9 +95,10 @@ export class PrismaScheduleRepository implements ScheduleRepository {
 
   async update(
     scheduleId: EntityId,
-    input: StaffScheduleUpdateInput,
+    _userId: EntityId,
+    input: UserScheduleUpdateInput,
     actor: string,
-  ): Promise<StaffSchedule> {
+  ): Promise<UserSchedule> {
     const updated = await this.prisma.staffSchedule.update({
       where: {
         id: scheduleId,
@@ -91,16 +112,17 @@ export class PrismaScheduleRepository implements ScheduleRepository {
         updatedAt: new Date(),
         updatedBy: actor,
       },
+      include: scheduleInclude,
     });
 
     return mapScheduleRecord(updated);
   }
 }
 
-function mapScheduleRecord(record: StaffScheduleRecord): StaffSchedule {
+function mapScheduleRecord(record: ScheduleWithMembership): UserSchedule {
   return {
-    id: record.id as StaffSchedule['id'],
-    staffId: record.staffId as StaffSchedule['staffId'],
+    id: record.id as UserSchedule['id'],
+    userId: record.membership.user.id as UserSchedule['userId'],
     weekday: record.weekday,
     startTime: record.startTime,
     endTime: record.endTime,

@@ -116,7 +116,7 @@ export function HandoffWorkspace({
               Pase minimo de turno
             </h1>
             <p className="max-w-[64ch] leading-[1.65] text-brand-text-secondary">
-              Resume que medicacion sigue pendiente, omitida o rechazada antes
+              Resume que medicación sigue pendiente, omitida o rechazada antes
               del proximo relevo.
             </p>
           </div>
@@ -140,8 +140,8 @@ export function HandoffWorkspace({
 
       {screenState === 'error' && (
         <StatusNotice
-          title="No pude cargar el pase de turno."
-          message={handoffError ?? 'Ocurrio un error inesperado.'}
+          title="No se pudo cargar el pase de turno."
+          message={handoffError ?? 'Ocurrió un error inesperado.'}
           actions={[
             {
               label: 'Reintentar',
@@ -206,7 +206,7 @@ export function HandoffWorkspace({
           {handoff.residents.length === 0 ? (
             <section className={surfaceCardClassName}>
               <div className="rounded-[22px] border border-dashed border-[rgba(0,102,132,0.2)] bg-brand-neutral/50 px-5 py-5 text-brand-text-secondary">
-                No hay residentes relevantes para este pase con la informacion
+                No hay residentes relevantes para este pase con la información
                 disponible en el turno actual.
               </div>
             </section>
@@ -237,7 +237,7 @@ export function HandoffWorkspace({
                           {resident.fullName}
                         </h2>
                         <p className="mt-1 leading-[1.55] text-brand-text-secondary">
-                          Habitacion {resident.room}
+                          Habitación {resident.room}
                         </p>
                       </div>
                     </div>
@@ -253,7 +253,7 @@ export function HandoffWorkspace({
                   <section className="mt-5 grid gap-3 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-brand-neutral/50 p-4">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-[0.76rem] font-semibold uppercase tracking-[0.16em] text-brand-primary">
-                        Medicacion del turno
+                        Medicación del turno
                       </span>
                       <span className="text-[0.9rem] text-brand-text-secondary">
                         {resident.medicationIssues.length === 0
@@ -264,7 +264,7 @@ export function HandoffWorkspace({
 
                     {resident.medicationIssues.length === 0 ? (
                       <div className="rounded-[20px] border border-dashed border-[rgba(0,102,132,0.18)] bg-white/65 px-4 py-4 text-brand-text-secondary">
-                        No hay medicacion pendiente, omitida o rechazada para
+                        No hay medicación pendiente, omitida o rechazada para
                         este residente en el turno actual.
                       </div>
                     ) : (
@@ -311,7 +311,7 @@ export function HandoffWorkspace({
                                   </>
                                 ) : (
                                   <span className="font-medium text-brand-text">
-                                    Sin registro de ejecucion
+                                    Sin registro de ejecución
                                   </span>
                                 )}
                               </div>

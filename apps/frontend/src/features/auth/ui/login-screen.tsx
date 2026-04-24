@@ -48,20 +48,20 @@ export function LoginScreen({
                 Gentrix MVP
               </strong>
               <span className="mt-1 block text-[0.72rem] uppercase tracking-[0.22em] text-white/72">
-                OPERACION CENTRALIZADA
+                OPERACIÓN CENTRALIZADA
               </span>
             </div>
           </div>
 
           <div className="relative z-10 mt-auto max-w-[460px]">
             <span className="inline-flex items-center rounded-full border border-white/16 bg-white/14 px-3.5 py-2 text-[0.74rem] uppercase tracking-[0.18em] text-white/88">
-              Nuestra mision
+              Nuestra misión
             </span>
             <h1 className="mt-6 text-[clamp(3rem,4.8vw,4.9rem)] leading-[0.93] font-bold tracking-[-0.05em]">
               Dignidad en cada detalle.
             </h1>
             <p className="mt-3 max-w-[34ch] text-[1.03rem] leading-[1.65] text-white/82">
-              Operacion clinica, seguimiento residencial y decisiones del turno
+              Operación clínica, seguimiento residencial y decisiones del turno
               en un solo lugar.
             </p>
             <div className="mt-7 h-1 w-[82px] rounded-full bg-white/62" />
@@ -100,13 +100,13 @@ export function LoginScreen({
                 </h2>
               </div>
               <p className="m-0 leading-[1.65] text-brand-text-secondary">
-                Ingresa tus credenciales para entrar a la consola operativa.
+                Ingrese sus credenciales para entrar a la consola operativa.
               </p>
             </div>
 
             {isCheckingSession && (
               <div className="rounded-[18px] border border-[rgba(0,102,132,0.14)] bg-[rgba(0,102,132,0.08)] px-4 py-3.5 text-[0.95rem] leading-[1.55] text-brand-secondary">
-                Verificando sesion previa antes de mostrar el formulario.
+                Verificando sesión previa antes de mostrar el formulario.
               </div>
             )}
 
@@ -196,7 +196,7 @@ export function LoginScreen({
 
                     <label className="grid gap-2.5">
                       <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                        Correo electronico
+                        Correo electrónico
                       </span>
                       <input
                         data-testid="login-email-input"
@@ -218,13 +218,13 @@ export function LoginScreen({
 
                     <label className="grid gap-2.5">
                       <span className="text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-text-muted">
-                        Contrasena
+                        Contraseña
                       </span>
                       <PasswordInput
                         data-testid="login-password-input"
                         autoComplete="current-password"
                         name="password"
-                        placeholder="Ingresa tu contrasena"
+                        placeholder="Ingrese su contraseña"
                         value={values.password}
                         onBlur={handleBlur}
                         onChange={handleChange}
@@ -248,7 +248,7 @@ export function LoginScreen({
                         className="border-0 bg-transparent p-0 font-semibold text-brand-primary"
                         type="button"
                       >
-                        Olvide mi contrasena
+                        Olvidé mi contraseña
                       </button>
                     </div>
 
@@ -267,9 +267,9 @@ export function LoginScreen({
           </div>
 
           <div className="flex flex-wrap justify-between gap-3 text-[0.78rem] uppercase tracking-[0.06em] text-brand-text-muted max-sm:flex-col">
-            <span>Terminos y privacidad</span>
-            <span>Estado del sistema: optimo</span>
-            <span>Conexion segura activa</span>
+            <span>Términos y privacidad</span>
+            <span>Estado del sistema: óptimo</span>
+            <span>Conexión segura activa</span>
           </div>
         </article>
       </section>

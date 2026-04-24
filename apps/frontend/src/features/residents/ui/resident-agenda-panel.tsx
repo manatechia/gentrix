@@ -95,29 +95,29 @@ function createInitialFormState(): FormState {
 
 function validateCreateForm(state: FormState): string | null {
   if (state.title.trim().length === 0) {
-    return 'El titulo del evento es obligatorio.';
+    return 'El título del evento es obligatorio.';
   }
   if (!/^\d{2}:\d{2}$/.test(state.time)) {
-    return 'Ingresa una hora HH:mm.';
+    return 'Ingrese una hora HH:mm.';
   }
   if (state.isRecurring) {
     const startsYmd = agendaInputDateToYmd(state.date);
     if (!startsYmd) {
-      return 'Ingresa la fecha de inicio DD/MM/YYYY.';
+      return 'Ingrese la fecha de inicio DD/MM/YYYY.';
     }
     if (state.recurrenceType === 'weekly' && state.daysOfWeek.length === 0) {
-      return 'Seleccioná al menos un día de la semana.';
+      return 'Seleccione al menos un día de la semana.';
     }
     if (state.endsOn) {
       const endsYmd = agendaInputDateToYmd(state.endsOn);
-      if (!endsYmd) return 'Fecha de fin invalida.';
+      if (!endsYmd) return 'Fecha de fin inválida.';
       if (endsYmd < startsYmd) return 'La fecha de fin debe ser posterior al inicio.';
     }
     return null;
   }
   // one-off
   const iso = combineAgendaDateTime(state.date, state.time);
-  if (!iso) return 'Ingresa fecha DD/MM/YYYY y hora HH:mm validas.';
+  if (!iso) return 'Ingrese fecha DD/MM/YYYY y hora HH:mm válidas.';
   if (!isAgendaDateTimeInFuture(state.date, state.time)) {
     return 'La fecha y hora del evento debe estar en el futuro.';
   }
@@ -215,8 +215,8 @@ export function ResidentAgendaPanel({
             Agenda de hoy
           </span>
           <p className="max-w-[68ch] leading-[1.65] text-brand-text-secondary">
-            Medicacion, turnos y actividades del dia. Los eventos recurrentes
-            (medicacion diaria, por ejemplo) se muestran acá automaticamente.
+            Medicación, turnos y actividades del día. Los eventos recurrentes
+            (medicación diaria, por ejemplo) se muestran acá automáticamente.
           </p>
         </div>
         <span className="rounded-full bg-brand-primary/10 px-3 py-2 text-[0.82rem] font-semibold text-brand-primary">
@@ -717,12 +717,12 @@ function EditEventForm({ occurrence, isBusy, onCancel, onSave }: EditEventFormPr
 
   async function submit(): Promise<void> {
     if (title.trim().length === 0) {
-      setLocalError('El titulo es obligatorio.');
+      setLocalError('El título es obligatorio.');
       return;
     }
     const iso = combineAgendaDateTime(date, time);
     if (!iso) {
-      setLocalError('Fecha/hora invalida.');
+      setLocalError('Fecha/hora inválida.');
       return;
     }
     if (!isAgendaDateTimeInFuture(date, time)) {
@@ -797,14 +797,14 @@ function EditOccurrenceForm({ occurrence, isBusy, onCancel, onSave }: EditOccurr
 
   async function submit(): Promise<void> {
     if (title.trim().length === 0) {
-      setLocalError('El titulo es obligatorio.');
+      setLocalError('El título es obligatorio.');
       return;
     }
     const occurrenceDate = occurrence.occurrenceDate;
     if (!occurrenceDate) return;
     const iso = combineAgendaDateTime(ymdToAgendaInputDate(occurrenceDate), time);
     if (!iso) {
-      setLocalError('Hora invalida.');
+      setLocalError('Hora inválida.');
       return;
     }
     setLocalError(null);
@@ -884,27 +884,27 @@ function EditSeriesForm({ occurrence, isBusy, onCancel, onSave }: EditSeriesForm
 
   async function submit(): Promise<void> {
     if (title.trim().length === 0) {
-      setLocalError('El titulo es obligatorio.');
+      setLocalError('El título es obligatorio.');
       return;
     }
     if (!/^\d{2}:\d{2}$/.test(time)) {
-      setLocalError('Ingresa una hora HH:mm.');
+      setLocalError('Ingrese una hora HH:mm.');
       return;
     }
     const startsYmd = agendaInputDateToYmd(startsOn);
     if (!startsYmd) {
-      setLocalError('Fecha de inicio invalida.');
+      setLocalError('Fecha de inicio inválida.');
       return;
     }
     if (recurrenceType === 'weekly' && daysOfWeek.length === 0) {
-      setLocalError('Seleccioná al menos un día de la semana.');
+      setLocalError('Seleccione al menos un día de la semana.');
       return;
     }
     let endsYmd: string | undefined;
     if (endsOn.length > 0) {
       const ey = agendaInputDateToYmd(endsOn);
       if (!ey) {
-        setLocalError('Fecha de fin invalida.');
+        setLocalError('Fecha de fin inválida.');
         return;
       }
       if (ey < startsYmd) {

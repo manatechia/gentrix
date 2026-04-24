@@ -20,7 +20,7 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
     reader.onload = () => {
       if (typeof reader.result !== 'string') {
-        reject(new Error('No pude leer el archivo seleccionado.'));
+        reject(new Error('No se pudo leer el archivo seleccionado.'));
         return;
       }
 
@@ -28,7 +28,7 @@ function readFileAsDataUrl(file: File): Promise<string> {
     };
 
     reader.onerror = () => {
-      reject(new Error('No pude leer el archivo seleccionado.'));
+      reject(new Error('No se pudo leer el archivo seleccionado.'));
     };
 
     reader.readAsDataURL(file);

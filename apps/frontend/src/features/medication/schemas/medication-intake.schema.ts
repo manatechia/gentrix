@@ -9,7 +9,7 @@ const scheduleTimeSchema = Yup.object({
     .trim()
     .test(
       'valid-time',
-      'Ingresa cada horario con formato HH:MM.',
+      'Ingrese cada horario con formato HH:MM.',
       (value) => !value || timePattern.test(value),
     ),
 });
@@ -17,19 +17,19 @@ const scheduleTimeSchema = Yup.object({
 export const medicationIntakeSchema = Yup.object({
   residentId: Yup.string()
     .trim()
-    .required('Selecciona el residente para esta orden.'),
+    .required('Seleccione el residente para esta orden.'),
   medicationCatalogId: Yup.string()
     .trim()
-    .required('Selecciona un medicamento del catalogo.'),
+    .required('Seleccione un medicamento del catálogo.'),
   dose: Yup.string().trim().required('La dosis es obligatoria.'),
-  route: Yup.string().required('Selecciona la via de administracion.'),
-  frequency: Yup.string().required('Selecciona la frecuencia.'),
+  route: Yup.string().required('Seleccione la vía de administración.'),
+  frequency: Yup.string().required('Seleccione la frecuencia.'),
   scheduleTimes: Yup.array()
     .of(scheduleTimeSchema)
-    .max(4, 'Puedes cargar hasta 4 horarios por medicamento.')
+    .max(4, 'Puede cargar hasta 4 horarios por medicamento.')
     .test(
       'schedule-times-required',
-      'Debes cargar al menos un horario para esta frecuencia.',
+      'Debe cargar al menos un horario para esta frecuencia.',
       (values, context) => {
         const frequency = context.parent.frequency;
         const filledCount =
@@ -44,7 +44,7 @@ export const medicationIntakeSchema = Yup.object({
     )
     .test(
       'schedule-times-complete',
-      'Completa o quita los horarios vacios.',
+      'Complete o quite los horarios vacíos.',
       (values) => {
         if (!values?.length) {
           return true;
@@ -68,15 +68,15 @@ export const medicationIntakeSchema = Yup.object({
     .required(),
   prescribedBy: Yup.string()
     .trim()
-    .required('Debes indicar quien prescribio la orden.'),
+    .required('Debe indicar quién prescribió la orden.'),
   startDate: Yup.string()
     .required('La fecha de inicio es obligatoria.')
-    .matches(datePattern, 'Selecciona una fecha valida.'),
+    .matches(datePattern, 'Seleccione una fecha válida.'),
   endDate: Yup.string()
     .trim()
     .test(
       'valid-end-date',
-      'Selecciona una fecha valida.',
+      'Seleccione una fecha válida.',
       (value) => !value || datePattern.test(value),
     )
     .test(
@@ -92,5 +92,5 @@ export const medicationIntakeSchema = Yup.object({
         return value >= startDate;
       },
     ),
-  status: Yup.string().required('Selecciona el estado de la orden.'),
+  status: Yup.string().required('Seleccione el estado de la orden.'),
 });

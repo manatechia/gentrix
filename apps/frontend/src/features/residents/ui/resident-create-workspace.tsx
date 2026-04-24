@@ -45,8 +45,8 @@ export function ResidentCreateWorkspace({
 
       {screenState === 'error' && authError && (
         <StatusNotice
-          title="No pude actualizar el padron."
-          message={`${authError} Igual podes completar el alta y guardar el paciente.`}
+          title="No se pudo actualizar el padron."
+          message={`${authError} Igual puede completar el alta y guardar el paciente.`}
         />
       )}
 

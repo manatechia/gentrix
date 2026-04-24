@@ -19,9 +19,9 @@ import { ResidentAgendaModule } from './modules/resident-agenda/resident-agenda.
 import { ResidentObservationNotesModule } from './modules/resident-observation-notes/resident-observation-notes.module';
 import { ResidentsModule } from './modules/residents/residents.module';
 import { SchedulesModule } from './modules/schedules/schedules.module';
-import { StaffModule } from './modules/staff/staff.module';
 import { SystemModule } from './modules/system/system.module';
 import { UsersModule } from './modules/users/users.module';
+import { WorkedHoursModule } from './modules/worked-hours/worked-hours.module';
 import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
@@ -42,11 +42,11 @@ import { LoggerModule } from './common/logger/logger.module';
     ResidentsModule,
     ResidentAgendaModule,
     ResidentObservationNotesModule,
-    StaffModule,
     SchedulesModule,
     MedicationModule,
     SystemModule,
     UsersModule,
+    WorkedHoursModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: ApiExceptionFilter },

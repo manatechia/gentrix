@@ -118,13 +118,16 @@ test.describe('admin user management', () => {
     await expect(usersWorkspace.getByText('Admin')).toHaveCount(0);
     await expect(usersWorkspace.getByText('Sofia Quiroga')).toHaveCount(0);
 
+    await page.getByTestId('users-admin-add-button').click();
+    await expect(page.getByTestId('users-create-drawer')).toBeVisible();
+
     await page.getByTestId('users-form-full-name-input').fill(fullName);
     await page.getByTestId('users-form-email-input').fill(email);
     await selectFieldOption(page, 'users-form-role-select', 'health-director');
     await page.getByTestId('users-form-password-input').fill(password);
     await page.getByTestId('users-form-submit-button').click();
 
-    await expect(page.getByText('Usuario creado correctamente.')).toBeVisible();
+    await expect(page.getByText('Personal agregado correctamente.')).toBeVisible();
     await expect(page.getByText(fullName)).toBeVisible();
 
     const adminSession = await loginWithDemoCredentials(request);

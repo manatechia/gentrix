@@ -31,7 +31,7 @@ export const sidebarSections: ReadonlyArray<SidebarSection> = [
   {
     testId: 'workspace-sidebar-link-users',
     label: 'Personal',
-    meta: 'cobertura del turno',
+    meta: 'gestión de personal',
     badge: 'PE',
     path: '/personal',
     end: false,
@@ -39,7 +39,7 @@ export const sidebarSections: ReadonlyArray<SidebarSection> = [
   },
   {
     testId: 'workspace-sidebar-link-handoff',
-    label: 'Pase',
+    label: 'Pase de turno',
     meta: 'turno y pendientes',
     badge: 'HO',
     path: '/handoff',
@@ -48,8 +48,8 @@ export const sidebarSections: ReadonlyArray<SidebarSection> = [
   },
   {
     testId: 'workspace-sidebar-link-medication',
-    label: 'Medicacion',
-    meta: 'agenda clinica',
+    label: 'Medicación',
+    meta: 'agenda clínica',
     badge: 'MD',
     path: '/medicacion',
     end: false,

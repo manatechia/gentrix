@@ -28,11 +28,25 @@ const ids = {
     sofiaQuiroga: '8f4e8eb5-f02f-49f3-8c1e-e8fba2264ec6',
     anaGomez: 'ba9c797a-3129-4d80-a2c6-16d846a84e56',
     mariaLopez: '183a5579-7a6f-4cb0-aa59-a1f7b833c424',
+    mauroPaz: 'd8c09d82-f72a-4af6-98cf-a3440ed61cd9',
+    luciaMendez: '54b355fb-6515-4800-9443-0b0577f52350',
+    pabloRuiz: '7a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d',
   },
   memberships: {
     sofiaQuirogaDemo: '91000000-0000-4000-8000-000000000003',
     anaGomezDemo: '91000000-0000-4000-8000-000000000004',
     mariaLopezDemo: '91000000-0000-4000-8000-000000000005',
+    mauroPazDemo: '91000000-0000-4000-8000-000000000006',
+    luciaMendezDemo: '91000000-0000-4000-8000-000000000007',
+    pabloRuizDemo: '91000000-0000-4000-8000-000000000008',
+  },
+  hourlyRates: {
+    pabloRuizCurrent: '91000000-0000-4000-8000-000000000080',
+  },
+  workedHourEntries: {
+    pabloMonday: '91000000-0000-4000-8000-000000000090',
+    pabloWednesday: '91000000-0000-4000-8000-000000000091',
+    pabloFriday: '91000000-0000-4000-8000-000000000092',
   },
   roles: {
     admin: '91000000-0000-4000-8000-000000000020',
@@ -45,11 +59,6 @@ const ids = {
     martaDiaz: 'f3bf3160-6a6e-492f-a632-e7485915a54d',
     elenaSuarez: '6d0c9153-5c16-4452-bdcb-c00b0d1cbde3',
     raulBenitez: '2259e44c-be39-4078-b4d0-70d07b06dc31',
-  },
-  staff: {
-    anaGomez: 'd8c09d82-f72a-4af6-98cf-a3440ed61cd9',
-    mauroPaz: 'dcd490ca-605b-4adb-8a4d-7d83972db84a',
-    luciaMendez: '54b355fb-6515-4800-9443-0b0577f52350',
   },
   wards: {
     centralUnidadA: '91000000-0000-4000-8000-000000000030',
@@ -91,23 +100,19 @@ const ids = {
     mauroWednesdayAfternoon: 'f7f6b3c7-a18f-4f75-8ff7-c24635fce4d1',
     luciaFridayCoverage: '095e2046-1ae0-4e67-b469-bef643970bd9',
   },
-  staffAssignments: {
-    anaCentral: '91000000-0000-4000-8000-000000000011',
-    mauroCentral: '91000000-0000-4000-8000-000000000012',
-    luciaCentral: '91000000-0000-4000-8000-000000000013',
-  },
 };
 
 export async function seedDatabase(prisma) {
   await prisma.authSession.deleteMany();
+  await prisma.workedHourEntry.deleteMany();
+  await prisma.hourSettlement.deleteMany();
+  await prisma.membershipHourlyRate.deleteMany();
   await prisma.staffSchedule.deleteMany();
-  await prisma.staffFacilityAssignment.deleteMany();
   await prisma.residentObservationNote.deleteMany();
   await prisma.clinicalHistoryEvent.deleteMany();
   await prisma.medicationExecution.deleteMany();
   await prisma.medicationOrder.deleteMany();
   await prisma.medicationCatalogItem.deleteMany();
-  await prisma.staffMember.deleteMany();
   await prisma.residentFamilyContact.deleteMany();
   await prisma.resident.deleteMany();
   await prisma.membershipFacilityScope.deleteMany();
@@ -355,6 +360,48 @@ export async function seedDatabase(prisma) {
     },
   });
 
+  await prisma.userAccount.create({
+    data: {
+      id: ids.users.mauroPaz,
+      fullName: 'Mauro Paz',
+      email: 'mauro.paz@gentrix.local',
+      password: seedPasswordHash,
+      status: 'active',
+      createdAt: new Date('2026-01-10T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
+  await prisma.userAccount.create({
+    data: {
+      id: ids.users.luciaMendez,
+      fullName: 'Lucia Mendez',
+      email: 'lucia.mendez@gentrix.local',
+      password: seedPasswordHash,
+      status: 'active',
+      createdAt: new Date('2026-01-10T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
+  await prisma.userAccount.create({
+    data: {
+      id: ids.users.pabloRuiz,
+      fullName: 'Pablo Ruiz',
+      email: 'pablo.ruiz@gentrix.local',
+      password: seedPasswordHash,
+      status: 'active',
+      createdAt: new Date('2026-03-01T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
   await prisma.organizationMembership.create({
     data: {
       id: ids.memberships.sofiaQuirogaDemo,
@@ -387,6 +434,9 @@ export async function seedDatabase(prisma) {
       organizationId: ids.organizations.gentrixDemo,
       userId: ids.users.anaGomez,
       roleId: ids.roles.nurse,
+      jobTitleId: ids.jobTitles.nurse,
+      wardId: ids.wards.centralUnidadA,
+      shift: 'morning',
       status: 'active',
       isDefault: true,
       joinedAt: new Date('2026-02-01T08:00:00.000Z'),
@@ -413,6 +463,8 @@ export async function seedDatabase(prisma) {
       organizationId: ids.organizations.gentrixDemo,
       userId: ids.users.mariaLopez,
       roleId: ids.roles.healthDirector,
+      jobTitleId: ids.jobTitles.coordinator,
+      shift: 'morning',
       status: 'active',
       isDefault: true,
       joinedAt: new Date('2026-02-10T08:00:00.000Z'),
@@ -431,6 +483,137 @@ export async function seedDatabase(prisma) {
         },
       },
     },
+  });
+
+  await prisma.organizationMembership.create({
+    data: {
+      id: ids.memberships.mauroPazDemo,
+      organizationId: ids.organizations.gentrixDemo,
+      userId: ids.users.mauroPaz,
+      roleId: ids.roles.assistant,
+      jobTitleId: ids.jobTitles.caregiver,
+      wardId: ids.wards.centralUnidadB,
+      shift: 'afternoon',
+      status: 'active',
+      isDefault: true,
+      joinedAt: new Date('2025-02-01T08:00:00.000Z'),
+      createdAt: new Date('2026-01-10T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+      facilityScopes: {
+        create: {
+          facilityId: ids.facilities.residenciaCentral,
+          scopeType: 'assigned',
+          createdAt: new Date('2026-01-10T09:00:00.000Z'),
+          createdBy: 'seed-script',
+          updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+          updatedBy: 'seed-script',
+        },
+      },
+    },
+  });
+
+  await prisma.organizationMembership.create({
+    data: {
+      id: ids.memberships.luciaMendezDemo,
+      organizationId: ids.organizations.gentrixDemo,
+      userId: ids.users.luciaMendez,
+      roleId: ids.roles.healthDirector,
+      jobTitleId: ids.jobTitles.doctor,
+      wardId: ids.wards.centralConsultorio,
+      shift: 'morning',
+      status: 'active',
+      isDefault: true,
+      joinedAt: new Date('2025-02-01T08:00:00.000Z'),
+      createdAt: new Date('2026-01-10T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+      facilityScopes: {
+        create: {
+          facilityId: ids.facilities.residenciaCentral,
+          scopeType: 'assigned',
+          createdAt: new Date('2026-01-10T09:00:00.000Z'),
+          createdBy: 'seed-script',
+          updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+          updatedBy: 'seed-script',
+        },
+      },
+    },
+  });
+
+  // Pablo Ruiz: médico externo que cobra por hora. Se usa como caso base
+  // de la feature de liquidación de horas (fase 1).
+  await prisma.organizationMembership.create({
+    data: {
+      id: ids.memberships.pabloRuizDemo,
+      organizationId: ids.organizations.gentrixDemo,
+      userId: ids.users.pabloRuiz,
+      roleId: ids.roles.external,
+      jobTitleId: ids.jobTitles.doctor,
+      shift: null,
+      status: 'active',
+      isDefault: true,
+      joinedAt: new Date('2026-03-01T09:00:00.000Z'),
+      createdAt: new Date('2026-03-01T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-20T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
+  await prisma.membershipHourlyRate.create({
+    data: {
+      id: ids.hourlyRates.pabloRuizCurrent,
+      membershipId: ids.memberships.pabloRuizDemo,
+      rate: '15000.00',
+      currency: 'ARS',
+      effectiveFrom: new Date('2026-03-01T00:00:00.000Z'),
+      effectiveTo: null,
+      createdAt: new Date('2026-03-01T09:00:00.000Z'),
+      createdBy: 'seed-script',
+      updatedAt: new Date('2026-03-01T09:00:00.000Z'),
+      updatedBy: 'seed-script',
+    },
+  });
+
+  await prisma.workedHourEntry.createMany({
+    data: [
+      {
+        id: ids.workedHourEntries.pabloMonday,
+        membershipId: ids.memberships.pabloRuizDemo,
+        workDate: new Date('2026-04-06T00:00:00.000Z'),
+        hours: '4.00',
+        notes: 'Visita semanal — controles de residentes en observación.',
+        createdAt: new Date('2026-04-06T18:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-04-06T18:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.workedHourEntries.pabloWednesday,
+        membershipId: ids.memberships.pabloRuizDemo,
+        workDate: new Date('2026-04-08T00:00:00.000Z'),
+        hours: '2.50',
+        notes: 'Consulta puntual Raúl Benítez (indicación de enoxaparina).',
+        createdAt: new Date('2026-04-08T19:00:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-04-08T19:00:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+      {
+        id: ids.workedHourEntries.pabloFriday,
+        membershipId: ids.memberships.pabloRuizDemo,
+        workDate: new Date('2026-04-10T00:00:00.000Z'),
+        hours: '3.00',
+        notes: 'Revisión semanal — pase de sala.',
+        createdAt: new Date('2026-04-10T18:30:00.000Z'),
+        createdBy: 'seed-script',
+        updatedAt: new Date('2026-04-10T18:30:00.000Z'),
+        updatedBy: 'seed-script',
+      },
+    ],
   });
 
   await prisma.resident.createMany({
@@ -745,103 +928,6 @@ export async function seedDatabase(prisma) {
     ],
   });
 
-  await prisma.staffMember.createMany({
-    data: [
-      {
-        id: ids.staff.anaGomez,
-        organizationId: ids.organizations.gentrixDemo,
-        firstName: 'Ana',
-        lastName: 'Gomez',
-        jobTitleId: ids.jobTitles.nurse,
-        wardId: ids.wards.centralUnidadA,
-        shift: 'morning',
-        status: 'active',
-        startDate: new Date('2025-02-01T08:00:00.000Z'),
-        createdAt: new Date('2026-01-10T09:00:00.000Z'),
-        createdBy: 'seed-script',
-        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
-        updatedBy: 'seed-script',
-      },
-      {
-        id: ids.staff.mauroPaz,
-        organizationId: ids.organizations.gentrixDemo,
-        firstName: 'Mauro',
-        lastName: 'Paz',
-        jobTitleId: ids.jobTitles.caregiver,
-        wardId: ids.wards.centralUnidadB,
-        shift: 'afternoon',
-        status: 'active',
-        startDate: new Date('2025-02-01T08:00:00.000Z'),
-        createdAt: new Date('2026-01-10T09:00:00.000Z'),
-        createdBy: 'seed-script',
-        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
-        updatedBy: 'seed-script',
-      },
-      {
-        id: ids.staff.luciaMendez,
-        organizationId: ids.organizations.gentrixDemo,
-        firstName: 'Lucia',
-        lastName: 'Mendez',
-        jobTitleId: ids.jobTitles.doctor,
-        wardId: ids.wards.centralConsultorio,
-        shift: 'morning',
-        status: 'active',
-        startDate: new Date('2025-02-01T08:00:00.000Z'),
-        createdAt: new Date('2026-01-10T09:00:00.000Z'),
-        createdBy: 'seed-script',
-        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
-        updatedBy: 'seed-script',
-      },
-    ],
-  });
-
-  await prisma.staffFacilityAssignment.createMany({
-    data: [
-      {
-        id: ids.staffAssignments.anaCentral,
-        staffId: ids.staff.anaGomez,
-        facilityId: ids.facilities.residenciaCentral,
-        jobTitleId: ids.jobTitles.nurse,
-        wardId: ids.wards.centralUnidadA,
-        shift: 'morning',
-        startDate: new Date('2025-02-01T08:00:00.000Z'),
-        status: 'active',
-        createdAt: new Date('2026-01-10T09:00:00.000Z'),
-        createdBy: 'seed-script',
-        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
-        updatedBy: 'seed-script',
-      },
-      {
-        id: ids.staffAssignments.mauroCentral,
-        staffId: ids.staff.mauroPaz,
-        facilityId: ids.facilities.residenciaCentral,
-        jobTitleId: ids.jobTitles.caregiver,
-        wardId: ids.wards.centralUnidadB,
-        shift: 'afternoon',
-        startDate: new Date('2025-02-01T08:00:00.000Z'),
-        status: 'active',
-        createdAt: new Date('2026-01-10T09:00:00.000Z'),
-        createdBy: 'seed-script',
-        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
-        updatedBy: 'seed-script',
-      },
-      {
-        id: ids.staffAssignments.luciaCentral,
-        staffId: ids.staff.luciaMendez,
-        facilityId: ids.facilities.residenciaCentral,
-        jobTitleId: ids.jobTitles.doctor,
-        wardId: ids.wards.centralConsultorio,
-        shift: 'morning',
-        startDate: new Date('2025-02-01T08:00:00.000Z'),
-        status: 'active',
-        createdAt: new Date('2026-01-10T09:00:00.000Z'),
-        createdBy: 'seed-script',
-        updatedAt: new Date('2026-03-20T09:00:00.000Z'),
-        updatedBy: 'seed-script',
-      },
-    ],
-  });
-
   await prisma.clinicalHistoryEvent.createMany({
     data: [
       {
@@ -1079,7 +1165,7 @@ export async function seedDatabase(prisma) {
     data: [
       {
         id: ids.schedules.anaMondayMorning,
-        staffId: ids.staff.anaGomez,
+        membershipId: ids.memberships.anaGomezDemo,
         weekday: 1,
         startTime: '07:00',
         endTime: '15:00',
@@ -1090,7 +1176,7 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.schedules.mauroWednesdayAfternoon,
-        staffId: ids.staff.mauroPaz,
+        membershipId: ids.memberships.mauroPazDemo,
         weekday: 3,
         startTime: '14:00',
         endTime: '22:00',
@@ -1101,7 +1187,7 @@ export async function seedDatabase(prisma) {
       },
       {
         id: ids.schedules.luciaFridayCoverage,
-        staffId: ids.staff.luciaMendez,
+        membershipId: ids.memberships.luciaMendezDemo,
         weekday: 5,
         startTime: '08:00',
         endTime: '12:00',

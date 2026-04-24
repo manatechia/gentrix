@@ -160,7 +160,7 @@ export function useMedicationsRoute() {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude cargar el modulo de medicacion.',
+        'No se pudo cargar el módulo de medicación.',
       );
 
       if (message === 'Unauthorized.') {
@@ -226,7 +226,7 @@ export function useMedicationsRoute() {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude guardar la orden de medicacion.',
+        'No se pudo guardar la orden de medicación.',
       );
 
       if (message === 'Unauthorized.') {
@@ -283,7 +283,7 @@ export function useMedicationsRoute() {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude registrar la ejecucion de medicacion.',
+        'No se pudo registrar la ejecución de medicación.',
       );
 
       if (message === 'Unauthorized.') {

@@ -49,7 +49,7 @@ export function useMedicationDetailRoute(medicationId: string | undefined) {
       setMedication(null);
       setMedicationCatalogItems([]);
       setResidents([]);
-      setMedicationError('No encontre la medicacion solicitada.');
+      setMedicationError('No se encontró la medicación solicitada.');
       setScreenState('error');
       return;
     }
@@ -77,7 +77,7 @@ export function useMedicationDetailRoute(medicationId: string | undefined) {
     } catch (error) {
       const message = getApiErrorMessage(
         error,
-        'No pude cargar el detalle del medicamento.',
+        'No se pudo cargar el detalle del medicamento.',
       );
 
       if (message === 'Unauthorized.') {

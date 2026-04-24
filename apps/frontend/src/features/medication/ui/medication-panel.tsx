@@ -15,10 +15,10 @@ export function MedicationPanel({ medications }: MedicationPanelProps) {
     <article className={surfaceCardClassName}>
       <div className="mb-[18px]">
         <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.18em] text-brand-primary">
-          Medicacion
+          Medicación
         </span>
         <h2 className="mt-1 text-[1.35rem] font-bold tracking-[-0.04em] text-brand-text">
-          Agenda de medicacion
+          Agenda de medicación
         </h2>
       </div>
 
