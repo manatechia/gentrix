@@ -130,9 +130,10 @@ export function AppRouter() {
         element={renderRoute(gated(<StaffSchedulesRoute />))}
       />
       <Route
-        path="/horas"
+        path="/personal/horas"
         element={renderRoute(gated(<WorkedHoursRoute />))}
       />
+      <Route path="/horas" element={<Navigate to="/personal/horas" replace />} />
       <Route
         path="/medicacion"
         element={renderRoute(gated(<MedicationsRoute />))}

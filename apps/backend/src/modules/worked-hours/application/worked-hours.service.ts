@@ -23,6 +23,7 @@ import type {
   WorkedHourEntryCreateInput,
   WorkedHourEntryUpdateInput,
 } from '@gentrix/shared-types';
+import { toIsoDateString } from '@gentrix/shared-utils';
 
 import { PrismaService } from '../../../infrastructure/prisma/prisma.service';
 import { UsersService } from '../../users/application/users.service';
@@ -82,9 +83,30 @@ export class WorkedHoursService {
       input.effectiveFrom,
       'effectiveFrom',
     );
+    const effectiveFromIso = toIsoDateString(effectiveFrom);
 
-    // Cierra la tarifa previa vigente en `effectiveFrom - 1 día` para que
-    // no queden dos tarifas activas al mismo tiempo.
+    // Si ya existe una tarifa vigente con la misma fecha de inicio (típico
+    // cuando se corrige una tarifa cargada minutos antes el mismo día), la
+    // actualizamos in-place. El constraint de la DB no acepta effectiveTo =
+    // effectiveFrom, así que no podemos cerrarla; reemplazarla es el
+    // comportamiento esperable para el usuario.
+    const existing = await this.rates.listByMembership(
+      membershipId as EntityId,
+    );
+    const sameDayActive = existing.find(
+      (rate) =>
+        rate.effectiveTo === null && rate.effectiveFrom === effectiveFromIso,
+    );
+    if (sameDayActive) {
+      return this.rates.update(sameDayActive.id, {
+        rate: input.rate,
+        currency: input.currency,
+        actor,
+      });
+    }
+
+    // Cierra la tarifa previa vigente en `effectiveFrom` para que no queden
+    // dos tarifas activas al mismo tiempo.
     await this.rates.closePrevious(
       membershipId as EntityId,
       effectiveFrom,
