@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import type {
+  ResidentCareStatusChangeEvent,
+  ResidentCareStatusClosureReason,
   ResidentObservationNote,
   ResidentObservationNoteCreateInput,
   ResidentObservationNoteCreateResponse,
@@ -16,6 +18,12 @@ import {
 interface ResidentObservationsPanelProps {
   notes: ResidentObservationNote[];
   /**
+   * Eventos de transición de `careStatus` del residente. El panel los
+   * intercala con las notas para que el cierre formal aparezca como un
+   * hito visible en el timeline.
+   */
+  careStatusChanges: ResidentCareStatusChangeEvent[];
+  /**
    * Si true, el checkbox "poner en observación" no se muestra: el residente
    * ya está en ese estado y no tiene sentido ofrecerlo al guardar.
    */
@@ -29,10 +37,11 @@ interface ResidentObservationsPanelProps {
   ) => Promise<ResidentObservationNoteCreateResponse | null>;
   onDelete: (noteId: string) => Promise<boolean>;
   /**
-   * Opcional. Si se provee y el residente está en observación, el panel muestra
-   * un botón para sacarlo del estado sin borrar las notas registradas.
+   * Si el residente está en observación, el panel muestra un botón para
+   * iniciar el cierre formal. El parent es responsable de abrir el modal
+   * que pide motivo y nota — el panel solo dispara la intención.
    */
-  onClearObservation?: () => Promise<boolean> | void;
+  onRequestObservationClosure?: () => void;
   isClearingObservation?: boolean;
 }
 
@@ -47,8 +56,24 @@ function formatDateTime(value: string): string {
   return dateTimeFormatter.format(new Date(value));
 }
 
+const closureReasonLabels: Record<ResidentCareStatusClosureReason, string> = {
+  estable: 'Quedó estable',
+  escalado_medico: 'Escalado a médico',
+  derivado: 'Derivado',
+  otro: 'Otro',
+};
+
+type TimelineItem =
+  | { kind: 'note'; createdAt: string; note: ResidentObservationNote }
+  | {
+      kind: 'closure';
+      createdAt: string;
+      event: ResidentCareStatusChangeEvent;
+    };
+
 export function ResidentObservationsPanel({
   notes,
+  careStatusChanges,
   isUnderObservation,
   isSaving,
   activeMutationId,
@@ -56,7 +81,7 @@ export function ResidentObservationsPanel({
   noticeTone,
   onCreate,
   onDelete,
-  onClearObservation,
+  onRequestObservationClosure,
   isClearingObservation = false,
 }: ResidentObservationsPanelProps) {
   const [note, setNote] = useState('');
@@ -68,8 +93,42 @@ export function ResidentObservationsPanel({
   const trimmedNote = note.trim();
   const canSubmit = trimmedNote.length > 0 && !isSaving;
 
-  const visibleNotes = expanded ? notes : notes.slice(0, INITIAL_PREVIEW_COUNT);
-  const hiddenCount = Math.max(0, notes.length - INITIAL_PREVIEW_COUNT);
+  // Solo los cierres formales aparecen como hitos en el timeline; las
+  // aperturas (normal -> en_observacion) ya quedan reflejadas por la nota
+  // que las dispara.
+  const closureEvents = useMemo(
+    () =>
+      careStatusChanges.filter(
+        (event) =>
+          event.fromStatus === 'en_observacion' && event.toStatus === 'normal',
+      ),
+    [careStatusChanges],
+  );
+
+  const timelineItems = useMemo<TimelineItem[]>(() => {
+    const noteItems: TimelineItem[] = notes.map((entry) => ({
+      kind: 'note',
+      createdAt: entry.audit.createdAt,
+      note: entry,
+    }));
+    const closureItems: TimelineItem[] = closureEvents.map((event) => ({
+      kind: 'closure',
+      createdAt: event.createdAt,
+      event,
+    }));
+    return [...noteItems, ...closureItems].sort((left, right) =>
+      left.createdAt < right.createdAt
+        ? 1
+        : left.createdAt > right.createdAt
+          ? -1
+          : 0,
+    );
+  }, [notes, closureEvents]);
+
+  const visibleItems = expanded
+    ? timelineItems
+    : timelineItems.slice(0, INITIAL_PREVIEW_COUNT);
+  const hiddenCount = Math.max(0, timelineItems.length - INITIAL_PREVIEW_COUNT);
 
   async function handleSubmit(): Promise<void> {
     if (!canSubmit) return;
@@ -98,19 +157,17 @@ export function ResidentObservationsPanel({
         <span className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-brand-primary sm:text-[0.76rem] sm:tracking-[0.16em]">
           Observaciones
         </span>
-        {isUnderObservation && onClearObservation && (
+        {isUnderObservation && onRequestObservationClosure && (
           <button
             data-testid="resident-observations-clear-observation-button"
             type="button"
             className={secondaryButtonClassName}
             disabled={isClearingObservation || isSaving}
-            onClick={() => {
-              void onClearObservation();
-            }}
+            onClick={() => onRequestObservationClosure()}
           >
             {isClearingObservation
               ? 'Actualizando...'
-              : 'Sacar de observación'}
+              : 'Cerrar observación'}
           </button>
         )}
       </header>
@@ -169,32 +226,61 @@ export function ResidentObservationsPanel({
       </div>
 
       <div className="grid gap-3">
-        {notes.length === 0 ? (
+        {timelineItems.length === 0 ? (
           <p className="rounded-[20px] border border-dashed border-[rgba(0,102,132,0.2)] bg-brand-neutral/40 px-4 py-6 text-center text-brand-text-secondary">
             Sin observaciones registradas.
           </p>
         ) : (
           <ul className="grid gap-3">
-            {visibleNotes.map((item) => {
+            {visibleItems.map((item) => {
+              if (item.kind === 'closure') {
+                return (
+                  <li
+                    key={`closure:${item.event.id}`}
+                    data-testid="resident-observation-closure-item"
+                    className="grid gap-2 rounded-[22px] border border-[rgba(0,102,132,0.16)] bg-[rgba(0,102,132,0.06)] px-4 py-3"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-2 text-[0.78rem] font-semibold uppercase tracking-[0.12em] text-brand-secondary">
+                        Cierre de observación
+                        {item.event.closureReason && (
+                          <span className="rounded-full bg-white/80 px-2 py-0.5 text-[0.72rem] tracking-normal text-brand-secondary">
+                            {closureReasonLabels[item.event.closureReason]}
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-[0.78rem] text-brand-text-muted">
+                        {formatDateTime(item.event.createdAt)} · {item.event.createdBy}
+                      </span>
+                    </div>
+                    {item.event.note && (
+                      <p className="whitespace-pre-wrap leading-[1.55] text-brand-text">
+                        {item.event.note}
+                      </p>
+                    )}
+                  </li>
+                );
+              }
+              const noteEntry = item.note;
               const isDeleting =
-                isSaving && activeMutationId === `delete:${item.id}`;
-              const isConfirming = confirmingId === item.id;
+                isSaving && activeMutationId === `delete:${noteEntry.id}`;
+              const isConfirming = confirmingId === noteEntry.id;
               return (
                 <li
-                  key={item.id}
+                  key={noteEntry.id}
                   data-testid="resident-observation-item"
                   className="grid gap-2 rounded-[22px] border border-[rgba(0,102,132,0.08)] bg-white/85 px-4 py-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="grid gap-0.5">
                       <span className="text-[0.78rem] font-semibold text-brand-text-muted">
-                        {formatDateTime(item.audit.createdAt)} · {item.audit.createdBy}
+                        {formatDateTime(noteEntry.audit.createdAt)} · {noteEntry.audit.createdBy}
                       </span>
-                      {item.audit.updatedAt !== item.audit.createdAt && (
+                      {noteEntry.audit.updatedAt !== noteEntry.audit.createdAt && (
                         <span className="text-[0.72rem] text-brand-text-muted">
-                          Editado {formatDateTime(item.audit.updatedAt)}
-                          {item.audit.updatedBy && item.audit.updatedBy !== item.audit.createdBy
-                            ? ` · ${item.audit.updatedBy}`
+                          Editado {formatDateTime(noteEntry.audit.updatedAt)}
+                          {noteEntry.audit.updatedBy && noteEntry.audit.updatedBy !== noteEntry.audit.createdBy
+                            ? ` · ${noteEntry.audit.updatedBy}`
                             : ''}
                         </span>
                       )}
@@ -205,7 +291,7 @@ export function ResidentObservationsPanel({
                         type="button"
                         aria-label="Eliminar observación"
                         className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[0.82rem] font-medium text-[rgb(130,44,25)] transition hover:bg-[rgba(168,43,17,0.08)] disabled:opacity-60"
-                        onClick={() => setConfirmingId(item.id)}
+                        onClick={() => setConfirmingId(noteEntry.id)}
                         disabled={isSaving}
                       >
                         <svg
@@ -235,7 +321,7 @@ export function ResidentObservationsPanel({
                           data-testid="resident-observation-confirm-delete-button"
                           type="button"
                           className="rounded-lg px-2 py-1 font-semibold text-[rgb(130,44,25)] transition hover:bg-[rgba(168,43,17,0.08)] disabled:opacity-60"
-                          onClick={() => void handleDelete(item.id)}
+                          onClick={() => void handleDelete(noteEntry.id)}
                           disabled={isDeleting}
                         >
                           {isDeleting ? 'Eliminando...' : 'Sí'}
@@ -252,7 +338,7 @@ export function ResidentObservationsPanel({
                     )}
                   </div>
                   <p className="whitespace-pre-wrap leading-[1.55] text-brand-text">
-                    {item.note}
+                    {noteEntry.note}
                   </p>
                 </li>
               );

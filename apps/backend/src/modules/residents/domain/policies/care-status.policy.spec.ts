@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  assertClosureReason,
   assertTransition,
   canTransition,
+  isObservationClosure,
   isResidentCareStatus,
+  isResidentCareStatusClosureReason,
 } from './care-status.policy';
 
 describe('care-status.policy', () => {
@@ -45,6 +48,58 @@ describe('care-status.policy', () => {
       expect(() => assertTransition('normal', 'normal')).toThrow(
         /ya se encuentra en el estado/i,
       );
+    });
+  });
+
+  describe('isObservationClosure', () => {
+    it('detecta solo en_observacion -> normal', () => {
+      expect(isObservationClosure('en_observacion', 'normal')).toBe(true);
+      expect(isObservationClosure('normal', 'en_observacion')).toBe(false);
+      expect(isObservationClosure('normal', 'normal')).toBe(false);
+    });
+  });
+
+  describe('isResidentCareStatusClosureReason', () => {
+    it('reconoce el catalogo cerrado', () => {
+      expect(isResidentCareStatusClosureReason('estable')).toBe(true);
+      expect(isResidentCareStatusClosureReason('escalado_medico')).toBe(true);
+      expect(isResidentCareStatusClosureReason('derivado')).toBe(true);
+      expect(isResidentCareStatusClosureReason('otro')).toBe(true);
+    });
+
+    it('rechaza valores fuera del catalogo', () => {
+      expect(isResidentCareStatusClosureReason('')).toBe(false);
+      expect(isResidentCareStatusClosureReason('estabilizado')).toBe(false);
+      expect(isResidentCareStatusClosureReason('ESTABLE')).toBe(false);
+    });
+  });
+
+  describe('assertClosureReason', () => {
+    it('exige motivo cuando la transicion es cierre', () => {
+      expect(() => assertClosureReason('en_observacion', 'normal', undefined)).toThrow(
+        /requiere un motivo/i,
+      );
+    });
+
+    it('rechaza motivos fuera del catalogo en cierres', () => {
+      expect(() =>
+        assertClosureReason('en_observacion', 'normal', 'estabilizado'),
+      ).toThrow(/no es válido/i);
+    });
+
+    it('acepta motivos del catalogo en cierres', () => {
+      expect(() =>
+        assertClosureReason('en_observacion', 'normal', 'estable'),
+      ).not.toThrow();
+    });
+
+    it('ignora el motivo si la transicion no es cierre', () => {
+      expect(() =>
+        assertClosureReason('normal', 'en_observacion', undefined),
+      ).not.toThrow();
+      expect(() =>
+        assertClosureReason('normal', 'en_observacion', 'cualquiera'),
+      ).not.toThrow();
     });
   });
 });

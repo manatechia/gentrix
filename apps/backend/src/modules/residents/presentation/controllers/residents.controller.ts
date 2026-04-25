@@ -118,6 +118,9 @@ export class ResidentsController {
    * que pueden poner a un residente en observación a través de la nota
    * rápida también pueden quitarlo desde su ficha, sin tener que pedirle
    * al admin que libere el estado.
+   *
+   * El cierre formal (en_observacion → normal) exige `closureReason` por
+   * política de dominio; sin él, el endpoint responde 400.
    */
   @Patch(':residentId/care-status')
   updateResidentCareStatus(
@@ -128,8 +131,27 @@ export class ResidentsController {
     assertCanRecordResidentObservations(request.authSession!.user.role);
     return this.residentsService.setResidentCareStatus(
       residentId,
-      body.toStatus,
+      {
+        toStatus: body.toStatus,
+        closureReason: body.closureReason,
+        note: body.note,
+      },
       getAuditActorFromRequest(request),
+      request.authSession!.activeOrganization.id,
+    );
+  }
+
+  /**
+   * Devuelve la historia de transiciones de `careStatus` para el residente,
+   * ordenada de más antigua a más nueva. Alimenta el timeline de la ficha.
+   */
+  @Get(':residentId/care-status-changes')
+  listResidentCareStatusChanges(
+    @Param('residentId') residentId: string,
+    @Req() request: RequestWithSession,
+  ) {
+    return this.residentsService.listResidentCareStatusChanges(
+      residentId,
       request.authSession!.activeOrganization.id,
     );
   }

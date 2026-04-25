@@ -9,7 +9,7 @@ import type {
   ResidentAgendaSeries,
   ResidentAgendaSeriesCreateInput,
   ResidentAgendaSeriesUpdateInput,
-  ResidentCareStatus,
+  ResidentCareStatusChangeEvent,
   ResidentCareStatusChangeResponse,
   ResidentCareStatusUpdateInput,
   ResidentCreateInput,
@@ -87,12 +87,21 @@ export async function getResidentsUnderObservation(): Promise<
 
 export async function updateResidentCareStatus(
   residentId: string,
-  toStatus: ResidentCareStatus,
+  input: ResidentCareStatusUpdateInput,
 ): Promise<ApiEnvelope<ResidentCareStatusChangeResponse>> {
-  const payload: ResidentCareStatusUpdateInput = { toStatus };
   const response = await apiClient.patch<
     ApiEnvelope<ResidentCareStatusChangeResponse>
-  >(`/api/residents/${residentId}/care-status`, payload);
+  >(`/api/residents/${residentId}/care-status`, input);
+
+  return response.data;
+}
+
+export async function getResidentCareStatusChanges(
+  residentId: string,
+): Promise<ApiEnvelope<ResidentCareStatusChangeEvent[]>> {
+  const response = await apiClient.get<
+    ApiEnvelope<ResidentCareStatusChangeEvent[]>
+  >(`/api/residents/${residentId}/care-status-changes`);
 
   return response.data;
 }

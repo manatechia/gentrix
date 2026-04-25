@@ -66,10 +66,12 @@ export class ResidentObservationNotesService {
     let careStatusChanged = false;
     if (input.putUnderObservation) {
       // setResidentCareStatus es no-op silencioso (changed: false) si ya está
-      // en_observacion; preservamos esa semántica.
+      // en_observacion; preservamos esa semántica. Esta transición
+      // (normal -> en_observacion) no es cierre, por eso no lleva motivo;
+      // la nota libre sí se propaga al evento como contexto.
       const result = await this.residents.setResidentCareStatus(
         resident.id,
-        'en_observacion',
+        { toStatus: 'en_observacion', note: trimmed },
         actor,
         resident.organizationId,
       );

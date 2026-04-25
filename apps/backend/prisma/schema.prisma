@@ -24,6 +24,7 @@ model Organization {
   agendaEvents     ResidentAgendaEvent[]
   agendaSeries     ResidentAgendaSeries[]
   observationNotes ResidentObservationNote[]
+  careStatusChanges ResidentCareStatusChange[]
   medicationExecutions MedicationExecution[]
   facilities       Facility[]
   jobTitles        JobTitle[]
@@ -56,6 +57,7 @@ model Facility {
   agendaEvents     ResidentAgendaEvent[]
   agendaSeries     ResidentAgendaSeries[]
   observationNotes ResidentObservationNote[]
+  careStatusChanges ResidentCareStatusChange[]
   medicationExecutions MedicationExecution[]
   medicationOrders MedicationOrder[]
   membershipScopes MembershipFacilityScope[]
@@ -363,6 +365,7 @@ model Resident {
   agendaEvents           ResidentAgendaEvent[]
   agendaSeries           ResidentAgendaSeries[]
   observationNotes       ResidentObservationNote[]
+  careStatusChanges      ResidentCareStatusChange[]
   facility               Facility               @relation(fields: [facilityId], references: [id], onDelete: Restrict)
   familyContacts         ResidentFamilyContact[]
   medicationExecutions   MedicationExecution[]
@@ -651,4 +654,31 @@ model ResidentObservationNote {
   @@index([residentId, createdAt, deletedAt])
   @@index([organizationId, deletedAt])
   @@index([deletedAt])
+}
+
+/// Evento auditable de transición del estado clínico operativo del residente.
+/// Captura el cierre formal de observación con motivo (`closureReason`) y
+/// nota libre. Se persiste en la misma transacción que el UPDATE de
+/// `Resident.careStatus`. No tiene soft-delete: estos eventos son hechos del
+/// pasado y no se borran ni se editan.
+model ResidentCareStatusChange {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  facilityId     String?      @db.Uuid
+  residentId     String       @db.Uuid
+  fromStatus     String
+  toStatus       String
+  /// Motivo del cierre cuando la transición es `en_observacion -> normal`.
+  /// Catálogo cerrado: `estable | escalado_medico | derivado | otro`.
+  /// Nullable porque las transiciones que no son cierre no piden motivo.
+  closureReason  String?
+  note           String?
+  createdAt      DateTime
+  createdBy      String
+  facility       Facility?    @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  resident       Resident     @relation(fields: [residentId], references: [id], onDelete: Restrict)
+
+  @@index([residentId, createdAt])
+  @@index([organizationId, createdAt])
 }
