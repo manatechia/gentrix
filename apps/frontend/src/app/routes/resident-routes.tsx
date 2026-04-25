@@ -109,6 +109,7 @@ export function ResidentDetailRoute() {
       isUpdatingCareStatus={detail.isUpdatingCareStatus}
       careStatusNotice={detail.careStatusNotice}
       careStatusNoticeTone={detail.careStatusNoticeTone}
+      careStatusChanges={detail.careStatusChanges}
       onCareStatusChange={detail.handleCareStatusChange}
       agendaOccurrences={agenda.occurrences}
       isSavingAgendaEvent={agenda.isSaving}

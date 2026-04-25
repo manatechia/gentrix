@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import type {
@@ -10,7 +10,8 @@ import type {
   ResidentAgendaOccurrenceOverrideInput,
   ResidentAgendaSeriesCreateInput,
   ResidentAgendaSeriesUpdateInput,
-  ResidentCareStatus,
+  ResidentCareStatusChangeEvent,
+  ResidentCareStatusUpdateInput,
   ResidentDetail,
   ResidentGeriatricAssessmentLevel,
   ResidentLiveProfile,
@@ -47,6 +48,7 @@ import type { DashboardScreenState } from '../../dashboard/types/dashboard-scree
 import { ResidentMedicationShiftPanel } from '../../medication/ui/resident-medication-shift-panel';
 import { ResidentAgendaPanel } from './resident-agenda-panel';
 import { ResidentLiveProfilePanel } from './resident-live-profile-panel';
+import { ResidentObservationClosureModal } from './resident-observation-closure-modal';
 import { ResidentObservationsPanel } from './resident-observations-panel';
 
 /**
@@ -89,7 +91,10 @@ interface ResidentDetailWorkspaceProps {
   isUpdatingCareStatus: boolean;
   careStatusNotice: string | null;
   careStatusNoticeTone: 'success' | 'error';
-  onCareStatusChange: (toStatus: ResidentCareStatus) => Promise<boolean>;
+  careStatusChanges: ResidentCareStatusChangeEvent[];
+  onCareStatusChange: (
+    input: ResidentCareStatusUpdateInput,
+  ) => Promise<boolean>;
   agendaOccurrences: ResidentAgendaOccurrence[];
   isSavingAgendaEvent: boolean;
   activeAgendaMutationId: string | null;
@@ -209,6 +214,7 @@ export function ResidentDetailWorkspace({
   isUpdatingCareStatus,
   careStatusNotice,
   careStatusNoticeTone,
+  careStatusChanges,
   onCareStatusChange,
   agendaOccurrences,
   isSavingAgendaEvent,
@@ -269,6 +275,22 @@ export function ResidentDetailWorkspace({
 
   const allergiesRaw = resident?.clinicalProfile.allergies;
   const hasAllergies = Boolean(allergiesRaw && allergiesRaw.trim());
+
+  const [isClosureModalOpen, setIsClosureModalOpen] = useState(false);
+
+  async function handleClosureConfirm(
+    closureReason: ResidentCareStatusUpdateInput['closureReason'],
+    note: string | undefined,
+  ): Promise<void> {
+    const ok = await onCareStatusChange({
+      toStatus: 'normal',
+      closureReason,
+      note,
+    });
+    if (ok) {
+      setIsClosureModalOpen(false);
+    }
+  }
 
   return (
     <WorkspaceShell
@@ -362,13 +384,11 @@ export function ResidentDetailWorkspace({
                     data-testid="resident-clear-observation-button"
                     className={secondaryButtonClassName}
                     disabled={isUpdatingCareStatus}
-                    onClick={() => {
-                      void onCareStatusChange('normal');
-                    }}
+                    onClick={() => setIsClosureModalOpen(true)}
                   >
                     {isUpdatingCareStatus
                       ? 'Actualizando...'
-                      : 'Quitar de observación'}
+                      : 'Cerrar observación'}
                   </button>
                 )}
               </div>
@@ -459,6 +479,7 @@ export function ResidentDetailWorkspace({
 
           <ResidentObservationsPanel
             notes={filterCurrentObservationNotes(observationNotes, resident)}
+            careStatusChanges={careStatusChanges}
             isUnderObservation={resident.careStatus === 'en_observacion'}
             isSaving={isSavingObservationNote}
             activeMutationId={activeObservationMutationId}
@@ -466,9 +487,18 @@ export function ResidentDetailWorkspace({
             noticeTone={observationNoticeTone}
             onCreate={onObservationNoteCreate}
             onDelete={onObservationNoteDelete}
-            onClearObservation={() => onCareStatusChange('normal')}
+            onRequestObservationClosure={() => setIsClosureModalOpen(true)}
             isClearingObservation={isUpdatingCareStatus}
           />
+
+          {isClosureModalOpen && (
+            <ResidentObservationClosureModal
+              residentName={resident.fullName}
+              isSubmitting={isUpdatingCareStatus}
+              onCancel={() => setIsClosureModalOpen(false)}
+              onConfirm={handleClosureConfirm}
+            />
+          )}
 
           <ResidentLiveProfilePanel profile={residentLiveProfile} />
 

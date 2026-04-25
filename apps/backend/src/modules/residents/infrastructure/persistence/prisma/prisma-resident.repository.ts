@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
 
 import type {
   Address,
@@ -8,6 +9,8 @@ import type {
   ResidentAttachment,
   ResidentBelongings,
   ResidentCareStatus,
+  ResidentCareStatusChangeEvent,
+  ResidentCareStatusClosureReason,
   ResidentClinicalProfile,
   ResidentDischargeInfo,
   ResidentGeriatricAssessment,
@@ -19,11 +22,15 @@ import type {
 } from '@gentrix/shared-types';
 import { isResidentCareLevel, type Resident } from '@gentrix/domain-residents';
 
-import { isResidentCareStatus } from '../../../domain/policies/care-status.policy';
+import {
+  isResidentCareStatus,
+  isResidentCareStatusClosureReason,
+} from '../../../domain/policies/care-status.policy';
 import { toIsoDateString } from '@gentrix/shared-utils';
 
 import { PrismaService } from '../../../../../infrastructure/prisma/prisma.service';
 import type {
+  ResidentCareStatusChangeResult,
   ResidentCareStatusUpdateRecordInput,
   ResidentRepository,
 } from '../../../domain/repositories/resident.repository';
@@ -221,33 +228,105 @@ export class PrismaResidentRepository implements ResidentRepository {
 
   async setCareStatus(
     input: ResidentCareStatusUpdateRecordInput,
-  ): Promise<Resident> {
+  ): Promise<ResidentCareStatusChangeResult> {
     const changedAt = new Date(input.changedAt);
-    const updated = await this.prisma.resident.update({
-      where: { id: input.residentId },
-      data: {
-        careStatus: input.toStatus,
-        careStatusChangedAt: changedAt,
-        careStatusChangedBy: input.actor,
-        // Convención del módulo: cambio de estado clínico también refresca
-        // updatedAt/updatedBy del residente.
-        updatedAt: changedAt,
-        updatedBy: input.actor,
-      },
-      include: {
-        clinicalEvents: {
-          where: { deletedAt: null },
-          orderBy: { occurredAt: 'desc' },
+    const facilityId = await this.resolveResidentFacilityId(input.residentId);
+    const eventId = randomUUID();
+
+    const [updated, eventRecord] = await this.prisma.$transaction([
+      this.prisma.resident.update({
+        where: { id: input.residentId },
+        data: {
+          careStatus: input.toStatus,
+          careStatusChangedAt: changedAt,
+          careStatusChangedBy: input.actor,
+          // Convención del módulo: cambio de estado clínico también refresca
+          // updatedAt/updatedBy del residente.
+          updatedAt: changedAt,
+          updatedBy: input.actor,
         },
-        familyContacts: {
-          where: { deletedAt: null },
-          orderBy: { createdAt: 'asc' },
+        include: {
+          clinicalEvents: {
+            where: { deletedAt: null },
+            orderBy: { occurredAt: 'desc' },
+          },
+          familyContacts: {
+            where: { deletedAt: null },
+            orderBy: { createdAt: 'asc' },
+          },
         },
+      }),
+      this.prisma.residentCareStatusChange.create({
+        data: {
+          id: eventId,
+          organizationId: input.organizationId,
+          facilityId,
+          residentId: input.residentId,
+          fromStatus: input.fromStatus,
+          toStatus: input.toStatus,
+          closureReason: input.closureReason ?? null,
+          note: input.note ?? null,
+          createdAt: changedAt,
+          createdBy: input.actor,
+        },
+      }),
+    ]);
+
+    return {
+      resident: mapResidentRecord(updated),
+      changeEvent: mapCareStatusChangeRecord(eventRecord),
+    };
+  }
+
+  async listCareStatusChangesByResident(
+    residentId: Resident['id'],
+    organizationId?: Resident['organizationId'],
+  ): Promise<ResidentCareStatusChangeEvent[]> {
+    const records = await this.prisma.residentCareStatusChange.findMany({
+      where: {
+        residentId,
+        organizationId: organizationId ?? undefined,
       },
+      orderBy: { createdAt: 'asc' },
     });
 
-    return mapResidentRecord(updated);
+    return records.map(mapCareStatusChangeRecord);
   }
+
+  private async resolveResidentFacilityId(
+    residentId: string,
+  ): Promise<string | null> {
+    const resident = await this.prisma.resident.findUnique({
+      where: { id: residentId },
+      select: { facilityId: true },
+    });
+    return resident?.facilityId ?? null;
+  }
+}
+
+function mapCareStatusChangeRecord(record: {
+  id: string;
+  residentId: string;
+  fromStatus: string;
+  toStatus: string;
+  closureReason: string | null;
+  note: string | null;
+  createdAt: Date;
+  createdBy: string;
+}): ResidentCareStatusChangeEvent {
+  return {
+    id: record.id as ResidentCareStatusChangeEvent['id'],
+    residentId: record.residentId as ResidentCareStatusChangeEvent['residentId'],
+    fromStatus: normalizeResidentCareStatus(record.fromStatus),
+    toStatus: normalizeResidentCareStatus(record.toStatus),
+    closureReason:
+      record.closureReason && isResidentCareStatusClosureReason(record.closureReason)
+        ? (record.closureReason as ResidentCareStatusClosureReason)
+        : undefined,
+    note: record.note ?? undefined,
+    createdAt: toIsoDateString(record.createdAt),
+    createdBy: record.createdBy,
+  };
 }
 
 function mapResidentRecord(record: ResidentRecord): Resident {

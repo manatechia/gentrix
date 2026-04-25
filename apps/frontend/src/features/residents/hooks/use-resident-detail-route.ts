@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type {
-  ResidentCareStatus,
+  ResidentCareStatusChangeEvent,
+  ResidentCareStatusUpdateInput,
   ResidentDetail,
   ResidentLiveProfile,
 } from '@gentrix/shared-types';
@@ -22,11 +23,15 @@ export function useResidentDetailRoute(residentId: string | undefined) {
   const [residentLiveProfile, setResidentLiveProfile] =
     useState<ResidentLiveProfile | null>(null);
   const [residentError, setResidentError] = useState<string | null>(null);
+  const [careStatusChanges, setCareStatusChanges] = useState<
+    ResidentCareStatusChangeEvent[]
+  >([]);
 
   const loadResidentDetail = useCallback(async (): Promise<void> => {
     if (!residentId) {
       setResident(null);
       setResidentLiveProfile(null);
+      setCareStatusChanges([]);
       setResidentError('No se encontró el residente solicitado.');
       setScreenState('error');
       return;
@@ -35,6 +40,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
     if (!token) {
       setResident(null);
       setResidentLiveProfile(null);
+      setCareStatusChanges([]);
       setResidentError(null);
       setScreenState('loading');
       return;
@@ -44,13 +50,16 @@ export function useResidentDetailRoute(residentId: string | undefined) {
     setResidentError(null);
 
     try {
-      const [residentPayload, residentLiveProfilePayload] = await Promise.all([
-        residentsService.getResidentById(residentId),
-        residentsService.getResidentLiveProfile(residentId),
-      ]);
+      const [residentPayload, residentLiveProfilePayload, careStatusChangesPayload] =
+        await Promise.all([
+          residentsService.getResidentById(residentId),
+          residentsService.getResidentLiveProfile(residentId),
+          residentsService.getResidentCareStatusChanges(residentId),
+        ]);
 
       setResident(unwrapEnvelope(residentPayload));
       setResidentLiveProfile(unwrapEnvelope(residentLiveProfilePayload));
+      setCareStatusChanges(unwrapEnvelope(careStatusChangesPayload));
       setScreenState('ready');
     } catch (error) {
       const message = getApiErrorMessage(
@@ -65,6 +74,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
 
       setResident(null);
       setResidentLiveProfile(null);
+      setCareStatusChanges([]);
       setResidentError(message);
       setScreenState('error');
     }
@@ -77,7 +87,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
   >('success');
 
   const handleCareStatusChange = useCallback(
-    async (toStatus: ResidentCareStatus): Promise<boolean> => {
+    async (input: ResidentCareStatusUpdateInput): Promise<boolean> => {
       if (!residentId) {
         setCareStatusNoticeTone('error');
         setCareStatusNotice('No se encontró el residente solicitado.');
@@ -95,16 +105,19 @@ export function useResidentDetailRoute(residentId: string | undefined) {
       try {
         const payload = await residentsService.updateResidentCareStatus(
           residentId,
-          toStatus,
+          input,
         );
         const result = unwrapEnvelope(payload);
 
         setResident(result.resident);
+        if (result.changeEvent) {
+          setCareStatusChanges((current) => [...current, result.changeEvent!]);
+        }
 
         setCareStatusNoticeTone('success');
         if (result.changed) {
           setCareStatusNotice(
-            toStatus === 'normal'
+            input.toStatus === 'normal'
               ? 'Residente quitado de observacion.'
               : 'Residente puesto en observacion.',
           );
@@ -137,6 +150,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
     if (status !== 'authenticated' || !token) {
       setResident(null);
       setResidentLiveProfile(null);
+      setCareStatusChanges([]);
       setResidentError(null);
       setScreenState('loading');
       return;
@@ -150,6 +164,7 @@ export function useResidentDetailRoute(residentId: string | undefined) {
     resident,
     residentLiveProfile,
     residentError,
+    careStatusChanges,
     isUpdatingCareStatus,
     careStatusNotice,
     careStatusNoticeTone,

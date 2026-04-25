@@ -281,6 +281,40 @@ export const RESIDENT_CARE_STATUS_TRANSITIONS: Record<
 } as const;
 
 /**
+ * Motivos de cierre formal de observación. Se exige uno cuando la transición
+ * es `en_observacion -> normal`. Catálogo cerrado para que el reporte
+ * agregado tenga semántica estable.
+ */
+export type ResidentCareStatusClosureReason =
+  | 'estable'
+  | 'escalado_medico'
+  | 'derivado'
+  | 'otro';
+
+export const RESIDENT_CARE_STATUS_CLOSURE_REASONS: readonly ResidentCareStatusClosureReason[] = [
+  'estable',
+  'escalado_medico',
+  'derivado',
+  'otro',
+] as const;
+
+/**
+ * Evento auditable de transición de `careStatus`. Persistido en
+ * `ResidentCareStatusChange`; sirve como entrada del timeline de la ficha
+ * del residente y registra el motivo de cierre cuando aplica.
+ */
+export interface ResidentCareStatusChangeEvent {
+  id: EntityId;
+  residentId: EntityId;
+  fromStatus: ResidentCareStatus;
+  toStatus: ResidentCareStatus;
+  closureReason?: ResidentCareStatusClosureReason;
+  note?: string;
+  createdAt: IsoDateString;
+  createdBy: string;
+}
+
+/**
  * These records are captured around admission/intake today, but they are not
  * the resident's stable identity and must not become a catch-all write contract.
  */
@@ -826,20 +860,31 @@ export type MedicationUpdateInput = MedicationCreateInput;
 /**
  * Payload para cambiar manualmente el estado clínico del residente
  * (ej.: el botón "Quitar de observación" en la ficha del residente).
+ *
+ * El `closureReason` es obligatorio cuando la transición es
+ * `en_observacion -> normal` (cierre formal). En cualquier otra transición
+ * se ignora. La política de dominio rechaza el payload si falta cuando
+ * corresponde.
  */
 export interface ResidentCareStatusUpdateInput {
   toStatus: ResidentCareStatus;
+  closureReason?: ResidentCareStatusClosureReason;
+  /** Texto libre opcional asociado a la transición (≤2000 caracteres). */
+  note?: string;
 }
 
 /**
  * Respuesta del endpoint que cambia el estado clínico operativo del residente
- * directamente (ej.: botón "Quitar de observación").
+ * directamente (ej.: botón "Quitar de observación"). `changeEvent` se incluye
+ * solo cuando hubo transición efectiva (`changed: true`); permite a la UI
+ * insertarlo en el timeline sin re-fetch.
  */
 export interface ResidentCareStatusChangeResponse {
   resident: ResidentDetail;
   changed: boolean;
   fromStatus: ResidentCareStatus;
   toStatus: ResidentCareStatus;
+  changeEvent?: ResidentCareStatusChangeEvent;
 }
 
 export type MedicationExecutionResult = 'administered' | 'omitted' | 'rejected';

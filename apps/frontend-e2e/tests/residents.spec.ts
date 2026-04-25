@@ -160,16 +160,26 @@ test('register, list with "see more" and delete resident observations', async (
     .click();
   await expect(page.getByText(firstNote)).toBeHidden();
 
-  // 4. Usar el boton "Quitar de observacion" (ya existente) para volver al
-  //    residente a normal y confirmar que el checkbox vuelve a aparecer.
+  // 4. Cerrar la observacion: ahora pide motivo en un modal. Confirmamos que
+  //    al cerrar con motivo el residente vuelve a normal y queda registrado
+  //    el cierre como hito en el timeline.
   const clearButton = page.getByTestId('resident-clear-observation-button');
   if (await clearButton.isVisible()) {
     await clearButton.click();
+    await selectFieldOption(
+      page,
+      'resident-observation-closure-reason-select',
+      'estable',
+    );
+    await page.getByTestId('resident-observation-closure-submit').click();
     await expect(page.getByTestId('resident-care-status-badge')).toContainText(
       'Normal',
     );
     await expect(
       page.getByTestId('resident-observation-put-under-observation-checkbox'),
+    ).toBeVisible();
+    await expect(
+      page.getByTestId('resident-observation-closure-item').first(),
     ).toBeVisible();
   }
 });

@@ -16,6 +16,8 @@ import {
 } from '@gentrix/domain-residents';
 import type {
   ResidentCareStatus,
+  ResidentCareStatusChangeEvent,
+  ResidentCareStatusClosureReason,
   ResidentCreateInput,
   ResidentDetail,
   ResidentDischargeInfo,
@@ -26,7 +28,11 @@ import type {
 } from '@gentrix/shared-types';
 import { toIsoDateString } from '@gentrix/shared-utils';
 
-import { assertTransition } from '../domain/policies/care-status.policy';
+import {
+  assertClosureReason,
+  assertTransition,
+  isObservationClosure,
+} from '../domain/policies/care-status.policy';
 import {
   RESIDENT_REPOSITORY,
   type ResidentRepository,
@@ -36,12 +42,25 @@ import {
  * Resultado del cambio de estado clínico operativo. `changed` indica si la
  * transición efectivamente ocurrió. Pasamos `false` cuando el residente ya se
  * encontraba en el estado destino — caso modelado como no-op silencioso.
+ * `changeEvent` se devuelve solo cuando hubo transición real.
  */
 export interface ResidentCareStatusChangeResult {
   resident: ResidentDetail;
   changed: boolean;
   fromStatus: ResidentCareStatus;
   toStatus: ResidentCareStatus;
+  changeEvent?: ResidentCareStatusChangeEvent;
+}
+
+/**
+ * Argumentos del cambio manual de estado clínico operativo. El DTO mapea
+ * directamente sobre esta forma; mantener separado del repository input
+ * permite que el servicio sume política sin que el repo conozca el catálogo.
+ */
+export interface SetResidentCareStatusInput {
+  toStatus: ResidentCareStatus;
+  closureReason?: ResidentCareStatusClosureReason;
+  note?: string;
 }
 
 @Injectable()
@@ -146,17 +165,19 @@ export class ResidentsService {
    *    (`changed: false`). No se toca auditoría ni se devuelve error.
    *  - Si la transición no está declarada en `RESIDENT_CARE_STATUS_TRANSITIONS`
    *    se lanza BadRequestException antes de tocar el repositorio.
-   *  - Caso contrario, se actualiza el residente y su auditoría
-   *    (`updatedAt`/`updatedBy`) en una sola operación.
+   *  - El cierre formal (`en_observacion -> normal`) requiere
+   *    `closureReason` (catálogo `RESIDENT_CARE_STATUS_CLOSURE_REASONS`).
+   *  - El residente y su evento auditable se persisten en una transacción.
    */
   async setResidentCareStatus(
     residentId: string,
-    toStatus: ResidentCareStatus,
+    input: SetResidentCareStatusInput,
     actor: string,
     organizationId?: Resident['organizationId'],
   ): Promise<ResidentCareStatusChangeResult> {
     const resident = await this.getResidentEntityById(residentId, organizationId);
     const fromStatus = resident.careStatus;
+    const { toStatus, closureReason, note } = input;
 
     if (fromStatus === toStatus) {
       return {
@@ -168,32 +189,58 @@ export class ResidentsService {
     }
 
     assertTransition(fromStatus, toStatus);
+    assertClosureReason(fromStatus, toStatus, closureReason);
 
     const persisted = await this.residents.setCareStatus({
       residentId: resident.id,
       organizationId: resident.organizationId,
+      fromStatus,
       toStatus,
       actor,
       changedAt: toIsoDateString(new Date()),
+      closureReason: isObservationClosure(fromStatus, toStatus)
+        ? closureReason
+        : undefined,
+      note: note?.trim() ? note.trim() : undefined,
     });
 
     this.logger.info(
       {
-        residentId: persisted.id,
-        organizationId: persisted.organizationId,
+        residentId: persisted.resident.id,
+        organizationId: persisted.resident.organizationId,
         fromStatus,
         toStatus,
+        closureReason: persisted.changeEvent.closureReason,
         actor,
       },
       'residents.care-status.changed',
     );
 
     return {
-      resident: toResidentDetail(persisted),
+      resident: toResidentDetail(persisted.resident),
       changed: true,
       fromStatus,
       toStatus,
+      changeEvent: persisted.changeEvent,
     };
+  }
+
+  /**
+   * Devuelve el timeline de transiciones de `careStatus` del residente,
+   * ordenado de más antiguo a más nuevo. Verifica el alcance organizacional.
+   */
+  async listResidentCareStatusChanges(
+    residentId: string,
+    organizationId?: Resident['organizationId'],
+  ): Promise<ResidentCareStatusChangeEvent[]> {
+    const resident = await this.getResidentEntityById(
+      residentId,
+      organizationId,
+    );
+    return this.residents.listCareStatusChangesByResident(
+      resident.id,
+      resident.organizationId,
+    );
   }
 
   async getResidentsByCareStatus(
